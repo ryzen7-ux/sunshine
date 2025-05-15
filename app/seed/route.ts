@@ -1,8 +1,13 @@
 import bcrypt from "bcryptjs";
 import postgres from "postgres";
-import { invoices, customers, revenue, users } from "../lib/placeholder-data";
-
-const sql = postgres(process.env.POSTGRES_URL!, { ssl: "require" });
+import {
+  invoices,
+  customers,
+  revenue,
+  users,
+  invoicees,
+} from "../lib/placeholder-data";
+import sql from "@/app/lib/db";
 
 async function seedUsers() {
   await sql`CREATE EXTENSION IF NOT EXISTS "uuid-ossp"`;
@@ -101,17 +106,48 @@ async function seedRevenue() {
   return insertedRevenue;
 }
 
+async function seedInvoicees() {
+  await sql`CREATE EXTENSION IF NOT EXISTS "uuid-ossp"`;
+
+  await sql`
+  CREATE TABLE IF NOT EXISTS invoicees (
+      id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+      name VARCHAR(255) NOT NULL,
+      invoiceNumber VARCHAR(255) NOT NULL,
+      date TIMESTAMPTZ NOT NULL,
+      quantity INT NOT NULL,
+      price INT NOT NULL,
+      tax INT NOT NULL,
+      payment VARCHAR(255) NOT NULL
+    );
+  `;
+
+  const insertedInvoices = await Promise.all(
+    invoicees.map(
+      (invoice) => sql`
+        INSERT INTO invoicees (name, invoiceNumber, date, quantity, price, tax, payment)
+        VALUES (${invoice.name},${invoice.invoiceNumber}, ${invoice.date}, ${invoice.quantity}, ${invoice.price}, ${invoice.tax}, ${invoice.payment})
+        ON CONFLICT (id) DO NOTHING;
+      `
+    )
+  );
+
+  return insertedInvoices;
+}
+
 export async function GET() {
   try {
     const result = await sql.begin((sql) => [
-      seedUsers(),
-      seedCustomers(),
-      seedInvoices(),
-      seedRevenue(),
+      // seedUsers(),
+      // seedInvoices(),
+      // seedCustomers(),
+      // seedRevenue(),
+      seedInvoicees(),
     ]);
 
     return Response.json({ message: "Database seeded successfully" });
   } catch (error) {
+    console.log(error);
     return Response.json({ error }, { status: 500 });
   }
 }
