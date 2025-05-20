@@ -58,7 +58,6 @@ export async function createInvoice(prevState: State, formData: FormData) {
   }
   const { name, invoiceNumber, quantity, price, tax, payment } =
     validatedFields.data;
-  console.log(name, invoiceNumber, quantity, price, tax, payment);
 
   try {
     await sql`
@@ -70,7 +69,10 @@ export async function createInvoice(prevState: State, formData: FormData) {
       message: "Database Error: Failed to Create Invoice.",
     };
   }
+  //  revalidatePath("/dashboard/sell");
+  // redirect("/dashboard/sell");
 
-  revalidatePath("/dashboard/sell");
-  redirect("/dashboard/sell");
+  return {
+    isSuccess: true,
+  };
 }

@@ -30,9 +30,11 @@ import { useActionState } from "react";
 export default function ModalFormComponent({
   list,
   index,
+  setStatus,
 }: {
   list?: any;
-  index: number;
+  index?: number;
+  setStatus?: {};
 }) {
   let defaultDate = today(getLocalTimeZone());
   let invoceNumber = `INV-${new Date().getFullYear()}-${new Date().getMonth()}-${new Date().getDate()}-${String(
@@ -49,7 +51,7 @@ export default function ModalFormComponent({
   const taxAmount = subtotal * (taxValue / 100);
   const total = subtotal + taxAmount;
 
-  const initialState: State = { message: null, errors: {} };
+  const initialState: State = { message: null, errors: {}, isSuccess: false };
 
   const [state, formAction, isLoading] = useActionState(
     createInvoice,
@@ -223,6 +225,7 @@ export default function ModalFormComponent({
             Create Invoice
           </Button>
         )}
+        {state.isSuccess && setStatus(true)}
       </div>
     </Form>
   );

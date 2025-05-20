@@ -1,0 +1,37 @@
+/* Print-specific styles */
+@media print {
+  /* Hide all other elements */
+  body * {
+    visibility: hidden;
+  }
+  
+  /* Show only receipt content */
+  .receipt-content,
+  .receipt-content * {
+    visibility: visible;
+  }
+  
+  /* Position receipt at the top of the page */
+  .receipt-content {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 80mm; /* Standard thermal receipt width */
+  }
+  
+  /* Remove background colors and shadows for better printing */
+  * {
+    background: none !important;
+    box-shadow: none !important;
+  }
+  
+  /* Ensure black text for better contrast */
+  * {
+    color: black !important;
+  }
+}
+
+/* Ensure proper line breaks */
+.receipt-item {
+  page-break-inside: avoid;
+}
