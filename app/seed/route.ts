@@ -138,10 +138,10 @@ async function seedInvoicees() {
 export async function GET() {
   try {
     const result = await sql.begin((sql) => [
-      // seedUsers(),
-      // seedInvoices(),
-      // seedCustomers(),
-      // seedRevenue(),
+      seedUsers(),
+      seedInvoices(),
+      seedCustomers(),
+      seedRevenue(),
       seedInvoicees(),
     ]);
 
