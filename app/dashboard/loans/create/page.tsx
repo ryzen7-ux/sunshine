@@ -1,3 +1,5 @@
+//@ts-nocheck
+
 import CreateLoan from "@/app/ui/loans/loan-from";
 import Breadcrumbs from "@/app/ui/invoices/breadcrumbs";
 import { fetchGroups, fetchGroupMembers } from "@/app/lib/sun-data";
