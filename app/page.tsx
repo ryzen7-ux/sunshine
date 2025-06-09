@@ -14,7 +14,7 @@ export default function Page() {
       <main className="flex min-h-screen flex-col bg-white mx-12">
         <div className=" flex grow flex-col gap-4 md:flex-row">
           <div className="flex flex-col  gap-6 rounded-lg md:pl-20 px-4 py-12 md:my-4  md:w-3/5 md:px-5">
-            <div className={styles.shape} />
+            {/* <div className={styles.shape} /> */}
             <p className={`text-xl  md:text-3xl md:leading-normal `}>
               <strong>Sunshine Jay Ventures ~</strong> Rising with you
             </p>

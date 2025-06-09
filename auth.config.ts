@@ -8,8 +8,9 @@ export const authConfig = {
     authorized({ auth, request: { nextUrl } }) {
       const isLoggedIn = !!auth?.user;
       const isOnDashboard = nextUrl.pathname.startsWith("/dashboard");
-      const isReceipt = nextUrl.pathname.startsWith("/reciept");
-      if (isOnDashboard || isReceipt) {
+      const isUpload = nextUrl.pathname.startsWith("/uploads");
+      const isApi = nextUrl.pathname.startsWith("/mpesa-api");
+      if (isOnDashboard || isUpload || isApi) {
         if (isLoggedIn) return true;
         return false; // Redirect unauthenticated users to login page
       } else if (isLoggedIn) {

@@ -8,13 +8,19 @@ import {
 } from "@heroicons/react/24/solid";
 import { lusitana } from "@/app/ui/fonts";
 import { fetchCardData } from "@/app/lib/data";
+import {
+  formatDateToLocal,
+  formatCurrency,
+  formatCurrencyToLocal,
+} from "@/app/lib/utils";
+import { fetchDashboardCardData } from "@/app/lib/sun-data";
 
 const iconMap = {
   disbursed: ScaleIcon,
   collected: BanknotesIcon,
   customers: UsersIcon,
-  pending: ClockIcon,
-  invoices: InboxIcon,
+  active: ClockIcon,
+  total: InboxIcon,
 };
 
 export default async function CardWrapper() {
@@ -24,6 +30,16 @@ export default async function CardWrapper() {
   //   totalPaidInvoices,
   //   totalPendingInvoices,
   // } = await fetchCardData();
+
+  const {
+    numberOfGroups,
+    numberOfMembers,
+    totalApprovedLoans,
+    totalPendingLoans,
+    totalInactiveLoans,
+    totalLoans,
+  } = await fetchDashboardCardData();
+
   return (
     <>
       {/* NOTE: Uncomment this code in Chapter 9 */}
@@ -42,22 +58,22 @@ export default async function CardWrapper() {
         span=""
       />
       <Card
-        title="Pending"
-        value={`Ksh 80,000`}
-        type="pending"
+        title="Total Loans"
+        value={formatCurrencyToLocal(Number(totalLoans))}
+        type="total"
         color="text-yellow-800"
         span=""
       />
       <Card
-        title="Total Invoices"
-        value={20}
-        type="invoices"
+        title="Active Loans"
+        value={totalApprovedLoans}
+        type="active"
         color="text-indigo-800"
         span=""
       />
       <Card
-        title="Total Members"
-        value={400}
+        title="Total Borrowers"
+        value={numberOfMembers}
         type="customers"
         color="text-pink-800"
         span="col-span-2 md:col-span-1"
@@ -75,7 +91,7 @@ export function Card({
 }: {
   title: string;
   value: number | string;
-  type: "disbursed" | "invoices" | "customers" | "pending" | "collected";
+  type: "disbursed" | "collected" | "total" | "active" | "customers";
   color: string;
   span: string;
 }) {

@@ -6,6 +6,10 @@ import {
   revenue,
   users,
   invoicees,
+  groups,
+  members,
+  loans,
+  ginvoices,
 } from "../lib/placeholder-data";
 import sql from "@/app/lib/db";
 
@@ -135,14 +139,134 @@ async function seedInvoicees() {
   return insertedInvoices;
 }
 
+async function seedGroups() {
+  await sql`CREATE EXTENSION IF NOT EXISTS "uuid-ossp"`;
+
+  await sql`
+  CREATE TABLE IF NOT EXISTS groups (
+      id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+      reg VARCHAR(255) NOT NULL,
+      name VARCHAR(255) NOT NULL,
+      location VARCHAR(255) NOT NULL,
+      disbursed INT NOT NULL,
+      date TIMESTAMPTZ NOT NULL
+    
+    );
+  `;
+
+  const insertedGroups = await Promise.all(
+    groups.map(
+      (group) => sql`
+        INSERT INTO groups (reg, name, location, disbursed, date)
+        VALUES (${group.reg},${group.name}, ${group.location}, ${group.disbursed}, ${group.date})
+        ON CONFLICT (id) DO NOTHING;
+      `
+    )
+  );
+
+  return insertedGroups;
+}
+
+async function seedMembers() {
+  await sql`CREATE EXTENSION IF NOT EXISTS "uuid-ossp"`;
+
+  await sql`
+  CREATE TABLE IF NOT EXISTS members (
+      id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+      groupId VARCHAR(255) NOT NULL,
+      idNumber INT NOT NULL,
+      surname VARCHAR(255) NOT NULL,
+      firstName VARCHAR(255) NOT NULL,
+      phone VARCHAR(255) NOT NULL,
+      location VARCHAR(255) NOT NULL,
+      date TIMESTAMPTZ NOT NULL,
+      id_front VARCHAR(255),
+      id_back VARCHAR(255),
+      passport VARCHAR(255),
+      doc VARCHAR(255)
+    );
+  `;
+
+  const insertedGroups = await Promise.all(
+    members.map(
+      (member) => sql`
+        INSERT INTO members (groupId, idNumber, surname, firstName, phone, location, date)
+        VALUES (${member.groupId}, ${member.idNumber}, ${member.surname}, ${member.firstName}, ${member.phone}, ${member.location}, ${member.date})
+        ON CONFLICT (id) DO NOTHING;
+      `
+    )
+  );
+
+  return insertedGroups;
+}
+
+async function seedLoans() {
+  await sql`CREATE EXTENSION IF NOT EXISTS "uuid-ossp"`;
+
+  await sql`
+  CREATE TABLE IF NOT EXISTS loans (
+      id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+      memberid UUID NOT NULL,
+      amount INT NOT NULL,
+      loanid VARCHAR(255),
+      interest FLOAT NOT NULL,
+      term INT NOT NULL,
+      status VARCHAR(255) NOT NULL,
+      date TIMESTAMP NOT NULL
+    );
+  `;
+
+  const insertedLoans = await Promise.all(
+    loans.map(
+      (loan) => sql`
+        INSERT INTO loans (memberid, amount, loanid, interest, term, status, date)
+        VALUES (${loan.memberid}, ${loan.amount}, ${loan.loanid}, ${loan.interest}, ${loan.term}, ${loan.status}, ${loan.date})
+        ON CONFLICT (id) DO NOTHING;
+      `
+    )
+  );
+
+  return insertedLoans;
+}
+
+async function seedGroupInvoices() {
+  await sql`CREATE EXTENSION IF NOT EXISTS "uuid-ossp"`;
+
+  await sql`
+    CREATE TABLE IF NOT EXISTS groupinvoice (
+      id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+      group_id UUID NOT NULL,
+      amount INT NOT NULL,
+      status VARCHAR(255) NOT NULL,
+      date DATE NOT NULL
+    );
+  `;
+
+  // const insertedInvoices = await Promise.all(
+  //   ginvoices.map(
+  //     (invoice) => sql`
+  //       INSERT INTO groupinvoice (group_id, amount, status, date)
+  //       VALUES (${invoice.group_id}, ${invoice.amount}, ${invoice.status}, ${invoice.date})
+  //       ON CONFLICT (id) DO NOTHING;
+  //     `
+  //   )
+  // );
+
+  // return insertedInvoices;
+}
+
 export async function GET() {
   try {
     const result = await sql.begin((sql) => [
-      seedUsers(),
-      seedInvoices(),
-      seedCustomers(),
-      seedRevenue(),
-      seedInvoicees(),
+      // seedUsers(),
+      // seedInvoices(),
+      // seedCustomers(),
+      // seedRevenue(),
+      // seedInvoicees(),
+      // seedGroups(),
+      // seedMembers(),
+      // seedLoans(),
+      seedGroupInvoices(),
     ]);
 
     return Response.json({ message: "Database seeded successfully" });

@@ -1,50 +1,54 @@
 "use client";
 
 import { CustomerField } from "@/app/lib/definitions";
+import { GroupsTable } from "@/app/lib/sun-defination";
 import Link from "next/link";
 import {
   CheckIcon,
   ClockIcon,
   CurrencyDollarIcon,
-  UserCircleIcon
+  UserCircleIcon,
 } from "@heroicons/react/24/outline";
 import { Button } from "@/app/ui/button";
 import { createInvoice, State } from "@/app/lib/actions";
+import { createGroupInvoice } from "@/app/lib/sun-actions";
 import { useActionState } from "react";
 
-export default function Form({ customers }: { customers: CustomerField[] }) {
+export default function Form({ groups }: { groups: GroupsTable[] }) {
   const initialState: State = { message: null, errors: {} };
-  const [state, formAction] = useActionState(createInvoice, initialState);
+  // const [state, formAction] = useActionState(createInvoice, initialState);
+  const [state, formAction] = useActionState(createGroupInvoice, initialState);
+
   return (
     <form action={formAction}>
       <div className="rounded-md bg-gray-50 p-4 md:p-6">
         {/* Customer Name */}
         <div className="mb-4">
           <label htmlFor="customer" className="mb-2 block text-sm font-medium">
-            Choose customer
+            Choose group
           </label>
           <div className="relative">
             <select
               id="customer"
-              name="customerId"
+              name="groupId"
               className="peer block w-full cursor-pointer rounded-md border border-gray-200 py-2 pl-10 text-sm outline-2 placeholder:text-gray-500"
               defaultValue=""
               aria-describedby="customer-error"
             >
               <option value="" disabled>
-                Select a customer
+                Select a group
               </option>
-              {customers.map((customer) => (
-                <option key={customer.id} value={customer.id}>
-                  {customer.name}
+              {groups.map((group) => (
+                <option key={group.id} value={group.id}>
+                  {group.name}
                 </option>
               ))}
             </select>
             <UserCircleIcon className="pointer-events-none absolute left-3 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-gray-500" />
           </div>
           <div id="customer-error" aria-live="polite" aria-atomic="true">
-            {state.errors?.customerId &&
-              state.errors.customerId.map((error: string) => (
+            {state.errors?.groupId &&
+              state.errors.groupId.map((error: string) => (
                 <p className="mt-2 text-sm text-red-500" key={error}>
                   {error}
                 </p>
@@ -69,6 +73,14 @@ export default function Form({ customers }: { customers: CustomerField[] }) {
               />
               <CurrencyDollarIcon className="pointer-events-none absolute left-3 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-gray-500 peer-focus:text-gray-900" />
             </div>
+          </div>
+          <div id="customer-error" aria-live="polite" aria-atomic="true">
+            {state.errors?.amount &&
+              state.errors.amount.map((error: string) => (
+                <p className="mt-2 text-sm text-red-500" key={error}>
+                  {error}
+                </p>
+              ))}
           </div>
         </div>
 
@@ -109,6 +121,14 @@ export default function Form({ customers }: { customers: CustomerField[] }) {
                   Paid <CheckIcon className="h-4 w-4" />
                 </label>
               </div>
+            </div>
+            <div id="customer-error" aria-live="polite" aria-atomic="true">
+              {state.errors?.status &&
+                state.errors.status.map((error: string) => (
+                  <p className="mt-2 text-sm text-red-500" key={error}>
+                    {error}
+                  </p>
+                ))}
             </div>
           </div>
         </fieldset>

@@ -1,24 +1,26 @@
 "use client";
 
 import { CustomerField, InvoiceForm } from "@/app/lib/definitions";
+import { InvoicesForm, GroupForm } from "@/app/lib/sun-defination";
 import {
   CheckIcon,
   ClockIcon,
   CurrencyDollarIcon,
-  UserCircleIcon
+  UserCircleIcon,
 } from "@heroicons/react/24/outline";
 import Link from "next/link";
 import { Button } from "@/app/ui/button";
 import { updateInvoice } from "@/app/lib/actions";
+import { updateGroupInvoice } from "@/app/lib/sun-actions";
 
 export default function EditInvoiceForm({
   invoice,
-  customers
+  groups,
 }: {
-  invoice: InvoiceForm;
-  customers: CustomerField[];
+  invoice: InvoicesForm;
+  groups: GroupForm[];
 }) {
-  const updateInvoiceWithId = updateInvoice.bind(null, invoice.id);
+  const updateInvoiceWithId = updateGroupInvoice.bind(null, invoice.id);
   return (
     <form action={updateInvoiceWithId}>
       <div className="rounded-md bg-gray-50 p-4 md:p-6">
@@ -32,14 +34,15 @@ export default function EditInvoiceForm({
               id="customer"
               name="customerId"
               className="peer block w-full cursor-pointer rounded-md border border-gray-200 py-2 pl-10 text-sm outline-2 placeholder:text-gray-500"
-              defaultValue={invoice.customer_id}
+              defaultValue={invoice.group_id}
+              disabled
             >
               <option value="" disabled>
                 Select a customer
               </option>
-              {customers.map((customer) => (
-                <option key={customer.id} value={customer.id}>
-                  {customer.name}
+              {groups.map((group, index) => (
+                <option key={index} value={group.id}>
+                  {group.name}
                 </option>
               ))}
             </select>

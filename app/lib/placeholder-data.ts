@@ -165,4 +165,90 @@ const invoicees = [
   },
 ];
 
-export { users, customers, invoices, revenue, invoicees };
+const groups = [
+  {
+    id: "0f6da62a-19b8-4cde-9f43-188a607e7235",
+    reg: "GRP0001",
+    name: "GROUP A",
+    location: "MAKUNGA",
+    disbursed: "45000",
+    date: "2025-05-09T10:31:47.714Z",
+  },
+  {
+    id: "e49a8cfb-94be-4e16-87d7-c4a4f3cc6cd0",
+    reg: "GRP0002",
+    name: "GROUP B",
+    location: "MATISI",
+    disbursed: "45000",
+    date: "2025-05-09T10:31:47.714Z",
+  },
+];
+
+const members = [
+  {
+    groupId: "0f6da62a-19b8-4cde-9f43-188a607e7235",
+    idNumber: 31986022,
+    surname: "OMONID",
+    firstName: "HENRY",
+    phone: "0708663296",
+    location: "MAKUNGA",
+    date: "2025-05-09T10:31:47.714Z",
+  },
+  {
+    groupId: "0f6da62a-19b8-4cde-9f43-188a607e7235",
+    idNumber: 31986022,
+    surname: "WAFULA",
+    firstName: "MARTIN",
+    phone: "0708663396",
+    location: "KITALE",
+    date: "2025-05-09T10:31:47.714Z",
+  },
+];
+
+const loans = [
+  {
+    memberid: "2a3d2e00-98ae-4aaa-9e2c-73069ff564c9",
+    amount: 50000,
+    loanid: "LN001",
+    interest: 5.1,
+    term: 6,
+    status: "pending",
+    date: "2025-05-09T10:31:47.714Z",
+  },
+  {
+    memberid: "918c565f-f87d-45a5-a1ea-8e7510109a89",
+    amount: 70000,
+    loanid: "LN002",
+    interest: 5.1,
+    term: 6,
+    status: "approved",
+    date: "2025-05-06T10:31:47.714Z",
+  },
+];
+
+const ginvoices = [
+  {
+    group_id: groups[0].id,
+    amount: 15795,
+    status: "paid",
+    date: "2022-12-06",
+  },
+  {
+    group_id: groups[1].id,
+    amount: 20348,
+    status: "pending",
+    date: "2022-11-14",
+  },
+];
+
+export {
+  users,
+  customers,
+  invoices,
+  revenue,
+  invoicees,
+  groups,
+  members,
+  loans,
+  ginvoices,
+};

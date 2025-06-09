@@ -5,7 +5,8 @@ import {
   HomeIcon,
   DocumentDuplicateIcon,
   CurrencyDollarIcon,
-} from "@heroicons/react/24/outline";
+  DocumentCurrencyDollarIcon,
+} from "@heroicons/react/24/solid";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import clsx from "clsx";
@@ -13,13 +14,31 @@ import clsx from "clsx";
 // Map of links to display in the side navigation.
 // Depending on the size of the application, this would be stored in a database.
 const links = [
-  { name: "Home", href: "/dashboard", icon: HomeIcon },
+  {
+    name: "Home",
+    href: "/dashboard",
+    path: "/null",
+    icon: HomeIcon,
+    dash: "/dashboard",
+  },
   {
     name: "Invoices",
     href: "/dashboard/invoices",
+    path: "/invoices",
     icon: DocumentDuplicateIcon,
   },
-  { name: "Groups", href: "/dashboard/customers", icon: UserGroupIcon },
+  {
+    name: "Groups",
+    href: "/dashboard/customers",
+    path: "/customers",
+    icon: UserGroupIcon,
+  },
+  {
+    name: "Loans and Disbursements",
+    href: "/dashboard/loans",
+    path: "/loans",
+    icon: DocumentCurrencyDollarIcon,
+  },
 ];
 
 export default function NavLinks() {
@@ -33,13 +52,14 @@ export default function NavLinks() {
             key={link.name}
             href={link.href}
             className={clsx(
-              "flex h-[48px] grow items-center justify-center gap-2 rounded-md bg-gray-50 p-3 text-sm font-medium hover:bg-sky-100 hover:text-blue-600 md:flex-none md:justify-start md:p-2 md:px-3",
+              "flex h-[48px] grow items-center justify-center gap-2 rounded-md bg-gray-50 p-3 text-sm font-medium hover:bg-green-200 hover:text-green-600 md:flex-none md:justify-start md:p-2 md:px-3",
               {
-                "bg-sky-100 text-blue-600": pathname === link.href,
+                "bg-green-200 text-green-600":
+                  pathname === link?.dash || pathname.match(link?.path),
               }
             )}
           >
-            <LinkIcon className="w-6" />
+            <LinkIcon className="w-5 fill-gray-500" />
             <p className="hidden md:block">{link.name}</p>
           </Link>
         );

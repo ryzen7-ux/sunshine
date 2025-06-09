@@ -1,9 +1,11 @@
 import Form from "@/app/ui/invoices/create-form";
 import Breadcrumbs from "@/app/ui/invoices/breadcrumbs";
 import { fetchCustomers } from "@/app/lib/data";
+import { fetchGroups } from "@/app/lib/sun-data";
 
 export default async function Page() {
   const customers = await fetchCustomers();
+  const groups = await fetchGroups();
 
   return (
     <main>
@@ -13,11 +15,11 @@ export default async function Page() {
           {
             label: "Create Invoice",
             href: "/dashboard/invoices/create",
-            active: true
-          }
+            active: true,
+          },
         ]}
       />
-      <Form customers={customers} />
+      <Form groups={groups} />
     </main>
   );
 }
