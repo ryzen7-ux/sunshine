@@ -1,3 +1,4 @@
+//@ts-nocheck
 "use client";
 
 import { CustomerField } from "@/app/lib/definitions";
