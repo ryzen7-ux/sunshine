@@ -19,7 +19,7 @@ export default function CreateGroup() {
           },
         ]}
       />
-      <GroupForm />
+      <GroupForm setIsSuccess={false} />
     </div>
   );
 }
