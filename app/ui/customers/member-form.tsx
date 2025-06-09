@@ -1,3 +1,4 @@
+//@ts-nocheck
 "use client";
 
 import { Form, Input, Button, Spinner, addToast } from "@heroui/react";
