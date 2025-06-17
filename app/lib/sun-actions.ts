@@ -4,9 +4,8 @@
 import { revalidatePath } from "next/cache";
 import fs from "node:fs/promises";
 import { redirect } from "next/navigation";
-import { z } from "zod";
+import { date, z } from "zod";
 import sql from "@/app/lib/db";
-import { areCookiesMutableInCurrentPhase } from "next/dist/server/web/spec-extension/adapters/request-cookies";
 
 const FormSchema = z.object({
   id: z.string(),
@@ -15,9 +14,6 @@ const FormSchema = z.object({
   }),
   name: z.string().min(1, { message: "Please enter group name" }),
   location: z.string().min(1, { message: "Please enter location" }),
-  disbursed: z.coerce
-    .number()
-    .gt(0, { message: "Please enter an amount greater than Ksh 0." }),
 });
 
 const MembersFormSchema = z.object({
@@ -26,6 +22,7 @@ const MembersFormSchema = z.object({
   surname: z.string().min(1, { message: "Please enter  surname" }),
   firstName: z.string().min(1, { message: "Please enter a name" }),
   phone: z.string().min(1, { message: "Please enter a value" }),
+  nature: z.string(),
   location: z.string().min(1, { message: "Please enter a value" }),
   id_front_name: z.string(),
   id_back_name: z.string(),
@@ -34,6 +31,7 @@ const MembersFormSchema = z.object({
 });
 
 const LoanFormSchema = z.object({
+  group_id: z.string(),
   member_id: z.string(),
   amount: z.coerce
     .number()
@@ -45,14 +43,16 @@ const LoanFormSchema = z.object({
   term: z.coerce
     .number()
     .gt(0, { message: "Please enter a value greater than zero." }),
-  status: z.enum(["pending", "approved", "inactive"], {
+  status: z.enum(["pending", "approved", "inactive", "rejected", "defered"], {
     invalid_type_error: "Please select a loan status.",
   }),
+  notes: z.string(),
+  date: z.string(),
 });
 
 const InvoiceFormSchema = z.object({
   id: z.string(),
-
+  groupId: z.string(),
   amount: z.coerce
     .number()
     .gt(0, { message: "Please enter an amount greater than Ksh 0." }),
@@ -75,8 +75,13 @@ const CreateMembers = MembersFormSchema.omit({
 });
 const UpdateMember = MembersFormSchema.omit({ groupId: true });
 
-const CreateLoan = LoanFormSchema.omit({});
-const UpdateLoan = LoanFormSchema.omit({ member_id: true });
+const CreateLoan = LoanFormSchema.omit({ date: true, notes: true });
+const UpdateLoan = LoanFormSchema.omit({
+  member_id: true,
+  group_id: true,
+  date: true,
+  notes: true,
+});
 
 const CreateGroupInvoice = InvoiceFormSchema.omit({ id: true, date: true });
 const UpdateGroupInvoice = InvoiceFormSchema.omit({ id: true, date: true });
@@ -86,7 +91,6 @@ export type State = {
     reg?: string[];
     name?: string[];
     location?: string[];
-    disbursed?: string[];
   };
   message?: string | null;
 };
@@ -124,12 +128,15 @@ export type InvoiceState = {
   message?: string | null;
 };
 
+export type DeleteState = {
+  message?: string | null;
+};
+
 export async function createGroup(prevState: State, formData: FormData) {
   const validatedFields = CreateGroup.safeParse({
     reg: formData.get("reg"),
     name: formData.get("name"),
     location: formData.get("location"),
-    disbursed: formData.get("disbursed"),
   });
 
   const utcDate = new Date(); // UTC time
@@ -143,12 +150,12 @@ export async function createGroup(prevState: State, formData: FormData) {
     };
   }
 
-  const { reg, name, location, disbursed } = validatedFields.data;
+  const { reg, name, location } = validatedFields.data;
 
   try {
     await sql`
-        INSERT INTO groups (reg, name, location, disbursed, date)
-        VALUES (${reg}, ${name}, ${location}, ${disbursed}, ${localDate})
+        INSERT INTO groups (reg, name, location, date)
+        VALUES (${reg}, ${name}, ${location}, ${localDate})
       `;
   } catch (error) {
     return {
@@ -157,26 +164,20 @@ export async function createGroup(prevState: State, formData: FormData) {
     };
   }
   revalidatePath("/dashboard/customers");
-  await redirect("/dashboard/customers");
-  return {
-    isSuccess: true,
-  };
+  redirect("/dashboard/customers?success=true");
 }
 
 export async function updateGroup(id: string, formData: FormData) {
-  const { reg, name, location, disbursed } = UpdateGroup.parse({
+  const { reg, name, location } = UpdateGroup.parse({
     reg: formData.get("reg"),
     name: formData.get("name"),
     location: formData.get("location"),
-    disbursed: formData.get("disbursed"),
   });
-
-  const disbursedInCents = disbursed * 100;
 
   try {
     await sql`
         UPDATE groups
-        SET reg = ${reg}, name = ${name}, location = ${location}, disbursed = ${disbursedInCents}
+        SET reg = ${reg}, name = ${name}, location = ${location}}
         WHERE id = ${id}
       `;
   } catch (error) {
@@ -188,8 +189,14 @@ export async function updateGroup(id: string, formData: FormData) {
   redirect("/dashboard/customers");
 }
 
-export async function deleteGroup(id: string) {
-  await sql`DELETE FROM groups WHERE id = ${id}`;
+export async function deleteGroup(prevState: DeleteState, formData: FormData) {
+  const id = formData.get("id");
+  try {
+    await sql`DELETE FROM members WHERE groupid = ${id}`;
+    await sql`DELETE FROM groups WHERE id = ${id}`;
+    await sql`DELETE FROM groupinvoice WHERE group_id = ${id}`;
+  } catch (error) {}
+
   revalidatePath("/dashboard/customers");
 }
 // Members
@@ -204,6 +211,7 @@ export async function createMembers(
     firstName: formData.get("firstName"),
     phone: formData.get("phone"),
     location: formData.get("location"),
+    nature: formData.get("nature"),
   });
 
   const utcDate = new Date(); // UTC time
@@ -217,13 +225,13 @@ export async function createMembers(
     };
   }
 
-  const { groupId, idNumber, surname, firstName, phone, location } =
+  const { groupId, idNumber, surname, firstName, phone, location, nature } =
     validatedFields.data;
   console.log(groupId, idNumber, surname, firstName, phone, location);
   try {
     await sql`
-        INSERT INTO members (groupid, idnumber, surname, firstname, phone, location, date)
-        VALUES (${groupId}, ${idNumber}, ${surname}, ${firstName}, ${phone}, ${location}, ${localDate})
+        INSERT INTO members (groupid, idnumber, surname, firstname, phone, location, nature, date)
+        VALUES (${groupId}, ${idNumber}, ${surname}, ${firstName}, ${phone}, ${location}, ${nature}, ${localDate})
       `;
   } catch (error) {
     return {
@@ -242,6 +250,7 @@ export async function updateMember(mid: string, formData: FormData) {
     firstName,
     phone,
     location,
+    nature,
     id_front_name,
     id_back_name,
     passport_name,
@@ -252,6 +261,7 @@ export async function updateMember(mid: string, formData: FormData) {
     firstName: formData.get("firstName"),
     phone: formData.get("phone"),
     location: formData.get("location"),
+    nature: formData.get("nature"),
     id_front_name: formData.get("id_front_name"),
     id_back_name: formData.get("id_back_name"),
     passport_name: formData.get("passport_name"),
@@ -299,7 +309,7 @@ export async function updateMember(mid: string, formData: FormData) {
   try {
     await sql`
         UPDATE members
-        SET idnumber = ${idNumber}, surname = ${surname}, firstname= ${firstName}, phone=${phone}, location = ${location}, id_front = ${id_front}, id_back = ${id_back}, passport = ${passport}, doc = ${doc}
+        SET idnumber = ${idNumber}, surname = ${surname}, firstname= ${firstName}, phone=${phone}, location = ${location}, nature = ${nature}, id_front = ${id_front}, id_back = ${id_back}, passport = ${passport}, doc = ${doc}
         WHERE id = ${mid}
       `;
   } catch (error) {
@@ -332,12 +342,14 @@ export async function updateMember(mid: string, formData: FormData) {
 }
 
 export async function deleteMember(id: string, gid: string) {
+  await sql`DELETE FROM loans WHERE memberid = ${id}`;
   await sql`DELETE FROM members WHERE id = ${id}`;
   revalidatePath(`/dashboard/customers/${gid}/details`);
 }
 
 export async function createLoan(prevState: LoanState, formData: FormData) {
   const validatedFields = CreateLoan.safeParse({
+    group_id: formData.get("group_id"),
     member_id: formData.get("member_id"),
     amount: formData.get("amount"),
     loan_id: formData.get("loan_id"),
@@ -356,15 +368,13 @@ export async function createLoan(prevState: LoanState, formData: FormData) {
       message: "Missing Fields. Failed to Create Invoice.",
     };
   }
-  const { member_id, amount, loan_id, interest, term, status } =
+  const { group_id, member_id, amount, loan_id, interest, term, status } =
     validatedFields.data;
 
-  const group_id = formData.get("group_id");
-  console.log(member_id, amount, loan_id, interest, term, status, localDate);
   try {
     await sql`
-      INSERT INTO loans (memberid, amount, loanid, interest, term, status, date)
-      VALUES (${member_id}, ${amount}, ${loan_id}, ${interest}, ${term}, ${status}, ${localDate})
+      INSERT INTO loans (groupid, memberid, amount, loanid, interest, term, status, date)
+      VALUES (${group_id}, ${member_id}, ${amount}, ${loan_id}, ${interest}, ${term}, ${status}, ${localDate})
     `;
   } catch (error) {
     console.log(error);
@@ -384,11 +394,13 @@ export async function updateLoan(id: string, formData: FormData) {
     term: formData.get("term"),
     status: formData.get("status"),
   });
-  console.log();
+  const date = formData.get("start_date");
+  const newDate = date.split("T")[0];
+  const notes = formData.get("notes");
   try {
     await sql`
       UPDATE loans
-      SET amount = ${amount}, loanid = ${loan_id}, interest = ${interest}, term = ${term}, status = ${status}
+      SET amount = ${amount}, loanid = ${loan_id}, interest = ${interest}, term = ${term}, status = ${status}, start_date=${newDate}, notes=${notes}
       WHERE id= ${id}
     `;
   } catch (error) {

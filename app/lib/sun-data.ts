@@ -7,8 +7,9 @@ import {
   LoanForm,
   InvoicesTable,
   InvoicesForm,
+  LatestInvoice,
 } from "./sun-defination";
-import { formatCurrencyToLocal } from "./utils";
+import { formatCurrencyToLocal, formatDateToLocal } from "@/app/lib/utils";
 
 const ITEMS_PER_PAGE = 6;
 export async function fetchFilteredGroups(query: string, currentPage: number) {
@@ -21,14 +22,18 @@ export async function fetchFilteredGroups(query: string, currentPage: number) {
         groups.reg,
         groups.name,
         groups.location,
-        groups.disbursed,
-        groups.date     
+        groups.date , 
+        COUNT (members.id) AS members_count,
+        SUM(CASE WHEN loans.status = 'approved' THEN loans.amount ELSE 0 END) AS disbursed
       FROM groups
+      LEFT JOIN members ON groups.id:: text = members.groupid
+      LEFT JOIN loans ON groups.id = loans.groupid
       WHERE
         groups.reg ILIKE ${`%${query}%`} OR
         groups.name ILIKE ${`%${query}%`} OR
         groups.location ILIKE ${`%${query}%`} OR
         groups.date::text ILIKE ${`%${query}%`}
+      GROUP BY groups.id
       ORDER BY groups.date DESC
       LIMIT ${ITEMS_PER_PAGE} OFFSET ${offset}
     `;
@@ -77,8 +82,7 @@ export async function fetchGroupById(id: string) {
         groups.id,
         groups.reg,
         groups.name,
-        groups.location,
-        groups.disbursed
+        groups.location  
       FROM groups
       WHERE groups.id = ${id};
     `;
@@ -86,7 +90,6 @@ export async function fetchGroupById(id: string) {
     const group = data.map((group) => ({
       ...group,
       // Convert amount from cents to dollars
-      amount: group.disbursed / 100,
     }));
 
     return group[0];
@@ -121,6 +124,7 @@ export async function fetchMembers(id: string) {
         members.firstName,
         members.phone,
         members.location,
+        members.nature,
         members.id_front,
         members.id_back,
         members.passport,
@@ -147,6 +151,7 @@ export async function fetchMemberById(mid: string) {
         members.firstName,
         members.phone,
         members.location,
+        members.nature,
         members.id_front,
         members.id_back,
         members.passport,
@@ -172,7 +177,12 @@ export async function fetchLoanById(mid: string) {
         loans.interest,
         loans.term,
         loans.date,
-        loans.status
+        loans.status,
+        loans.notes,
+        loans.start_date,
+        loans.start_date + (COALESCE(loans.term, 0) * INTERVAL '1 week') AS end_date,
+        (EXTRACT(days FROM (now() - loans.start_date)) / 7)::int as today,
+        (EXTRACT(days FROM (now() - loans.start_date)))::int as past_days
       FROM loans
       WHERE loans.memberid = ${mid}
       ORDER BY loans.date DESC
@@ -197,6 +207,8 @@ export async function fetchLoanByIdNew(id: string) {
         loans.term,
         loans.date,
         loans.status,
+        loans.start_date,
+        loans.notes,
         members.surname,
         members.firstname,
         members.idnumber
@@ -225,6 +237,8 @@ export async function fetchFilteredLoans(query: string, currentPage: number) {
         loans.term,
         loans.status,
         loans.date,
+        loans.notes,
+        loans.start_date,
         members.surname,
         members.firstName,
         groups.name      
@@ -303,40 +317,44 @@ export async function fetchDashboardCardData() {
     // You can probably combine these into a single SQL query
     // However, we are intentionally splitting them to demonstrate
     // how to initialize multiple queries in parallel with JS.
-    const groupCountPromise = sql`SELECT COUNT(*) FROM groups`;
+    const groupCountPromise = sql`SELECT SUM(CASE WHEN status = 'approved' THEN amount ELSE 0 END) FROM loans`;
     const membersCountPromise = sql`SELECT COUNT(*) FROM members`;
     const loanStatusPromise = sql`SELECT
          SUM(CASE WHEN status = 'approved' THEN amount ELSE 0 END) AS "approved",
          SUM(CASE WHEN status = 'pending' THEN amount ELSE 0 END) AS "pending",
          SUM(CASE WHEN status = 'inactive' THEN amount ELSE 0 END) AS "inactive"
          FROM loans`;
-    const totalLoanPromise = sql`SELECT SUM(amount) AS total FROM loans`;
+    const totalLoanPromise = sql`SELECT SUM((CASE WHEN status = 'approved' THEN amount ELSE 0 END/term + CASE WHEN status = 'approved' THEN amount ELSE 0 END * (interest/4/100) + CASE WHEN status = 'approved' THEN 1 ELSE 0 END ) * term ) AS sum FROM loans`;
+    const collectedLoanPromise = sql`SELECT SUM(CASE WHEN status = 'paid' THEN amount ELSE 0 END) AS total FROM groupinvoice`;
 
     const data = await Promise.all([
       groupCountPromise,
       membersCountPromise,
       loanStatusPromise,
       totalLoanPromise,
+      collectedLoanPromise,
     ]);
 
-    const numberOfGroups = Number(data[0][0].count ?? "0");
-    const numberOfMembers = Number(data[1][0].count ?? "0");
-    const totalApprovedLoans = formatCurrencyToLocal(
-      Number(data[2][0].approved ?? "0")
-    );
-    const totalPendingLoans = formatCurrencyToLocal(data[2][0].pending ?? "0");
-    const totalInactiveLoans = formatCurrencyToLocal(
-      data[2][0].inactive ?? "0"
-    );
-    const totalLoans = data[3][0].total ?? "0";
+    const groupAmount = formatCurrencyToLocal(Number(data[0][0]?.sum || "0"));
+    const numberOfMembers = Number(data[1][0]?.count ?? "0");
 
+    const totalLoans = formatCurrencyToLocal(Number(data[3][0]?.sum ?? "0"));
+    const totalCollectedLoans = formatCurrencyToLocal(
+      Number(data[4][0]?.total ?? "0")
+    );
+    const pendingPayments = formatCurrencyToLocal(
+      Number(data[0][0].sum ?? "0") - Number(data[4][0]?.total ?? "0")
+    );
+    const loanBalance = formatCurrencyToLocal(
+      Number(data[3][0]?.sum || "0") - Number(data[4][0]?.total || "0")
+    );
     return {
-      numberOfGroups,
+      groupAmount,
       numberOfMembers,
-      totalApprovedLoans,
-      totalPendingLoans,
-      totalInactiveLoans,
       totalLoans,
+      totalCollectedLoans,
+      pendingPayments,
+      loanBalance,
     };
   } catch (error) {
     console.error("Database Error:", error);
@@ -425,7 +443,6 @@ export async function fetchGroupInvoiceById(id: string) {
       FROM groupinvoice
       WHERE groupinvoice.id  = ${id};
     `;
-    console.log(data);
     return data[0];
   } catch (error) {
     console.error("Database Error:", error);
@@ -440,8 +457,79 @@ export async function fectchGroupCardData(id: string) {
       FROM members
       WHERE members.groupid = ${id}
     `;
-    console.log("Group Card Data:", data);
+
     return Number(data[0] ?? "0");
+  } catch (error) {
+    console.error("Database Error:", error);
+    throw new Error("Failed to fetch card data.");
+  }
+}
+
+export async function fetchLatestGroupInvoices() {
+  try {
+    const data = await sql<LatestInvoice[]>`
+      SELECT groupinvoice.amount, groups.name, groupinvoice.id, groupinvoice.date
+      FROM groupinvoice
+      JOIN groups ON groupinvoice.group_id = groups.id
+      ORDER BY groupinvoice.date DESC
+      LIMIT 5`;
+
+    const latestInvoices = data.map((invoice) => ({
+      ...invoice,
+      amount: formatCurrencyToLocal(invoice.amount),
+    }));
+
+    return latestInvoices;
+  } catch (error) {
+    console.error("Database Error:", error);
+    throw new Error("Failed to fetch the latest invoices.");
+  }
+}
+
+export async function fetchGroupCardData(id: string) {
+  try {
+    // You can probably combine these into a single SQL query
+    // However, we are intentionally splitting them to demonstrate
+    // how to initialize multiple queries in parallel with JS.
+    const groupDisbursedPromise = sql`SELECT SUM(CASE WHEN status = 'approved' THEN amount ELSE 0 END), SUM((CASE WHEN status = 'approved' THEN amount ELSE 0 END/term + CASE WHEN status = 'approved' THEN amount ELSE 0 END * (interest/4/100) + CASE WHEN status = 'approved' THEN 1 ELSE 0 END ) * term ) AS payment FROM loans WHERE groupid = ${id} GROUP BY id`;
+    const groupsCollectedPromise = sql`SELECT SUM(CASE WHEN status = 'paid' THEN amount ELSE 0 END) FROM groupinvoice WHERE group_id = ${id}`;
+    const groupsPendingPromise = sql`SELECT SUM(CASE WHEN status = 'pending' THEN amount ELSE 0 END) FROM groupinvoice WHERE group_id = ${id}`;
+    const totalMembersPromise = sql`SELECT COUNT(*) AS total FROM members WHERE groupid = ${id}`;
+
+    const data = await Promise.all([
+      groupDisbursedPromise,
+      groupsCollectedPromise,
+      groupsPendingPromise,
+      totalMembersPromise,
+    ]);
+
+    const groupDisbusredAmount = formatCurrencyToLocal(
+      Number(data[0][0]?.sum || "0")
+    );
+    const totalPayment = formatCurrencyToLocal(
+      Number(data[0][0]?.payment ?? "0")
+    );
+
+    const groupCollectedAmount = formatCurrencyToLocal(
+      Number(data[1][0]?.sum ?? "0")
+    );
+
+    const groupPendingPayments = formatCurrencyToLocal(
+      Number(data[2][0]?.sum ?? "0")
+    );
+    const totalMembers = Number(data[3][0]?.total ?? "0");
+    const balance = formatCurrencyToLocal(
+      Number(data[0][0]?.payment ?? "0") - Number(data[1][0]?.sum ?? "0")
+    );
+    console.log(data);
+    return {
+      groupDisbusredAmount,
+      totalPayment,
+      groupCollectedAmount,
+      groupPendingPayments,
+      totalMembers,
+      balance,
+    };
   } catch (error) {
     console.error("Database Error:", error);
     throw new Error("Failed to fetch card data.");

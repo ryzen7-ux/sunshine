@@ -207,6 +207,7 @@ const members = [
 
 const loans = [
   {
+    groupid: "dbaa7aea-4041-45c3-911a-4996ad4affad",
     memberid: "2a3d2e00-98ae-4aaa-9e2c-73069ff564c9",
     amount: 50000,
     loanid: "LN001",
@@ -216,6 +217,7 @@ const loans = [
     date: "2025-05-09T10:31:47.714Z",
   },
   {
+    groupid: "dbaa7aea-4041-45c3-911a-4996ad4affad",
     memberid: "918c565f-f87d-45a5-a1ea-8e7510109a89",
     amount: 70000,
     loanid: "LN002",

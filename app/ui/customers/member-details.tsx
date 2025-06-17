@@ -1,6 +1,6 @@
 "use client";
 
-import { Divider, Avatar } from "@heroui/react";
+import { Divider, Avatar, Progress } from "@heroui/react";
 import { EnvelopeIcon, PhoneIcon } from "@heroicons/react/24/solid";
 import { Camera } from "lucide-react";
 import { MemberForm, LoanForm } from "@/app/lib/sun-defination";
@@ -14,7 +14,19 @@ export default function MemberDetails({
   memberData: MemberForm;
   loan: LoanForm;
 }) {
-  console.log(loan);
+  const principal = loan?.amount || 0;
+  const loanterm = loan?.term || 0;
+  const rate = loan?.interest || 0;
+  const newrate = rate / 100 / 4;
+
+  const wpay = Math.ceil(principal / loanterm + principal * newrate);
+  const payment = Math.ceil(wpay * loanterm);
+  const loan_today = loan?.today || 0;
+  const today = Math.floor((loan_today * 100) / loanterm);
+  const today_date = new Date();
+  const past_days = loan?.past_days || 0;
+  const remaining_days = loanterm * 7 - past_days;
+
   return (
     <div className="w-full flex flex-col md:flex-row py-4 gap-4">
       <div className="w-full flex gap-3 pb-4 border rounded-lg bg-gray-100 py-4 px-4">
@@ -46,7 +58,7 @@ export default function MemberDetails({
         <div>
           <div className="flex justify-between ">
             <h1 className="text-xl font-bold text-gray-900 py-4 ">
-              Loan Details
+              Latest Loan Details
             </h1>
             <div className="p-4">
               <InvoiceStatus status={loan?.status || "No loan"} />
@@ -58,7 +70,7 @@ export default function MemberDetails({
             <div className="flex flex-col w-48 md:w-36">
               <p className="text-sm text-default-600">Amount</p>
               <p className="text-lg font-bold text-default-900">
-                Ksh {loan?.amount || "0"}
+                {formatCurrencyToLocal(loan?.amount || 0.0)}
               </p>
             </div>
             <div className="w-24 md:w-32"></div>
@@ -79,7 +91,17 @@ export default function MemberDetails({
             <div className="w-24 md:w-32"></div>
             <div className="flex flex-col justify-center w-48 md:w-36">
               <p className="text-sm text-default-600">Weekly Installment</p>
-              <p className="text-lg font-bold text-default-900">Ksh 0</p>
+              <p className="text-lg font-bold text-default-900">
+                {formatCurrencyToLocal(wpay || 0.0)}
+              </p>
+            </div>
+          </div>
+          <div className="flex gap-4 pt-4">
+            <div className="flex flex-col w-48 md:w-36">
+              <p className="text-sm text-default-600">Total Amount (P+I)</p>
+              <p className="text-lg font-bold text-default-900">
+                {formatCurrencyToLocal(payment || 0.0)}
+              </p>
             </div>
           </div>
         </div>
@@ -88,24 +110,27 @@ export default function MemberDetails({
           <div className="flex gap-4">
             <div className="flex flex-col w-48 md:w-36">
               <p className="text-sm text-default-600">Loan Start Date</p>
-              <p className="text-lg font-bold text-default-900">Null</p>
+              <p className="text-lg font-bold text-default-900">
+                {loan?.start_date ? formatDateToLocal(loan?.start_date) : "Nil"}
+              </p>
             </div>
             <div className="w-24 md:w-32"></div>
             <div className="flex flex-col jutify-center w-48 md:w-36">
               <p className="text-sm text-default-600">Loan End Date</p>
-              <p className="text-lg font-bold text-default-900">null</p>
+              <p className="text-lg font-bold text-default-900">
+                {loan?.end_date ? formatDateToLocal(loan?.end_date) : "Nil"}
+              </p>
             </div>
           </div>
           <div className="flex gap-4 pt-4">
-            <div className="flex flex-col w-48 md:w-36">
-              <p className="text-sm text-default-600">Total Aamount (P+I)</p>
-              <p className="text-lg font-bold text-default-900">null</p>
-            </div>
-            <div className="w-24 md:w-32"></div>
-            <div className="flex flex-col justify-center w-48 md:w-36">
-              <p className="text-sm text-default-600">Remaining Amount</p>
-              <p className="text-lg font-bold text-default-900">null</p>
-            </div>
+            <Progress
+              aria-label="Loading..."
+              className="max-w-md"
+              label={`Today: ${today_date.toDateString()} ( ${
+                (loan?.status === "approved" && remaining_days) || 0
+              } Remaining days)`}
+              value={today}
+            />
           </div>
         </div>
       </div>

@@ -5,64 +5,82 @@ import {
   InboxIcon,
   ScaleIcon,
   UsersIcon,
+  CircleStackIcon,
+  DocumentChartBarIcon,
 } from "@heroicons/react/24/solid";
 import { lusitana } from "@/app/ui/fonts";
 import { fetchCardData } from "@/app/lib/data";
-import { fectchGroupCardData } from "@/app/lib/sun-data";
+import { fectchGroupCardData, fetchGroupCardData } from "@/app/lib/sun-data";
 
 const iconMap = {
   disbursed: ScaleIcon,
   collected: BanknotesIcon,
-  customers: UsersIcon,
   pending: ClockIcon,
-  invoices: InboxIcon,
+  totalLoan: CircleStackIcon,
+  loanBalance: DocumentChartBarIcon,
+  total: UsersIcon,
 };
 
-export default async function CardWrapper() {
+export default async function CardWrapper({ groupid }: { groupid: string }) {
   // const {
   //   numberOfInvoices,
   //   numberOfCustomers,
   //   totalPaidInvoices,
   //   totalPendingInvoices,
   // } = await fetchCardData();
+  const {
+    groupDisbusredAmount,
+    totalPayment,
+    groupCollectedAmount,
+    groupPendingPayments,
+    totalMembers,
+    balance,
+  } = await fetchGroupCardData(groupid);
 
   return (
     <>
       {/* NOTE: Uncomment this code in Chapter 9 */}
       <Card
         title="Disbursed"
-        value="Ksh 0"
+        value={groupDisbusredAmount}
         type="disbursed"
         color="text-blue-800"
         span=""
       />
       <Card
         title="Collected"
-        value={`Ksh 0`}
+        value={groupCollectedAmount}
         type="collected"
         color="text-green-800"
         span=""
       />
       <Card
-        title="Active oans"
-        value={`Ksh 0`}
-        type="pending"
-        color="text-yellow-800"
+        title="Total Loans"
+        value={totalPayment}
+        type="totalLoan"
+        color="text-pink-800"
         span=""
       />
       <Card
-        title="Total Invoices"
-        value={0}
-        type="invoices"
-        color="text-indigo-800"
+        title="Loan Balance"
+        value={balance}
+        type="loanBalance"
+        color="text-cyan-800"
         span=""
+      />
+      <Card
+        title="Pending Payments"
+        value={groupPendingPayments}
+        type="pending"
+        color="text-yellow-800"
+        span="col-span-1 md:col-span-2"
       />
       <Card
         title="Total Members"
-        value={0}
-        type="customers"
-        color="text-pink-800"
-        span="col-span-2 md:col-span-1"
+        value={totalMembers}
+        type="total"
+        color="text-indigo-800"
+        span="col-span-1 md:col-span-2"
       />
     </>
   );
@@ -77,7 +95,13 @@ export function Card({
 }: {
   title: string;
   value: number | string;
-  type: "disbursed" | "invoices" | "customers" | "pending" | "collected";
+  type:
+    | "disbursed"
+    | "collected"
+    | "pending"
+    | "totalLoan"
+    | "loanBalance"
+    | "total";
   color: string;
   span: string;
 }) {

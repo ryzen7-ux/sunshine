@@ -126,17 +126,17 @@ async function seedInvoicees() {
     );
   `;
 
-  const insertedInvoices = await Promise.all(
-    invoicees.map(
-      (invoice) => sql`
-        INSERT INTO invoicees (name, invoiceNumber, date, quantity, price, tax, payment)
-        VALUES (${invoice.name},${invoice.invoiceNumber}, ${invoice.date}, ${invoice.quantity}, ${invoice.price}, ${invoice.tax}, ${invoice.payment})
-        ON CONFLICT (id) DO NOTHING;
-      `
-    )
-  );
+  // const insertedInvoices = await Promise.all(
+  //   invoicees.map(
+  //     (invoice) => sql`
+  //       INSERT INTO invoicees (name, invoiceNumber, date, quantity, price, tax, payment)
+  //       VALUES (${invoice.name},${invoice.invoiceNumber}, ${invoice.date}, ${invoice.quantity}, ${invoice.price}, ${invoice.tax}, ${invoice.payment})
+  //       ON CONFLICT (id) DO NOTHING;
+  //     `
+  //   )
+  // );
 
-  return insertedInvoices;
+  // return insertedInvoices;
 }
 
 async function seedGroups() {
@@ -148,23 +148,22 @@ async function seedGroups() {
       reg VARCHAR(255) NOT NULL,
       name VARCHAR(255) NOT NULL,
       location VARCHAR(255) NOT NULL,
-      disbursed INT NOT NULL,
       date TIMESTAMPTZ NOT NULL
     
     );
   `;
 
-  const insertedGroups = await Promise.all(
-    groups.map(
-      (group) => sql`
-        INSERT INTO groups (reg, name, location, disbursed, date)
-        VALUES (${group.reg},${group.name}, ${group.location}, ${group.disbursed}, ${group.date})
-        ON CONFLICT (id) DO NOTHING;
-      `
-    )
-  );
+  // const insertedGroups = await Promise.all(
+  //   groups.map(
+  //     (group) => sql`
+  //       INSERT INTO groups (reg, name, location, date)
+  //       VALUES (${group.reg},${group.name}, ${group.location}, ${group.date})
+  //       ON CONFLICT (id) DO NOTHING;
+  //     `
+  //   )
+  // );
 
-  return insertedGroups;
+  // return insertedGroups;
 }
 
 async function seedMembers() {
@@ -178,6 +177,7 @@ async function seedMembers() {
       surname VARCHAR(255) NOT NULL,
       firstName VARCHAR(255) NOT NULL,
       phone VARCHAR(255) NOT NULL,
+      nature VARCHAR(5000),
       location VARCHAR(255) NOT NULL,
       date TIMESTAMPTZ NOT NULL,
       id_front VARCHAR(255),
@@ -187,17 +187,17 @@ async function seedMembers() {
     );
   `;
 
-  const insertedGroups = await Promise.all(
-    members.map(
-      (member) => sql`
-        INSERT INTO members (groupId, idNumber, surname, firstName, phone, location, date)
-        VALUES (${member.groupId}, ${member.idNumber}, ${member.surname}, ${member.firstName}, ${member.phone}, ${member.location}, ${member.date})
-        ON CONFLICT (id) DO NOTHING;
-      `
-    )
-  );
+  // const insertedGroups = await Promise.all(
+  //   members.map(
+  //     (member) => sql`
+  //       INSERT INTO members (groupId, idNumber, surname, firstName, phone, location, date)
+  //       VALUES (${member.groupId}, ${member.idNumber}, ${member.surname}, ${member.firstName}, ${member.phone}, ${member.location}, ${member.date})
+  //       ON CONFLICT (id) DO NOTHING;
+  //     `
+  //   )
+  // );
 
-  return insertedGroups;
+  // return insertedGroups;
 }
 
 async function seedLoans() {
@@ -206,27 +206,30 @@ async function seedLoans() {
   await sql`
   CREATE TABLE IF NOT EXISTS loans (
       id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+      groupid UUID NOT NULL,
       memberid UUID NOT NULL,
       amount INT NOT NULL,
       loanid VARCHAR(255),
       interest FLOAT NOT NULL,
       term INT NOT NULL,
       status VARCHAR(255) NOT NULL,
+      start_date DATE,
+      notes VARCHAR(10000),
       date TIMESTAMP NOT NULL
     );
   `;
 
-  const insertedLoans = await Promise.all(
-    loans.map(
-      (loan) => sql`
-        INSERT INTO loans (memberid, amount, loanid, interest, term, status, date)
-        VALUES (${loan.memberid}, ${loan.amount}, ${loan.loanid}, ${loan.interest}, ${loan.term}, ${loan.status}, ${loan.date})
-        ON CONFLICT (id) DO NOTHING;
-      `
-    )
-  );
+  // const insertedLoans = await Promise.all(
+  //   loans.map(
+  //     (loan) => sql`
+  //       INSERT INTO loans (groupid, memberid, amount, loanid, interest, term, status, date)
+  //       VALUES (${loan.groupid}, ${loan.memberid}, ${loan.amount}, ${loan.loanid}, ${loan.interest}, ${loan.term}, ${loan.status}, ${loan.date})
+  //       ON CONFLICT (id) DO NOTHING;
+  //     `
+  //   )
+  // );
 
-  return insertedLoans;
+  // return insertedLoans;
 }
 
 async function seedGroupInvoices() {
@@ -262,7 +265,7 @@ export async function GET() {
       seedInvoices(),
       seedCustomers(),
       seedRevenue(),
-      seedInvoicees(),
+      // seedInvoicees(),
       seedGroups(),
       seedMembers(),
       seedLoans(),

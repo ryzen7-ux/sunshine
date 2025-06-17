@@ -18,6 +18,7 @@ import { createLoan, LoanState } from "@/app/lib/sun-actions";
 import { useActionState } from "react";
 import { useSearchParams, usePathname, useRouter } from "next/navigation";
 import { useDebouncedCallback } from "use-debounce";
+import { formatCurrencyToLocal, formatDateToLocal } from "@/app/lib/utils";
 
 export default function CreateLoanForm({
   groups,
@@ -49,13 +50,11 @@ export default function CreateLoanForm({
   const [weeklyPayment, setWeeklyPayment] = React.useState(0);
 
   const principal = Number.parseFloat(amount);
-  const rate = Number.parseFloat(interest) / 100 / 12;
+  const rate = Number.parseFloat(interest) / 100 / 4;
   const Loanterm = Number.parseInt(term);
 
-  const payment =
-    (principal * rate * Math.pow(1 + rate, Loanterm)) /
-    (Math.pow(1 + rate, Loanterm) - 1);
-  const wpay = Math.round(payment * 100) / 100;
+  const wpay = Math.ceil(principal / Loanterm + principal * rate);
+  const payment = Math.ceil(wpay * Loanterm);
 
   const calculateWeeklyPayment = () => {
     const principal = Number.parseFloat(amount);
@@ -86,6 +85,7 @@ export default function CreateLoanForm({
         <div className="w-full">
           <Select
             isRequired
+            name="group_id"
             className=""
             label="Select a group"
             variant="faded"
@@ -174,6 +174,7 @@ export default function CreateLoanForm({
             type="number"
             className="outline-2 outline-blue-500  "
             label="Interest Rate (%)"
+            description="NB: This is interest per month"
             labelPlacement="outside"
             size="md"
             variant="faded"
@@ -250,6 +251,7 @@ export default function CreateLoanForm({
               </label>
             </div>
           </div>
+          <input className="hidden" name="group_id" value={select} />
         </div>
         <div id="status-error" aria-live="polite" aria-atomic="true">
           {state?.errors?.status &&
@@ -265,10 +267,14 @@ export default function CreateLoanForm({
         <div className="space-y-2">
           <div className="flex justify-between">
             <span className="text-sm text-gray-600">Loan Amount:</span>
-            <span className="font-medium">Ksh {amount || "0"}</span>
+            <span className="font-medium">
+              {formatCurrencyToLocal(principal || 0)}
+            </span>
           </div>
           <div className="flex justify-between">
-            <span className="text-sm text-gray-600">Interest Rate:</span>
+            <span className="text-sm text-gray-600">
+              Interest Rate (Per Month):
+            </span>
             <span className="font-medium">{interest || "0"}%</span>
           </div>
           <div className="flex justify-between">
@@ -278,7 +284,17 @@ export default function CreateLoanForm({
           <Divider />
           <div className="flex justify-between">
             <span className="text-sm text-gray-600">Weekly Payment:</span>
-            <span className="font-bold text-lg">Ksh {wpay || "0"}</span>
+            <span className="font-bold text-lg">
+              {" "}
+              {formatCurrencyToLocal(wpay || 0)}
+            </span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-sm text-gray-600">Total Payment:</span>
+            <span className="font-bold text-lg">
+              {" "}
+              {formatCurrencyToLocal(payment || 0)}
+            </span>
           </div>
         </div>
       </div>

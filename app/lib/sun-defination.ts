@@ -15,6 +15,7 @@ export type GroupsTable = {
   reg: string;
   name: string;
   location: string;
+  members_count: string;
   disbursed: number;
 };
 
@@ -23,6 +24,7 @@ export type GroupForm = {
   reg: string;
   name: string;
   location: string;
+  members_count: string;
   disbursed: number;
 };
 
@@ -32,6 +34,7 @@ export type MembersTable = {
   idnumber: number;
   surname: string;
   firstname: string;
+  nature: string;
   phone: string;
   location: string;
   id_front: string;
@@ -47,6 +50,7 @@ export type MemberForm = {
   surname: string;
   firstname: string;
   phone: string;
+  nature: string;
   location: string;
   id_front: string;
   id_back: string;
@@ -70,6 +74,11 @@ export type LoanForm = {
   location: string;
   name: string;
   idnumber: string;
+  start_date: string;
+  notes: string;
+  end_date: string;
+  today: number;
+  past_days: number;
 };
 
 export type InvoicesTable = {
@@ -82,6 +91,15 @@ export type InvoicesTable = {
 };
 
 export type InvoicesForm = {
+  id: string;
+  group_id: string;
+  name: string;
+  date: string;
+  amount: number;
+  status: "pending" | "paid";
+};
+
+export type LatestInvoice = {
   id: string;
   group_id: string;
   name: string;

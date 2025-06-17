@@ -138,7 +138,7 @@ export default function EditMemberForm({
             </div>
             <div className="w-full">
               <Input
-                name="business"
+                name="nature"
                 type="text"
                 className="outline-2 outline-blue-500  "
                 label="Nature of Business"
@@ -146,7 +146,7 @@ export default function EditMemberForm({
                 color="success"
                 size="md"
                 variant="faded"
-                defaultValue={member.location}
+                defaultValue={member.nature}
               />
               <div
                 id="customer-error"

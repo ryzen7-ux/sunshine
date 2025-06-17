@@ -4,9 +4,12 @@ import Image from "next/image";
 import { lusitana } from "@/app/ui/fonts";
 import { LatestInvoice } from "@/app/lib/definitions";
 import { fetchLatestInvoices } from "@/app/lib/data";
+import { fetchLatestGroupInvoices } from "@/app/lib/sun-data";
+import { formatDateToLocal } from "@/app/lib/utils";
 
 export default async function LatestInvoices() {
   // const latestInvoices = await fetchLatestInvoices();
+  const latestInvoices = await fetchLatestGroupInvoices();
 
   const inv = [
     {
@@ -30,6 +33,7 @@ export default async function LatestInvoices() {
       amount: "Ksh 11,000",
     },
   ];
+
   return (
     <div className="flex w-full flex-col md:col-span-4">
       <h2 className={` mb-4 text-xl md:text-2xl`}>Latest Group Invoices</h2>
@@ -37,7 +41,7 @@ export default async function LatestInvoices() {
         {/* NOTE: Uncomment this code in Chapter 7 */}
 
         <div className="bg-white px-6">
-          {inv.map((invoice, i) => {
+          {latestInvoices.map((invoice, i) => {
             return (
               <div
                 key={i}
@@ -56,6 +60,9 @@ export default async function LatestInvoices() {
                   <div className="min-w-0 ml-12">
                     <p className="truncate text-sm font-semibold md:text-base">
                       {invoice.name}
+                    </p>
+                    <p className="hidden text-sm text-gray-500 sm:block">
+                      {formatDateToLocal(invoice.date)}
                     </p>
                   </div>
                 </div>

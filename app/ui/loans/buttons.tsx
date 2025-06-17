@@ -3,7 +3,17 @@
 import { PencilIcon, PlusIcon, TrashIcon } from "@heroicons/react/24/solid";
 import Link from "next/link";
 import { deleteLoan } from "@/app/lib/sun-actions";
-import { Tooltip } from "@heroui/react";
+import {
+  Tooltip,
+  Modal,
+  ModalContent,
+  ModalHeader,
+  ModalBody,
+  ModalFooter,
+  Button,
+  useDisclosure,
+} from "@heroui/react";
+import { Trash2Icon, Trash2, Eye, Pen, AlertTriangleIcon } from "lucide-react";
 
 export function CreateInvoice() {
   return (
@@ -32,19 +42,44 @@ export function UpdateLoan({ id }: { id: string }) {
 
 export function DeleteLoan({ id }: { id: string }) {
   const deleteLoanWithId = deleteLoan.bind(null, id);
+  const { isOpen, onOpen, onOpenChange } = useDisclosure();
   return (
     <>
       <Tooltip color="danger" content="Delete Loan Item">
-        <form action={deleteLoanWithId}>
-          <button
-            type="submit"
-            className="rounded-md border p-2 hover:bg-red-100"
-          >
-            <span className="sr-only">Delete</span>
-            <TrashIcon className="w-4 fill-red-500" />
-          </button>
-        </form>
+        <button
+          onClick={onOpen}
+          className="rounded-md border p-2 hover:bg-red-100"
+        >
+          <span className="sr-only">Delete</span>
+          <TrashIcon className="w-4 fill-red-500" />
+        </button>
       </Tooltip>
+      <Modal isOpen={isOpen} onOpenChange={onOpenChange}>
+        <ModalContent>
+          {(onClose) => (
+            <>
+              <ModalHeader className="flex flex-col gap-1">
+                <AlertTriangleIcon className="h-8 w-8 text-red-500" />
+              </ModalHeader>
+              <ModalBody>
+                <p className="text-lg">
+                  Are you sure you want to delete this item?
+                </p>
+              </ModalBody>
+              <ModalFooter>
+                <form action={deleteLoanWithId}>
+                  <Button type="submit" color="danger">
+                    YES
+                  </Button>
+                </form>
+                <Button color="primary" onPress={onClose}>
+                  NO
+                </Button>
+              </ModalFooter>
+            </>
+          )}
+        </ModalContent>
+      </Modal>
     </>
   );
 }

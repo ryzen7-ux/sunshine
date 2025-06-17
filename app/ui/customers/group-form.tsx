@@ -6,13 +6,12 @@ import { createGroup, State } from "@/app/lib/sun-actions";
 import React from "react";
 import { useAppContext } from "@/app/app-context";
 
-export default function GroupForm({ setIsSuccess }: { setIsSuccess: any }) {
+export default function GroupForm() {
   const initialState: State = { message: null, errors: {} };
   const [state, formAction, isLoading] = useActionState(
     createGroup,
     initialState
   );
-  const { success, handleSuccess } = useAppContext();
 
   return (
     <Form action={formAction}>
@@ -87,27 +86,6 @@ export default function GroupForm({ setIsSuccess }: { setIsSuccess: any }) {
                 ))}
             </div>
           </div>
-          <div className="w-full">
-            <Input
-              isRequired
-              name="disbursed"
-              className="outline-2 outline-blue-500 "
-              label="Amount disbursed"
-              color="success"
-              labelPlacement="outside"
-              size="md"
-              type="number"
-              variant="faded"
-            />
-            <div id="customer-error" aria-live="polite" aria-atomic="true">
-              {state.errors?.disbursed &&
-                state.errors.disbursed.map((error: string) => (
-                  <p className="mt-2 text-sm text-red-500" key={error}>
-                    {error}
-                  </p>
-                ))}
-            </div>
-          </div>
         </div>
         <div className="my-6 py-6">
           <Button
@@ -115,7 +93,6 @@ export default function GroupForm({ setIsSuccess }: { setIsSuccess: any }) {
             color="success"
             className="w-full"
             disabled={isLoading}
-            onPress={handleSuccess}
           >
             {isLoading ? (
               <Spinner color="default" size="md" className="py-4" />

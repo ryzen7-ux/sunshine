@@ -38,6 +38,9 @@ export default async function InvoicesTable({
                     </div>
                     <p className="text-sm text-gray-500">{loan.loanid}</p>
                   </div>
+                  <div>
+                    <InvoiceStatus status={loan.status} />
+                  </div>
                 </div>
                 <div className="flex w-full items-center justify-between pt-4">
                   <div>

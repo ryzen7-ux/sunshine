@@ -30,6 +30,7 @@ export default async function Page(props: {
   const [member] = await Promise.all([fetchMemberById(mid)]);
   const [loan] = await Promise.all([fetchLoanById(mid)]);
 
+  console.log(loan);
   if (!member) {
     notFound();
   }

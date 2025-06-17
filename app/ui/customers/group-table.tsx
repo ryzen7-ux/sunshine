@@ -18,57 +18,15 @@ import { useAppContext } from "@/app/app-context";
 import Link from "next/link";
 import { deleteGroup } from "@/app/lib/sun-actions";
 import { DeleteGroupAction } from "@/app/ui/customers/table-actions";
+import { formatCurrencyToLocal } from "@/app/lib/utils";
 
 export const columns = [
   { name: "REG NO", uid: "reg" },
   { name: "NAME", uid: "name" },
   { name: "LOCATION", uid: "location" },
-  { name: "AMOUNT DISBURSED", uid: "disbursed" },
-  { name: "MEMBERS", uid: "members" },
+  { name: "DISBURSED", uid: "disbursed" },
+  { name: "MEMBERS", uid: "members_count" },
   { name: "ACTIONS", uid: "actions" },
-];
-
-export const groups = [
-  // {
-  //   id: 1,
-  //   reg: "GRP001",
-  //   name: "Group 1",
-  //   location: "MATISI",
-  //   disbursed: "Ksh 50,000",
-  //   members: "10",
-  // },
-  // {
-  //   id: 2,
-  //   reg: "GRP002",
-  //   name: "Group 2",
-  //   location: "Mitume",
-  //   disbursed: "Ksh 50,000",
-  //   members: "20",
-  // },
-  // {
-  //   id: 3,
-  //   reg: "GRP003",
-  //   name: "Group 3",
-  //   location: "KIPSONGO",
-  //   disbursed: "Ksh 70,000",
-  //   members: "11",
-  // },
-  // {
-  //   id: 4,
-  //   reg: "GRP004",
-  //   name: "Group 4",
-  //   location: "KIMININI",
-  //   disbursed: "Ksh 70,000",
-  //   members: "15",
-  // },
-  // {
-  //   id: 5,
-  //   reg: "GRP005",
-  //   name: "Group 5",
-  //   location: "MATISI",
-  //   disbursed: "Ksh 50,000",
-  //   members: "10",
-  // },
 ];
 
 export const EyeIcon = (props: any) => {
@@ -202,7 +160,6 @@ export default function GroupTable({ groups }: { groups: any }) {
   const { success, handleSuccess, resetSuccess } = useAppContext();
 
   React.useEffect(() => {
-    console.log(success);
     if (success) {
       addToast({
         title: "Success!",
@@ -239,7 +196,17 @@ export default function GroupTable({ groups }: { groups: any }) {
       case "disbursed":
         return (
           <div>
-            <p className="text-bold text-xs capitalize">{cellValue}</p>
+            <p className="text-bold text-xs capitalize">
+              {formatCurrencyToLocal(Number(cellValue))}
+            </p>
+          </div>
+        );
+      case "members_count":
+        return (
+          <div>
+            <p className="flext justify-center text-bold text-xs capitalize">
+              {cellValue}
+            </p>
           </div>
         );
 
@@ -260,7 +227,7 @@ export default function GroupTable({ groups }: { groups: any }) {
                 </span>
               </Link>
             </Tooltip>
-            <Tooltip color="danger" content="Delete group">
+            <Tooltip color="danger" content="Delete group info">
               <DeleteGroupAction id={group.id} />
             </Tooltip>
           </div>

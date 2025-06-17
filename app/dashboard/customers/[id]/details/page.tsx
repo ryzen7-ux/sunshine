@@ -24,7 +24,7 @@ export default async function Page(props: { params: Promise<{ id: string }> }) {
   if (!group) {
     notFound();
   }
-  console.log(members);
+
   return (
     <main>
       <HeroBreadcrumbs
@@ -44,9 +44,9 @@ export default async function Page(props: { params: Promise<{ id: string }> }) {
         <div className="flex w-full items-center pb-2">
           <h1 className={`text-xl font-bold text-gray-900`}>{group.name}</h1>
         </div>
-        <div className="grid gap-6 grid-cols-2 lg:grid-cols-5">
+        <div className="grid gap-6 grid-cols-2 lg:grid-cols-4">
           <Suspense fallback={<CardsSkeleton />}>
-            <CardWrapper />
+            <CardWrapper groupid={id} />
           </Suspense>
         </div>
 

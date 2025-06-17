@@ -133,6 +133,26 @@ export default function MemberForm({
                 ))}
             </div>
           </div>
+          <div className="w-full">
+            <Input
+              name="nature"
+              type="text"
+              className="outline-2 outline-blue-500  "
+              label="Nature of business"
+              labelPlacement="outside"
+              color="success"
+              size="md"
+              variant="faded"
+            />
+            <div id="customer-error" aria-live="polite" aria-atomic="true">
+              {state.errors?.location &&
+                state.errors.location.map((error: string) => (
+                  <p className="mt-2 text-sm text-red-500" key={error}>
+                    {error}
+                  </p>
+                ))}
+            </div>
+          </div>
         </div>
 
         <Input

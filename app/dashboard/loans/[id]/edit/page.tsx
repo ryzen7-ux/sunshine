@@ -8,7 +8,7 @@ export default async function Page(props: { params: Promise<{ id: string }> }) {
   const params = await props.params;
   const id = params.id;
   const [loan] = await Promise.all([fetchLoanByIdNew(id)]);
-  console.log(loan);
+
   if (!loan) {
     notFound();
   }

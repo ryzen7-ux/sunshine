@@ -5,6 +5,9 @@ import {
   InboxIcon,
   ScaleIcon,
   UsersIcon,
+  CalendarDaysIcon,
+  CalendarIcon,
+  CircleStackIcon,
 } from "@heroicons/react/24/solid";
 import { lusitana } from "@/app/ui/fonts";
 import { fetchCardData } from "@/app/lib/data";
@@ -20,7 +23,7 @@ const iconMap = {
   collected: BanknotesIcon,
   customers: UsersIcon,
   active: ClockIcon,
-  total: InboxIcon,
+  pending: CircleStackIcon,
 };
 
 export default async function CardWrapper() {
@@ -32,12 +35,12 @@ export default async function CardWrapper() {
   // } = await fetchCardData();
 
   const {
-    numberOfGroups,
+    groupAmount,
     numberOfMembers,
-    totalApprovedLoans,
-    totalPendingLoans,
-    totalInactiveLoans,
     totalLoans,
+    totalCollectedLoans,
+    pendingPayments,
+    loanBalance,
   } = await fetchDashboardCardData();
 
   return (
@@ -45,28 +48,28 @@ export default async function CardWrapper() {
       {/* NOTE: Uncomment this code in Chapter 9 */}
       <Card
         title="Disbursed"
-        value={`Ksh 200,000`}
+        value={groupAmount}
         type="disbursed"
         color="text-blue-800"
         span=""
       />
       <Card
         title="Collected"
-        value={`Ksh 120,000`}
+        value={totalCollectedLoans}
         type="collected"
         color="text-green-800"
         span=""
       />
       <Card
         title="Total Loans"
-        value={formatCurrencyToLocal(Number(totalLoans))}
-        type="total"
+        value={totalLoans}
+        type="pending"
         color="text-yellow-800"
         span=""
       />
       <Card
-        title="Active Loans"
-        value={totalApprovedLoans}
+        title="Loan Balance"
+        value={loanBalance}
         type="active"
         color="text-indigo-800"
         span=""
@@ -91,7 +94,7 @@ export function Card({
 }: {
   title: string;
   value: number | string;
-  type: "disbursed" | "collected" | "total" | "active" | "customers";
+  type: "disbursed" | "collected" | "pending" | "active" | "customers";
   color: string;
   span: string;
 }) {

@@ -14,6 +14,7 @@ import { MemberForm } from "@/app/lib/sun-defination";
 import { ClockIcon, CheckIcon } from "@heroicons/react/20/solid";
 import { createLoan, LoanState } from "@/app/lib/sun-actions";
 import { useActionState } from "react";
+import { formatCurrencyToLocal, formatDateToLocal } from "@/app/lib/utils";
 
 export default function LoanModal({
   isOpen,
@@ -30,13 +31,11 @@ export default function LoanModal({
   const [weeklyPayment, setWeeklyPayment] = React.useState(0);
 
   const principal = Number.parseFloat(amount);
-  const rate = Number.parseFloat(interest) / 100 / 12;
+  const rate = Number.parseFloat(interest) / 100 / 4;
   const Loanterm = Number.parseInt(term);
 
-  const payment =
-    (principal * rate * Math.pow(1 + rate, Loanterm)) /
-    (Math.pow(1 + rate, Loanterm) - 1);
-  const wpay = Math.round(payment * 100) / 100;
+  const wpay = Math.ceil(principal / Loanterm + principal * rate);
+  const payment = Math.ceil(wpay * Loanterm);
 
   const calculateWeeklyPayment = () => {
     const principal = Number.parseFloat(amount);
@@ -260,7 +259,10 @@ export default function LoanModal({
                         <span className="text-sm text-gray-600">
                           Loan Amount:
                         </span>
-                        <span className="font-medium">Ksh {amount || "0"}</span>
+                        <span className="font-medium">
+                          {" "}
+                          {formatCurrencyToLocal(principal || 0)}
+                        </span>
                       </div>
                       <div className="flex justify-between">
                         <span className="text-sm text-gray-600">
@@ -278,7 +280,17 @@ export default function LoanModal({
                           Weekly Payment:
                         </span>
                         <span className="font-bold text-lg">
-                          Ksh {wpay || "0"}
+                          {" "}
+                          {formatCurrencyToLocal(wpay || 0.0)}
+                        </span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-sm text-gray-600">
+                          Total Payment:
+                        </span>
+                        <span className="font-bold text-lg">
+                          {" "}
+                          {formatCurrencyToLocal(payment || 0.0)}
                         </span>
                       </div>
                     </div>

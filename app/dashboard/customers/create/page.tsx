@@ -3,7 +3,7 @@ import { Breadcrumbs, BreadcrumbItem } from "@heroui/react";
 import HeroBreadcrumbs from "@/app/ui/customers/hero-breadcrumbs";
 import { UsersBRoundIcon } from "@/app/ui/customers/icons";
 
-export default function CreateGroup() {
+export default async function CreateGroup() {
   return (
     <div>
       <HeroBreadcrumbs
@@ -19,7 +19,7 @@ export default function CreateGroup() {
           },
         ]}
       />
-      <GroupForm setIsSuccess={false} />
+      <GroupForm />
     </div>
   );
 }

@@ -35,7 +35,7 @@ export const columns = [
   { name: "", uid: "surname" },
   { name: "PHONE", uid: "phone" },
   { name: "LOCATION", uid: "location" },
-  { name: "PAID", uid: "paid" },
+  { name: "BUSINESS", uid: "business" },
   { name: "ACTIONS", uid: "actions" },
 ];
 
@@ -197,32 +197,32 @@ export default function MembersTable({
     switch (columnKey) {
       case "id":
         return (
-          <div>
-            <p className="py-2 text-xs">{cellValue}</p>
+          <div className="flex flex-col">
+            <p className="py-2 text-xs">{member.idnumber}</p>
           </div>
         );
-      case "":
+      case "firstname":
         return (
           <div className="flex flex-col">
-            <p className=" text-bold text-xs capitalize">{member.surname}</p>
+            <p className=" text-bold text-md ">{member.firstname}</p>
           </div>
         );
       case "surname":
         return (
           <div className="flex flex-col">
-            <p className=" text-bold text-xs capitalize">{member.surname}</p>
+            <p className=" text-bold text-md">{member.surname}</p>
           </div>
         );
       case "location":
         return (
           <div>
-            <p className="text-bold text-xs capitalize">{cellValue}</p>
+            <p className="text-bold text-md ">{member.location}</p>
           </div>
         );
-      case "disbursed":
+      case "business":
         return (
           <div>
-            <p className="text-bold text-xs capitalize">{cellValue}</p>
+            <p className="text-bold text-md ">{member.nature}</p>
           </div>
         );
 
