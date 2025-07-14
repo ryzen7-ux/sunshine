@@ -46,7 +46,7 @@ export default async function Page(props: { params: Promise<{ id: string }> }) {
         </div>
         <div className="grid gap-6 grid-cols-2 lg:grid-cols-4">
           <Suspense fallback={<CardsSkeleton />}>
-            <CardWrapper groupid={id} />
+            <CardWrapper groupid={id} name={group.name} />
           </Suspense>
         </div>
 

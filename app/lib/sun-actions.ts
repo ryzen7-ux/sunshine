@@ -1,4 +1,3 @@
-//@ts-nocheck
 "use server";
 
 import { revalidatePath } from "next/cache";
@@ -177,7 +176,7 @@ export async function updateGroup(id: string, formData: FormData) {
   try {
     await sql`
         UPDATE groups
-        SET reg = ${reg}, name = ${name}, location = ${location}}
+        SET reg = ${reg}, name = ${name}, location = ${location}
         WHERE id = ${id}
       `;
   } catch (error) {
@@ -189,8 +188,9 @@ export async function updateGroup(id: string, formData: FormData) {
   redirect("/dashboard/customers");
 }
 
-export async function deleteGroup(prevState: DeleteState, formData: FormData) {
+export async function deleteGroup(prevState, formData: FormData) {
   const id = formData.get("id");
+
   try {
     await sql`DELETE FROM members WHERE groupid = ${id}`;
     await sql`DELETE FROM groups WHERE id = ${id}`;

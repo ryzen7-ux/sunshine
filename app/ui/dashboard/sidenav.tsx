@@ -5,7 +5,7 @@ import { PowerIcon } from "@heroicons/react/24/outline";
 import { signOut } from "@/auth";
 import Image from "next/image";
 
-export default function SideNav() {
+export default async function SideNav() {
   return (
     <div className="flex h-full flex-col  pb-4 md:px-0 md:py-0 ">
       <Link

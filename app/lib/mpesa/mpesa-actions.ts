@@ -1,6 +1,6 @@
 export const generateToken = async () => {
   const auth = Buffer.from(
-    `${process.env.MPESA_CONSUMER_KEY}:${process.env.MPESA_CONSUMER_SECRET}`
+    `${process.env.CONSUMER_KEY}:${process.env.CONSUMER_SECRET}`
   ).toString("base64");
 
   try {
@@ -14,12 +14,15 @@ export const generateToken = async () => {
         },
       }
     );
+
     if (!response.ok) {
+      console.log(response);
       throw new Error("Failed to generate token");
     }
-    const data = await response.json();
-    return data.access_token;
+    const data = response;
+    return data;
   } catch (error) {
+    console.log(error);
     console.error("Error generating token:", error);
     throw new Error("Failed to generate token");
   }

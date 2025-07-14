@@ -8,6 +8,7 @@ import {
   InvoicesTable,
   InvoicesForm,
   LatestInvoice,
+  MpesaInvoice,
 } from "./sun-defination";
 import { formatCurrencyToLocal, formatDateToLocal } from "@/app/lib/utils";
 
@@ -325,7 +326,7 @@ export async function fetchDashboardCardData() {
          SUM(CASE WHEN status = 'inactive' THEN amount ELSE 0 END) AS "inactive"
          FROM loans`;
     const totalLoanPromise = sql`SELECT SUM((CASE WHEN status = 'approved' THEN amount ELSE 0 END/term + CASE WHEN status = 'approved' THEN amount ELSE 0 END * (interest/4/100) + CASE WHEN status = 'approved' THEN 1 ELSE 0 END ) * term ) AS sum FROM loans`;
-    const collectedLoanPromise = sql`SELECT SUM(CASE WHEN status = 'paid' THEN amount ELSE 0 END) AS total FROM groupinvoice`;
+    const collectedLoanPromise = sql`SELECT SUM(transamount) AS total FROM mpesainvoice`;
 
     const data = await Promise.all([
       groupCountPromise,
@@ -414,6 +415,57 @@ export async function fetchFilteredGroupInvoices(
     throw new Error("Failed to fetch invoices.");
   }
 }
+// MPESA FETCH LOGIC
+export async function fetchMpesaInvoicesPages(query: string) {
+  try {
+    const data = await sql`SELECT COUNT(*)
+    FROM mpesainvoice
+    WHERE
+      mpesainvoice.transid ILIKE ${`%${query}%`} OR
+      mpesainvoice.transtime::text ILIKE ${`%${query}%`} OR
+      mpesainvoice.transamount::text ILIKE ${`%${query}%`} OR
+      mpesainvoice.refnumber ILIKE ${`%${query}%`}
+  `;
+
+    const totalPages = Math.ceil(Number(data[0].count) / ITEMS_PER_PAGE);
+
+    return totalPages;
+  } catch (error) {
+    console.error("Database Error:", error);
+    throw new Error("Failed to fetch total number of invoices.");
+  }
+}
+
+export async function fetchFilteredMpesaInvoices(
+  query: string,
+  currentPage: number
+) {
+  const offset = (currentPage - 1) * ITEMS_PER_PAGE;
+
+  try {
+    const invoices = await sql<MpesaInvoice[]>`
+      SELECT
+        mpesainvoice.id,
+        mpesainvoice.transid,
+        mpesainvoice.transtime,
+        mpesainvoice.transamount,
+        mpesainvoice.refnumber
+      FROM mpesainvoice
+      WHERE
+        mpesainvoice.transid ILIKE ${`%${query}%`} OR
+        mpesainvoice.transtime::text ILIKE ${`%${query}%`} OR
+        mpesainvoice.transamount::text ILIKE ${`%${query}%`} OR
+        mpesainvoice.refnumber ILIKE ${`%${query}%`}
+      ORDER BY mpesainvoice.transtime DESC
+      LIMIT ${ITEMS_PER_PAGE} OFFSET ${offset}
+    `;
+
+    return invoices;
+  } catch (error) {
+    console.error("Database Error:", error);
+    throw new Error("Failed to fetch invoices.");
+  }
+}
 
 export async function fetchInvoicesPages(query: string) {
   try {
@@ -486,7 +538,29 @@ export async function fetchLatestGroupInvoices() {
   }
 }
 
-export async function fetchGroupCardData(id: string) {
+export async function fetchLatestMpesaInvoices() {
+  try {
+    const data = await sql<MpesaInvoice[]>`
+      SELECT mpesainvoice.transamount, mpesainvoice.refnumber, mpesainvoice.transtime, mpesainvoice.transid
+      FROM mpesainvoice
+    
+      ORDER BY mpesainvoice.transtime DESC
+      LIMIT 5`;
+
+    const latestInvoices = data.map((invoice) => ({
+      ...invoice,
+      transamount: formatCurrencyToLocal(invoice.transamount),
+      transtime: formatDateToLocal(invoice.transtime),
+    }));
+
+    return latestInvoices;
+  } catch (error) {
+    console.error("Database Error:", error);
+    throw new Error("Failed to fetch the latest invoices.");
+  }
+}
+
+export async function fetchGroupCardData(id: string, name: string) {
   try {
     // You can probably combine these into a single SQL query
     // However, we are intentionally splitting them to demonstrate
@@ -495,12 +569,14 @@ export async function fetchGroupCardData(id: string) {
     const groupsCollectedPromise = sql`SELECT SUM(CASE WHEN status = 'paid' THEN amount ELSE 0 END) FROM groupinvoice WHERE group_id = ${id}`;
     const groupsPendingPromise = sql`SELECT SUM(CASE WHEN status = 'pending' THEN amount ELSE 0 END) FROM groupinvoice WHERE group_id = ${id}`;
     const totalMembersPromise = sql`SELECT COUNT(*) AS total FROM members WHERE groupid = ${id}`;
+    const collectedMpesaPromise = sql`SELECT SUM(transamount) AS mpesa FROM mpesainvoice WHERE mpesainvoice.refnumber ILIKE ${`%${name}%`} `;
 
     const data = await Promise.all([
       groupDisbursedPromise,
       groupsCollectedPromise,
       groupsPendingPromise,
       totalMembersPromise,
+      collectedMpesaPromise,
     ]);
 
     const groupDisbusredAmount = formatCurrencyToLocal(
@@ -519,9 +595,10 @@ export async function fetchGroupCardData(id: string) {
     );
     const totalMembers = Number(data[3][0]?.total ?? "0");
     const balance = formatCurrencyToLocal(
-      Number(data[0][0]?.payment ?? "0") - Number(data[1][0]?.sum ?? "0")
+      Number(data[0][0]?.payment ?? "0") - Number(data[4][0]?.mpesa ?? "0")
     );
-    console.log(data);
+    const totalMpesa = formatCurrencyToLocal(Number(data[4][0]?.mpesa ?? "0"));
+
     return {
       groupDisbusredAmount,
       totalPayment,
@@ -529,6 +606,7 @@ export async function fetchGroupCardData(id: string) {
       groupPendingPayments,
       totalMembers,
       balance,
+      totalMpesa,
     };
   } catch (error) {
     console.error("Database Error:", error);

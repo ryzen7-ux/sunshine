@@ -3,9 +3,17 @@
 const users = [
   {
     id: "410544b2-4001-4271-9855-fec4b6a6442a",
-    name: "User",
+    is_admin: true,
+    name: "Admin",
     email: "sunshine@admin.com",
-    password: "sunshine@2025",
+    password: "sunshine@admin2025",
+  },
+  {
+    id: "d6e15727-9fe1-4961-8c5b-ea44a9bd81aa",
+    is_admin: false,
+    name: "Staff",
+    email: "sunshine@staff.com",
+    password: "staff@2025",
   },
 ];
 

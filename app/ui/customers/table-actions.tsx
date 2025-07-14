@@ -14,16 +14,16 @@ import {
   Spinner,
 } from "@heroui/react";
 import { useActionState, useState } from "react";
+import { SuccessToast, DeleteSuccessToast } from "@/app/ui/toast";
 
 export function DeleteGroupAction({ id }: { id: string }) {
   // const deleteGroupWithId = deleteGroup.bind(null, id);
-  const initialState = { message: null };
-  const [message, formAction, isLoading] = useActionState(
+  const initialState = { success: false };
+  const [formstate, formAction, isLoading] = useActionState(
     deleteGroup,
     initialState
   );
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
-  console.log("mm", message);
   return (
     <>
       <Tooltip color="danger" content="Delete Group">

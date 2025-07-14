@@ -2,6 +2,7 @@ import "@/app/ui/global.css";
 import { inter } from "@/app/ui/fonts";
 import { Metadata } from "next";
 import { Providers } from "./providers";
+import { SessionProvider } from "next-auth/react";
 
 export const metadata: Metadata = {
   title: {

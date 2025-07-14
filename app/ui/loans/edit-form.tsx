@@ -20,6 +20,7 @@ import { Button } from "@/app/ui/button";
 import { updateLoan, LoanState } from "@/app/lib/sun-actions";
 import { formatCurrencyToLocal, formatDateToLocal } from "@/app/lib/utils";
 import { now, getLocalTimeZone } from "@internationalized/date";
+import { useSession } from "next-auth/react";
 
 export default function EditLoanForm({ loan }: { loan: LoanForm }) {
   const [amount, setAmount] = React.useState(loan.amount.toString());
@@ -49,6 +50,20 @@ export default function EditLoanForm({ loan }: { loan: LoanForm }) {
   };
   const initialState: LoanState = { message: null, errors: {} };
   const updateLoanWithId = updateLoan.bind(null, loan.id);
+
+  const { data: session, status } = useSession();
+  if (status === "loading") {
+    return <p>Loading...</p>;
+  }
+
+  if (session) {
+    // Access user information like email, name, image, etc.
+    const { user } = session;
+    console.log(user);
+  } else {
+    // User is not signed in
+    console.log("User not signed in");
+  }
 
   return (
     <form

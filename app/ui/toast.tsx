@@ -18,12 +18,12 @@ export function SuccessToast({ success }: { success: string }) {
   return <></>;
 }
 
-export function DeleteSuccessToast({ success }: { success: string }) {
+export function DeleteSuccessToast({ success }: { success: boolean }) {
   React.useEffect(() => {
-    if (success === "true") {
+    if (success === true) {
       addToast({
         title: "Success!",
-        color: "success",
+        color: "warning",
         variant: "solid",
         timeout: 10000,
         description: "Group created successfully",

@@ -107,3 +107,11 @@ export type LatestInvoice = {
   amount: number;
   status: "pending" | "paid";
 };
+
+export type MpesaInvoice = {
+  id: string;
+  transid: string;
+  transamount: number;
+  transtime: string;
+  refnumber: string;
+};

@@ -2,15 +2,16 @@ import NextAuth from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 import { authConfig } from "./auth.config";
 import { z } from "zod";
-import type { User } from "@/app/lib/definitions";
+import type { UserTypes } from "@/app/lib/definitions";
 import bcrypt from "bcryptjs";
 import sql from "@/app/lib/db";
 
-
-
-async function getUser(email: string): Promise<User | undefined> {
+async function getUser(email: string): Promise<UserTypes | undefined> {
   try {
-    const user = await sql<User[]>`SELECT * FROM users WHERE email=${email}`;
+    const user = await sql<
+      UserTypes[]
+    >`SELECT * FROM users WHERE email=${email}`;
+
     return user[0];
   } catch (error) {
     console.error("Failed to fetch user:", error);
@@ -36,7 +37,7 @@ export const { auth, signIn, signOut } = NextAuth({
         }
 
         return null;
-      }
-    })
-  ]
+      },
+    }),
+  ],
 });

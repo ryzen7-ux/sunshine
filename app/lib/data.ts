@@ -5,6 +5,7 @@ import {
   InvoiceForm,
   InvoicesTable,
   LatestInvoiceRaw,
+  MpesaRevenue,
   Revenue,
 } from "./definitions";
 import { formatCurrency } from "./utils";
@@ -21,8 +22,44 @@ export async function fetchRevenue() {
     const data = await sql<Revenue[]>`SELECT * FROM revenue`;
 
     // console.log('Data fetch completed after 3 seconds.');
+    //     const data2 = await sql`SELECT
+    //     TO_CHAR(DATE_TRUNC('month', transtime), 'Month') AS month_name,
+    //     SUM(transamount) AS revenue
+    // FROM
+    //     mpesainvoice
+    // WHERE
+    //     DATE_PART('year', transtime) = DATE_PART('year', CURRENT_DATE)
+    // GROUP BY
+    //     month_name
+    // ORDER BY
+    //     MIN(transtime)`;
 
-    return data;
+    const data2 = await sql<MpesaRevenue[]>`WITH months AS (
+    SELECT to_char(generate_series(date_trunc('year', CURRENT_DATE), date_trunc('year', CURRENT_DATE) + interval '1 year - 1 day', '1 month'), 'YYYY-MM') AS month
+),
+monthly_data AS (
+    SELECT
+        to_char(transtime, 'YYYY-MM') AS month,
+        SUM(transamount) AS total
+    FROM
+        mpesainvoice
+    WHERE
+        transtime >= date_trunc('year', CURRENT_DATE)
+        AND transtime < date_trunc('year', CURRENT_DATE) + interval '1 year'
+    GROUP BY
+        1
+)
+SELECT
+    m.month,
+    COALESCE(md.total, 0) AS revenue
+FROM
+    months m
+LEFT JOIN
+    monthly_data md ON m.month = md.month
+ORDER BY
+    m.month;`;
+
+    return data2;
   } catch (error) {
     console.error("Database Error:", error);
     throw new Error("Failed to fetch revenue data.");

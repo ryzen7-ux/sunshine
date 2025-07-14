@@ -96,7 +96,7 @@ export default function EditGroupForm({
                 ))}
             </div>
           </div>
-          <div className="w-full">
+          {/* <div className="w-full">
             <Input
               isRequired
               name="disbursed"
@@ -118,7 +118,7 @@ export default function EditGroupForm({
                   </p>
                 ))}
             </div>
-          </div>
+          </div> */}
         </div>
         <div className="my-6 py-6">
           <Button

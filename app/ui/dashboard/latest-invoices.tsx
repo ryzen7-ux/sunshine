@@ -4,43 +4,23 @@ import Image from "next/image";
 import { lusitana } from "@/app/ui/fonts";
 import { LatestInvoice } from "@/app/lib/definitions";
 import { fetchLatestInvoices } from "@/app/lib/data";
-import { fetchLatestGroupInvoices } from "@/app/lib/sun-data";
+import {
+  fetchLatestGroupInvoices,
+  fetchLatestMpesaInvoices,
+} from "@/app/lib/sun-data";
 import { formatDateToLocal } from "@/app/lib/utils";
 
 export default async function LatestInvoices() {
   // const latestInvoices = await fetchLatestInvoices();
-  const latestInvoices = await fetchLatestGroupInvoices();
-
-  const inv = [
-    {
-      name: "Group 1",
-      amount: "Ksh 7,000",
-    },
-    {
-      name: "Group 2",
-      amount: "Ksh 12,000",
-    },
-    {
-      name: "Group 3",
-      amount: "Ksh 8,000",
-    },
-    {
-      name: "Group 4",
-      amount: "Ksh 6,000",
-    },
-    {
-      name: "Group 5",
-      amount: "Ksh 11,000",
-    },
-  ];
+  const latestInvoices = await fetchLatestMpesaInvoices();
 
   return (
     <div className="flex w-full flex-col md:col-span-4">
-      <h2 className={` mb-4 text-xl md:text-2xl`}>Latest Group Invoices</h2>
-      <div className="flex grow flex-col justify-between rounded-xl bg-gray-50 p-4">
+      <h2 className={` mb-4 text-xl md:text-2xl`}>Latest Mpesa Invoices</h2>
+      <div className="flex grow flex-col justify-between rounded-xl bg-gray-200 p-2">
         {/* NOTE: Uncomment this code in Chapter 7 */}
 
-        <div className="bg-white px-6">
+        <div className="bg-white px-6 rounded-xl shadow-lg">
           {latestInvoices.map((invoice, i) => {
             return (
               <div
@@ -57,20 +37,27 @@ export default async function LatestInvoices() {
                     className="h-8
                    w-8 text-indigo-500"
                   />
-                  <div className="min-w-0 ml-12">
+                  <div className="min-w-0 ml-6">
                     <p className="truncate text-sm font-semibold md:text-base">
-                      {invoice.name}
+                      {invoice.refnumber}
                     </p>
-                    <p className="hidden text-sm text-gray-500 sm:block">
-                      {formatDateToLocal(invoice.date)}
+                    <p className=" text-sm text-gray-500 sm:block">
+                      {formatDateToLocal(invoice.transtime)}
                     </p>
                   </div>
                 </div>
-                <p
-                  className={`truncate text-sm font-medium md:text-sm flex justify-center`}
-                >
-                  {invoice.amount}
-                </p>
+                <div className="flex flex-col">
+                  <p
+                    className={`truncate text-sm font-extrabold md:text-lg flex justify-center`}
+                  >
+                    {invoice.transamount}
+                  </p>
+                  <p
+                    className={`truncate text-md text-green-500 font-extrabold pt-2 flex justify-center`}
+                  >
+                    {invoice.transid}
+                  </p>
+                </div>
               </div>
             );
           })}

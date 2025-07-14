@@ -19,6 +19,7 @@ import Link from "next/link";
 import { deleteGroup } from "@/app/lib/sun-actions";
 import { DeleteGroupAction } from "@/app/ui/customers/table-actions";
 import { formatCurrencyToLocal } from "@/app/lib/utils";
+import { useSession } from "next-auth/react";
 
 export const columns = [
   { name: "REG NO", uid: "reg" },
@@ -157,20 +158,6 @@ const statusColorMap = {
 };
 
 export default function GroupTable({ groups }: { groups: any }) {
-  const { success, handleSuccess, resetSuccess } = useAppContext();
-
-  React.useEffect(() => {
-    if (success) {
-      addToast({
-        title: "Success!",
-        color: "success",
-        variant: "solid",
-        timeout: 5000,
-      });
-    }
-    return resetSuccess;
-  }, [0]);
-
   const renderCell = React.useCallback((group: any, columnKey: any) => {
     const cellValue = group[columnKey];
 
@@ -184,19 +171,19 @@ export default function GroupTable({ groups }: { groups: any }) {
       case "name":
         return (
           <div className="flex flex-col">
-            <p className=" text-xs capitalize">{cellValue}</p>
+            <p className=" text-xs">{cellValue}</p>
           </div>
         );
       case "location":
         return (
           <div>
-            <p className="text-bold text-xs capitalize">{cellValue}</p>
+            <p className="text-bold text-xs">{cellValue}</p>
           </div>
         );
       case "disbursed":
         return (
           <div>
-            <p className="text-bold text-xs capitalize">
+            <p className="text-bold text-xs">
               {formatCurrencyToLocal(Number(cellValue))}
             </p>
           </div>
@@ -204,7 +191,7 @@ export default function GroupTable({ groups }: { groups: any }) {
       case "members_count":
         return (
           <div>
-            <p className="flext justify-center text-bold text-xs capitalize">
+            <p className="flext justify-center text-bold text-xs">
               {cellValue}
             </p>
           </div>

@@ -6,6 +6,7 @@ import {
   DocumentDuplicateIcon,
   CurrencyDollarIcon,
   DocumentCurrencyDollarIcon,
+  DeviceTabletIcon,
 } from "@heroicons/react/24/solid";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -26,6 +27,12 @@ const links = [
     href: "/dashboard/invoices",
     path: "/invoices",
     icon: DocumentDuplicateIcon,
+  },
+  {
+    name: "Mpesa Invoices",
+    href: "/dashboard/mpesa",
+    path: "/mpesa",
+    icon: DeviceTabletIcon,
   },
   {
     name: "Groups",

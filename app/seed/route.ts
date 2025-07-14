@@ -18,6 +18,7 @@ async function seedUsers() {
   await sql`
     CREATE TABLE IF NOT EXISTS users (
       id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+      is_admin BOOLEAN DEFAULT FALSE,
       name VARCHAR(255) NOT NULL,
       email TEXT NOT NULL UNIQUE,
       password TEXT NOT NULL
@@ -28,8 +29,8 @@ async function seedUsers() {
     users.map(async (user) => {
       const hashedPassword = await bcrypt.hash(user.password, 10);
       return sql`
-        INSERT INTO users (id, name, email, password)
-        VALUES (${user.id}, ${user.name}, ${user.email}, ${hashedPassword})
+        INSERT INTO users (id, is_admin, name, email, password)
+        VALUES (${user.id},${user.is_admin}, ${user.name}, ${user.email}, ${hashedPassword})
         ON CONFLICT (id) DO NOTHING;
       `;
     })
@@ -258,18 +259,32 @@ async function seedGroupInvoices() {
   // return insertedInvoices;
 }
 
+async function seedMpesaInvoices() {
+  await sql`CREATE EXTENSION IF NOT EXISTS "uuid-ossp"`;
+
+  await sql`
+    CREATE TABLE IF NOT EXISTS mpesainvoice (
+      id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+      transid VARCHAR(255),
+      transtime TIMESTAMPTZ,
+      transamount INT,
+      refnumber VARCHAR(255)
+    );
+  `;
+}
 export async function GET() {
   try {
     const result = await sql.begin((sql) => [
       seedUsers(),
-      seedInvoices(),
-      seedCustomers(),
-      seedRevenue(),
+      // seedInvoices(),
+      // seedCustomers(),
+      // seedRevenue(),
       // seedInvoicees(),
-      seedGroups(),
-      seedMembers(),
-      seedLoans(),
-      seedGroupInvoices(),
+      // seedGroups(),
+      // seedMembers(),
+      // seedLoans(),
+      // seedGroupInvoices(),
+      // seedMpesaInvoices(),
     ]);
 
     return Response.json({ message: "Database seeded successfully" });

@@ -21,7 +21,13 @@ const iconMap = {
   total: UsersIcon,
 };
 
-export default async function CardWrapper({ groupid }: { groupid: string }) {
+export default async function CardWrapper({
+  groupid,
+  name,
+}: {
+  groupid: string;
+  name: string;
+}) {
   // const {
   //   numberOfInvoices,
   //   numberOfCustomers,
@@ -35,7 +41,8 @@ export default async function CardWrapper({ groupid }: { groupid: string }) {
     groupPendingPayments,
     totalMembers,
     balance,
-  } = await fetchGroupCardData(groupid);
+    totalMpesa,
+  } = await fetchGroupCardData(groupid, name);
 
   return (
     <>
@@ -49,7 +56,7 @@ export default async function CardWrapper({ groupid }: { groupid: string }) {
       />
       <Card
         title="Collected"
-        value={groupCollectedAmount}
+        value={totalMpesa}
         type="collected"
         color="text-green-800"
         span=""
