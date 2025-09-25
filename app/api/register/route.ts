@@ -1,10 +1,9 @@
-//@ts-nocheck
 import { generateToken } from "@/app/lib/mpesa/mpesa-actions";
 import { NextResponse } from "next/server";
 
 import type { NextApiRequest, NextApiResponse } from "next";
 
-export async function POST(request: Request) {
+export async function POST() {
   const token = await generateToken();
 
   try {
