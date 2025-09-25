@@ -1,3 +1,4 @@
+//@ts-nocheck
 import SideNav from "@/app/ui/dashboard/sidenav";
 import UserAvatar from "@/app/ui/user-avatar";
 import { auth } from "@/auth";

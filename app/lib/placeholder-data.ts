@@ -6,7 +6,7 @@ const users = [
     is_admin: true,
     name: "Admin",
     email: "sunshine@admin.com",
-    password: "sunshine@admin2025",
+    password: "admin@2025",
   },
   {
     id: "d6e15727-9fe1-4961-8c5b-ea44a9bd81aa",

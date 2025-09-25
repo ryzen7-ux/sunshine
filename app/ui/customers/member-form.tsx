@@ -5,7 +5,6 @@ import { Form, Input, Button, Spinner, addToast } from "@heroui/react";
 import { useActionState } from "react";
 import { createMembers, MembersState } from "@/app/lib/sun-actions";
 import React from "react";
-import { useAppContext } from "@/app/app-context";
 
 export default function MemberForm({
   groupId,
@@ -19,7 +18,6 @@ export default function MemberForm({
     createMembers,
     initialState
   );
-  const { success, handleSuccess } = useAppContext();
 
   return (
     <Form action={formAction}>
@@ -167,7 +165,6 @@ export default function MemberForm({
             color="success"
             className="w-full"
             disabled={isLoading}
-            onPress={handleSuccess}
           >
             {isLoading ? (
               <Spinner color="default" size="md" className="py-4" />

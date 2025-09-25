@@ -22,6 +22,7 @@ export const formatDateToLocal = (
 ) => {
   const date = new Date(dateStr);
   const options: Intl.DateTimeFormatOptions = {
+    timeZone: "Africa/Nairobi",
     minute: "numeric",
     hour: "numeric",
     day: "numeric",

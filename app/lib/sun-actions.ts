@@ -1,3 +1,4 @@
+//@ts-nocheck
 "use server";
 
 import { revalidatePath } from "next/cache";
@@ -163,7 +164,7 @@ export async function createGroup(prevState: State, formData: FormData) {
     };
   }
   revalidatePath("/dashboard/customers");
-  redirect("/dashboard/customers?success=true");
+  redirect("/dashboard/customers");
 }
 
 export async function updateGroup(id: string, formData: FormData) {
@@ -188,8 +189,8 @@ export async function updateGroup(id: string, formData: FormData) {
   redirect("/dashboard/customers");
 }
 
-export async function deleteGroup(prevState, formData: FormData) {
-  const id = formData.get("id");
+export async function deleteGroup(prevState: any, formData: FormData) {
+  const id = formData.get("id") as string;
 
   try {
     await sql`DELETE FROM members WHERE groupid = ${id}`;
@@ -358,9 +359,7 @@ export async function createLoan(prevState: LoanState, formData: FormData) {
     status: formData.get("status"),
   });
 
-  const utcDate = new Date(); // UTC time
-  const offset = utcDate.getTimezoneOffset() * 60000; // Offset in milliseconds
-  const localDate = new Date(utcDate.getTime() - offset);
+  const localDate = new Date();
 
   if (!validatedFields.success) {
     return {
@@ -388,14 +387,14 @@ export async function createLoan(prevState: LoanState, formData: FormData) {
 
 export async function updateLoan(id: string, formData: FormData) {
   const { amount, loan_id, interest, term, status } = UpdateLoan.parse({
-    amount: formData.get("amount"),
-    loan_id: formData.get("loan_id"),
-    interest: formData.get("interest"),
-    term: formData.get("term"),
-    status: formData.get("status"),
+    amount: formData.get("amount") as unknown,
+    loan_id: formData.get("loan_id") as string,
+    interest: formData.get("interest") as unknown,
+    term: formData.get("term") as unknown,
+    status: formData.get("status") as unknown,
   });
-  const date = formData.get("start_date");
-  const newDate = date.split("T")[0];
+  const date = formData.get("start_date") as string;
+  const newDate = date?.split("T")[0];
   const notes = formData.get("notes");
   try {
     await sql`
@@ -477,11 +476,20 @@ export async function updateGroupInvoice(id: string, formData: FormData) {
 export async function deleteGroupInvoice(id: string) {
   try {
     await sql`DELETE FROM groupinvoice WHERE id = ${id}`;
-    console.log("Deleted invoice with ID:", id);
   } catch (error) {
     // We'll log the error to the console for now
     console.error(error);
   }
 
   revalidatePath("/dashboard/invoices");
+}
+
+export async function deleteMpesaInvoice(id: string) {
+  try {
+    await sql`DELETE FROM mpesainvoice WHERE id = ${id}`;
+  } catch (error) {
+    // We'll log the error to the console for now
+    console.error(error);
+  }
+  revalidatePath("/dashboard/mpesa");
 }

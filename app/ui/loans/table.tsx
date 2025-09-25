@@ -73,7 +73,7 @@ export default async function InvoicesTable({
                   Amount
                 </th>
                 <th scope="col" className="px-3 py-5 font-medium">
-                  Remaining
+                  Loan Created
                 </th>
                 <th scope="col" className="px-3 py-5 font-medium">
                   Rate
@@ -108,7 +108,9 @@ export default async function InvoicesTable({
                   <td className="whitespace-nowrap px-3 py-3 text-xs">
                     {formatCurrencyToLocal(loan.amount)}
                   </td>
-                  <td className="whitespace-nowrap px-3 py-3 text-xs"></td>
+                  <td className="whitespace-nowrap px-3 py-3 text-xs">
+                    {formatDateToLocal(loan.date)}
+                  </td>
                   <td className="whitespace-nowrap px-3 py-3 text-xs">
                     {loan.interest} %
                   </td>
@@ -127,6 +129,11 @@ export default async function InvoicesTable({
           </table>
         </div>
       </div>
+      {loans.length < 1 && (
+        <div className="text-sm flex items-center justify-center py-6">
+          No loans are added
+        </div>
+      )}
     </div>
   );
 }

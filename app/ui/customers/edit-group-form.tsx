@@ -1,11 +1,9 @@
-//@ts-nocheck
 "use client";
 
 import { Form, Input, Button, Spinner, addToast } from "@heroui/react";
 import { useActionState } from "react";
 import { createGroup, updateGroup, State } from "@/app/lib/sun-actions";
 import React from "react";
-import { useAppContext } from "@/app/app-context";
 import { GroupForm } from "@/app/lib/sun-defination";
 
 export default function EditGroupForm({
@@ -20,7 +18,7 @@ export default function EditGroupForm({
     createGroup,
     initialState
   );
-  const { success, handleSuccess } = useAppContext();
+
   const updateGroupWithId = updateGroup.bind(null, group.id);
 
   return (
@@ -126,7 +124,6 @@ export default function EditGroupForm({
             color="success"
             className="w-full"
             disabled={isLoading}
-            onPress={handleSuccess}
           >
             {isLoading ? (
               <Spinner color="default" size="md" className="py-4" />

@@ -11,7 +11,6 @@ import {
   MembersState,
 } from "@/app/lib/sun-actions";
 import React from "react";
-import { useAppContext } from "@/app/app-context";
 import { MemberForm } from "@/app/lib/sun-defination";
 
 export default function EditMemberForm({
@@ -23,7 +22,6 @@ export default function EditMemberForm({
 }) {
   const initialState: MembersState = { message: null, errors: {} };
 
-  const { success, handleSuccess } = useAppContext();
   const updateMemberWithId = updateMember.bind(null, member.id);
 
   return (
@@ -156,7 +154,7 @@ export default function EditMemberForm({
             </div>
           </div>
           {/*File Input*/}
-          <div className=" ">
+          <div className=" hidden">
             <div className="flex flex-col md:flex-row mt-4 gap-4 ">
               <div className="w-full  col-span-4 pb-4">
                 {/* <label>
@@ -297,12 +295,7 @@ export default function EditMemberForm({
           />
 
           <div className="my-6 py-6">
-            <Button
-              type="submit"
-              color="success"
-              className="w-full"
-              onPress={handleSuccess}
-            >
+            <Button type="submit" color="success" className="w-full">
               Edit
             </Button>
           </div>

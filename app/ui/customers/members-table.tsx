@@ -21,7 +21,7 @@ import {
 } from "@heroui/react";
 import { Trash2Icon, Trash2, Eye, Pen, HandCoins } from "lucide-react";
 import { Input, Button, addToast } from "@heroui/react";
-import { useAppContext } from "@/app/app-context";
+
 import Link from "next/link";
 import { deleteGroup } from "@/app/lib/sun-actions";
 import { DeleteMemberAction } from "@/app/ui/customers/table-actions";
@@ -173,23 +173,10 @@ export default function MembersTable({
   group: any;
   members: any;
 }) {
-  const { success, handleSuccess, resetSuccess } = useAppContext();
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
   const [isOpenLoan, setIsOpenLoan] = React.useState(false);
 
   const [memberData, setMemberData] = React.useState({});
-
-  React.useEffect(() => {
-    if (success) {
-      addToast({
-        title: "Success!",
-        color: "success",
-        variant: "solid",
-        timeout: 5000,
-      });
-    }
-    return resetSuccess;
-  }, [0]);
 
   const renderCell = React.useCallback((member: any, columnKey: any) => {
     const cellValue = member[columnKey];

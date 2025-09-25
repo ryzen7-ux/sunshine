@@ -48,6 +48,7 @@ export default function CreateLoanForm({
   const [interest, setInterest] = React.useState("");
   const [term, setTerm] = React.useState("");
   const [weeklyPayment, setWeeklyPayment] = React.useState(0);
+  const [loanId, setLoanId] = React.useState("");
 
   const principal = Number.parseFloat(amount);
   const rate = Number.parseFloat(interest) / 100 / 4;
@@ -162,6 +163,8 @@ export default function CreateLoanForm({
             labelPlacement="outside"
             size="md"
             variant="faded"
+            value={loanId}
+            onChange={(e) => setLoanId(e.target.value)}
           />
         </div>
       </div>
@@ -225,8 +228,9 @@ export default function CreateLoanForm({
                 id="pending"
                 name="status"
                 type="radio"
-                value="pending"
+                defaultValue="pending"
                 className="h-4 w-4 cursor-pointer border-gray-300 bg-gray-100 text-gray-600 focus:ring-2"
+                readOnly
               />
               <label
                 htmlFor="pending"
@@ -240,8 +244,9 @@ export default function CreateLoanForm({
                 id="approved"
                 name="status"
                 type="radio"
-                value="approved"
+                defaultValue="approved"
                 className="h-4 w-4 cursor-pointer border-gray-500 bg-gray-100 text-gray-600 focus:ring-2"
+                readOnly
               />
               <label
                 htmlFor="paid"

@@ -25,18 +25,18 @@ async function seedUsers() {
     );
   `;
 
-  const insertedUsers = await Promise.all(
-    users.map(async (user) => {
-      const hashedPassword = await bcrypt.hash(user.password, 10);
-      return sql`
-        INSERT INTO users (id, is_admin, name, email, password)
-        VALUES (${user.id},${user.is_admin}, ${user.name}, ${user.email}, ${hashedPassword})
-        ON CONFLICT (id) DO NOTHING;
-      `;
-    })
-  );
+  // const insertedUsers = await Promise.all(
+  //   users.map(async (user) => {
+  //     const hashedPassword = await bcrypt.hash(user.password, 10);
+  //     return sql`
+  //       INSERT INTO users (id, is_admin, name, email, password)
+  //       VALUES (${user.id},${user.is_admin}, ${user.name}, ${user.email}, ${hashedPassword})
+  //       ON CONFLICT (id) DO NOTHING;
+  //     `;
+  //   })
+  // );
 
-  return insertedUsers;
+  // return insertedUsers;
 }
 
 async function seedInvoices() {
@@ -52,17 +52,17 @@ async function seedInvoices() {
     );
   `;
 
-  const insertedInvoices = await Promise.all(
-    invoices.map(
-      (invoice) => sql`
-        INSERT INTO invoices (customer_id, amount, status, date)
-        VALUES (${invoice.customer_id}, ${invoice.amount}, ${invoice.status}, ${invoice.date})
-        ON CONFLICT (id) DO NOTHING;
-      `
-    )
-  );
+  // const insertedInvoices = await Promise.all(
+  //   invoices.map(
+  //     (invoice) => sql`
+  //       INSERT INTO invoices (customer_id, amount, status, date)
+  //       VALUES (${invoice.customer_id}, ${invoice.amount}, ${invoice.status}, ${invoice.date})
+  //       ON CONFLICT (id) DO NOTHING;
+  //     `
+  //   )
+  // );
 
-  return insertedInvoices;
+  // return insertedInvoices;
 }
 
 async function seedCustomers() {
@@ -77,17 +77,17 @@ async function seedCustomers() {
     );
   `;
 
-  const insertedCustomers = await Promise.all(
-    customers.map(
-      (customer) => sql`
-        INSERT INTO customers (id, name, email, image_url)
-        VALUES (${customer.id}, ${customer.name}, ${customer.email}, ${customer.image_url})
-        ON CONFLICT (id) DO NOTHING;
-      `
-    )
-  );
+  // const insertedCustomers = await Promise.all(
+  //   customers.map(
+  //     (customer) => sql`
+  //       INSERT INTO customers (id, name, email, image_url)
+  //       VALUES (${customer.id}, ${customer.name}, ${customer.email}, ${customer.image_url})
+  //       ON CONFLICT (id) DO NOTHING;
+  //     `
+  //   )
+  // );
 
-  return insertedCustomers;
+  // return insertedCustomers;
 }
 
 async function seedRevenue() {
@@ -98,17 +98,17 @@ async function seedRevenue() {
     );
   `;
 
-  const insertedRevenue = await Promise.all(
-    revenue.map(
-      (rev) => sql`
-        INSERT INTO revenue (month, revenue)
-        VALUES (${rev.month}, ${rev.revenue})
-        ON CONFLICT (month) DO NOTHING;
-      `
-    )
-  );
+  // const insertedRevenue = await Promise.all(
+  //   revenue.map(
+  //     (rev) => sql`
+  //       INSERT INTO revenue (month, revenue)
+  //       VALUES (${rev.month}, ${rev.revenue})
+  //       ON CONFLICT (month) DO NOTHING;
+  //     `
+  //   )
+  // );
 
-  return insertedRevenue;
+  // return insertedRevenue;
 }
 
 async function seedInvoicees() {
@@ -216,7 +216,7 @@ async function seedLoans() {
       status VARCHAR(255) NOT NULL,
       start_date DATE,
       notes VARCHAR(10000),
-      date TIMESTAMP NOT NULL
+      date TIMESTAMPTZ NOT NULL
     );
   `;
 
@@ -276,15 +276,15 @@ export async function GET() {
   try {
     const result = await sql.begin((sql) => [
       seedUsers(),
-      // seedInvoices(),
-      // seedCustomers(),
-      // seedRevenue(),
-      // seedInvoicees(),
-      // seedGroups(),
-      // seedMembers(),
-      // seedLoans(),
-      // seedGroupInvoices(),
-      // seedMpesaInvoices(),
+      seedInvoices(),
+      seedCustomers(),
+      seedRevenue(),
+      seedInvoicees(),
+      seedGroups(),
+      seedMembers(),
+      seedLoans(),
+      seedGroupInvoices(),
+      seedMpesaInvoices(),
     ]);
 
     return Response.json({ message: "Database seeded successfully" });

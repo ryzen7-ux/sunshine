@@ -19,7 +19,6 @@ import Link from "next/link";
 import { deleteGroup } from "@/app/lib/sun-actions";
 import { DeleteGroupAction } from "@/app/ui/customers/table-actions";
 import { formatCurrencyToLocal } from "@/app/lib/utils";
-import { useSession } from "next-auth/react";
 
 export const columns = [
   { name: "REG NO", uid: "reg" },

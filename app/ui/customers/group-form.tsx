@@ -4,7 +4,6 @@ import { Form, Input, Button, Spinner, addToast } from "@heroui/react";
 import { useActionState } from "react";
 import { createGroup, State } from "@/app/lib/sun-actions";
 import React from "react";
-import { useAppContext } from "@/app/app-context";
 
 export default function GroupForm() {
   const initialState: State = { message: null, errors: {} };
