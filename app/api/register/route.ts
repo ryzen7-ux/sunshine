@@ -8,7 +8,7 @@ export async function POST() {
 
   try {
     const requestBody = {
-      ShortCode: 600983,
+      ShortCode: 600991,
       ResponseType: "Completed",
       ConfirmationURL: "https://25ee7bd48a37.ngrok-free.app/api/confirmation",
       ValidationURL: "https://25ee7bd48a37.ngrok-free.app/api/validation",

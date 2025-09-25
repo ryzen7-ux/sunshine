@@ -1,7 +1,8 @@
 //@ts-nocheck
 import sql from "@/app/lib/db";
+import { NextApiRequest, NextApiResponse } from "next";
 
-export async function POST(request: Request) {
+export async function GET(request: Request) {
   const res = await request.json();
 
   const transID = res.TransID ?? "";
