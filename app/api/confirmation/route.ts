@@ -27,9 +27,9 @@ export async function POST(request: NextRequest) {
       VALUES (${transID}, ${dateObject}, ${transAmount}, ${refNumber})
     `;
   } catch (error) {
-    return {
+    return NextResponse.json({
       message: "Database Error: Failed to Create Invoice.",
-    };
+    });
   }
 
   return NextResponse.json({ message: "success" });
