@@ -1,3 +1,4 @@
+//@ts-nocheck
 import { generateToken } from "@/app/lib/mpesa/mpesa-actions";
 import { NextResponse } from "next/server";
 

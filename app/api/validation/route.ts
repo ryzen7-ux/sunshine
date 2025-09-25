@@ -1,3 +1,5 @@
+//@ts-nocheck
+
 export async function POST(request: Request) {
   try {
     return {

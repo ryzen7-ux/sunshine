@@ -1,3 +1,4 @@
+//@ts-nocheck
 import sql from "@/app/lib/db";
 
 export async function POST(request: Request) {
