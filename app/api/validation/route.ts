@@ -1,4 +1,5 @@
 //@ts-nocheck
+import { NextRequest, NextResponse } from "next/server";
 
 export async function POST(request: Request) {
   try {
@@ -9,4 +10,5 @@ export async function POST(request: Request) {
   } catch (error) {
     error;
   }
+  return NextResponse.json({ message: "success" });
 }

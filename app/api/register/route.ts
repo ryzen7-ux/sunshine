@@ -8,10 +8,10 @@ export async function POST() {
 
   try {
     const requestBody = {
-      ShortCode: 600991,
+      ShortCode: 600997,
       ResponseType: "Completed",
-      ConfirmationURL: "https://25ee7bd48a37.ngrok-free.app/api/confirmation",
-      ValidationURL: "https://25ee7bd48a37.ngrok-free.app/api/validation",
+      ConfirmationURL: "https://044603dda042.ngrok-free.app/api/confirmation",
+      ValidationURL: "https://044603dda042.ngrok-free.app/api/validation",
     };
 
     const response = await fetch(

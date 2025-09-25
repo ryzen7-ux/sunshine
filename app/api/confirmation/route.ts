@@ -1,8 +1,8 @@
-//@ts-nocheck
 import sql from "@/app/lib/db";
-import { NextApiRequest, NextApiResponse } from "next";
+import { NextRequest, NextResponse } from "next/server";
+import { revalidatePath } from "next/cache";
 
-export async function GET(request: Request) {
+export async function POST(request: NextRequest) {
   const res = await request.json();
 
   const transID = res.TransID ?? "";
@@ -11,6 +11,7 @@ export async function GET(request: Request) {
   const refNumber = res.BillRefNumber ?? "";
   const dateString = transTime; // YYYYMMDD format
   const year = parseInt(dateString.substring(0, 4));
+
   // Month is 0-indexed in JavaScript Date objects, so subtract 1
   const month = parseInt(dateString.substring(4, 6)) - 1;
   const day = parseInt(dateString.substring(6, 8));
@@ -30,5 +31,6 @@ export async function GET(request: Request) {
       message: "Database Error: Failed to Create Invoice.",
     };
   }
-  return Response.json({ res });
+
+  return NextResponse.json({ message: "success" });
 }
