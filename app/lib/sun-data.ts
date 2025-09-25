@@ -24,10 +24,10 @@ export async function fetchFilteredGroups(query: string, currentPage: number) {
         groups.name,
         groups.location,
         groups.date , 
-        COUNT (members.id) AS members_count,
+        (SELECT COUNT(*) FROM members WHERE members.groupid = groups.id:: text ) as members_count,
         SUM(CASE WHEN loans.status = 'approved' THEN loans.amount ELSE 0 END) AS disbursed
       FROM groups
-      LEFT JOIN members ON groups.id:: text = members.groupid
+      JOIN members ON groups.id:: text = members.groupid
       LEFT JOIN loans ON groups.id = loans.groupid
       WHERE
         groups.reg ILIKE ${`%${query}%`} OR
@@ -38,7 +38,7 @@ export async function fetchFilteredGroups(query: string, currentPage: number) {
       ORDER BY groups.date DESC
       LIMIT ${ITEMS_PER_PAGE} OFFSET ${offset}
     `;
-
+    console.log(groups);
     return groups;
   } catch (error) {
     console.error("Database Error:", error);
@@ -541,7 +541,7 @@ export async function fetchLatestGroupInvoices() {
 export async function fetchLatestMpesaInvoices() {
   try {
     const data = await sql<MpesaInvoice[]>`
-      SELECT mpesainvoice.transamount, mpesainvoice.refnumber, mpesainvoice.transtime, mpesainvoice.transid
+      SELECT mpesainvoice.transamount, mpesainvoice.refnumber, mpesainvoice.transtime, mpesainvoice.transid, first_name, middle_name, last_name, phone_number
       FROM mpesainvoice
     
       ORDER BY mpesainvoice.transtime DESC
@@ -552,7 +552,7 @@ export async function fetchLatestMpesaInvoices() {
       transamount: formatCurrencyToLocal(invoice.transamount),
       transtime: formatDateToLocal(invoice.transtime),
     }));
-
+    console.log(latestInvoices);
     return latestInvoices;
   } catch (error) {
     console.error("Database Error:", error);

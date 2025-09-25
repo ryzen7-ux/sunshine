@@ -114,4 +114,8 @@ export type MpesaInvoice = {
   transamount: number;
   transtime: string;
   refnumber: string;
+  first_name: string;
+  middle_name: string;
+  last_name: string;
+  phone_number: string;
 };

@@ -25,18 +25,18 @@ async function seedUsers() {
     );
   `;
 
-  // const insertedUsers = await Promise.all(
-  //   users.map(async (user) => {
-  //     const hashedPassword = await bcrypt.hash(user.password, 10);
-  //     return sql`
-  //       INSERT INTO users (id, is_admin, name, email, password)
-  //       VALUES (${user.id},${user.is_admin}, ${user.name}, ${user.email}, ${hashedPassword})
-  //       ON CONFLICT (id) DO NOTHING;
-  //     `;
-  //   })
-  // );
+  const insertedUsers = await Promise.all(
+    users.map(async (user) => {
+      const hashedPassword = await bcrypt.hash(user.password, 10);
+      return sql`
+        INSERT INTO users (id, is_admin, name, email, password)
+        VALUES (${user.id},${user.is_admin}, ${user.name}, ${user.email}, ${hashedPassword})
+        ON CONFLICT (id) DO NOTHING;
+      `;
+    })
+  );
 
-  // return insertedUsers;
+  return insertedUsers;
 }
 
 async function seedInvoices() {

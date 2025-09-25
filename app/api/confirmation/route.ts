@@ -4,13 +4,17 @@ import { revalidatePath } from "next/cache";
 
 export async function POST(request: NextRequest) {
   const res = await request.json();
-
+  console.log(res);
   const transID = res.TransID ?? "";
   const transTime = res.TransTime ?? "";
   const transAmount = Number(res.TransAmount ?? "0");
   const refNumber = res.BillRefNumber ?? "";
   const dateString = transTime; // YYYYMMDD format
   const year = parseInt(dateString.substring(0, 4));
+  const firstName = res.FirstName;
+  const middleName = res.MiddleName;
+  const lastName = res.LastName;
+  const number = res.MSISDN;
 
   // Month is 0-indexed in JavaScript Date objects, so subtract 1
   const month = parseInt(dateString.substring(4, 6)) - 1;
@@ -23,8 +27,8 @@ export async function POST(request: NextRequest) {
 
   try {
     await sql`
-      INSERT INTO mpesainvoice (transid, transtime, transamount, refnumber)
-      VALUES (${transID}, ${dateObject}, ${transAmount}, ${refNumber})
+      INSERT INTO mpesainvoice (transid, transtime, transamount, refnumber, first_name, middle_name, last_name, phone_number)
+      VALUES (${transID}, ${dateObject}, ${transAmount}, ${refNumber}, ${firstName},  ${middleName}, ${lastName}, ${number})
     `;
   } catch (error) {
     return NextResponse.json({

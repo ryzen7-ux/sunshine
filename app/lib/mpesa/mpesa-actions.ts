@@ -5,7 +5,7 @@ export const generateToken = async () => {
 
   try {
     const response = await fetch(
-      `${process.env.MPESA_API_BASE_URL}/oauth/v1/generate?grant_type=client_credentials`,
+      `https://sandbox.safaricom.co.ke/oauth/v1/generate?grant_type=client_credentials`,
       {
         method: "GET",
         headers: {

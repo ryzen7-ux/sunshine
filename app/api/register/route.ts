@@ -5,13 +5,14 @@ import type { NextApiRequest, NextApiResponse } from "next";
 
 export async function POST() {
   const token = await generateToken();
+  console.log(token);
 
   try {
     const requestBody = {
-      ShortCode: 600997,
+      ShortCode: 600989,
       ResponseType: "Completed",
-      ConfirmationURL: "https://044603dda042.ngrok-free.app/api/confirmation",
-      ValidationURL: "https://044603dda042.ngrok-free.app/api/validation",
+      ConfirmationURL: "https://1969da5fe22d.ngrok-free.app/api/confirmation",
+      ValidationURL: "https://1969da5fe22d.ngrok-free.app/api/validation",
     };
 
     const response = await fetch(

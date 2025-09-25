@@ -42,7 +42,14 @@ export default async function LatestInvoices() {
                       {invoice.refnumber}
                     </p>
                     <p className=" text-sm text-gray-500 sm:block">
-                      {formatDateToLocal(invoice.transtime)}
+                      {invoice.first_name} {invoice.middle_name}{" "}
+                      {invoice.last_name}
+                    </p>
+                    <p className=" text-sm text-gray-500 sm:block">
+                      {invoice.phone_number}
+                    </p>
+                    <p className=" text-sm text-gray-500 sm:block">
+                      {invoice.transtime}
                     </p>
                   </div>
                 </div>
