@@ -44,7 +44,7 @@ export default async function Page(props: { params: Promise<{ id: string }> }) {
         <div className="flex w-full items-center pb-2">
           <h1 className={`text-xl font-bold text-gray-900`}>{group.name}</h1>
         </div>
-        <div className="grid gap-6 grid-cols-2 lg:grid-cols-4">
+        <div className="grid gap-6 grid-cols-1 lg:grid-cols-3">
           <Suspense fallback={<CardsSkeleton />}>
             <CardWrapper groupid={id} name={group.name} />
           </Suspense>

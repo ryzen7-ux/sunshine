@@ -18,34 +18,36 @@ export async function fetchFilteredGroups(query: string, currentPage: number) {
 
   try {
     const groups = await sql<GroupsTable[]>`
+    WITH summary1 AS (SELECT groupid, SUM(amount) as disbursed FROM loans GROUP BY groupid)
+   
       SELECT
         groups.id,
         groups.reg,
         groups.name,
         groups.location,
-        groups.date , 
+        groups.date, 
         (SELECT COUNT(*) FROM members WHERE members.groupid = groups.id:: text ) as members_count,
-        (SELECT SUM(loans.amount) FROM loans WHERE loans.status = 'approved') AS disbursed
+        s1.disbursed 
       FROM groups
-      JOIN members ON groups.id:: text = members.groupid
-      LEFT JOIN loans ON groups.id = loans.groupid
+      LEFT JOIN summary1 s1 ON groups.id = s1.groupid
       WHERE
         groups.reg ILIKE ${`%${query}%`} OR
         groups.name ILIKE ${`%${query}%`} OR
         groups.location ILIKE ${`%${query}%`} OR
         groups.date::text ILIKE ${`%${query}%`}
-      GROUP BY groups.id
+      GROUP BY groups.id, s1.disbursed
       ORDER BY groups.date DESC
       LIMIT ${ITEMS_PER_PAGE} OFFSET ${offset}
     `;
-    console.log(groups);
+
     return groups;
   } catch (error) {
     console.error("Database Error:", error);
     throw new Error("Failed to fetch groups.");
   }
 }
-
+// (SELECT COUNT(*) FROM members WHERE members.groupid = groups.id:: text ) as members_count,
+// SUM(CASE WHEN loans.status = 'approved' THEN loans.amount ELSE 0 END)
 export async function fetchGroupPages(query: string) {
   try {
     const data = await sql`SELECT COUNT(*)
@@ -573,7 +575,10 @@ export async function fetchGroupCardData(id: string, name: string) {
     // You can probably combine these into a single SQL query
     // However, we are intentionally splitting them to demonstrate
     // how to initialize multiple queries in parallel with JS.
-    const groupDisbursedPromise = sql`SELECT SUM(CASE WHEN status = 'approved' THEN amount ELSE 0 END), SUM((CASE WHEN status = 'approved' THEN amount ELSE 0 END/term + CASE WHEN status = 'approved' THEN amount ELSE 0 END * (interest/4/100) + CASE WHEN status = 'approved' THEN 1 ELSE 0 END ) * term ) AS payment FROM loans WHERE groupid = ${id} GROUP BY id`;
+    // const groupDisbursedPromise = sql`SELECT SUM(CASE WHEN status = 'approved' THEN amount ELSE 0 END), SUM((CASE WHEN status = 'approved' THEN amount ELSE 0 END/term + CASE WHEN status = 'approved' THEN amount ELSE 0 END * (interest/4/100) + CASE WHEN status = 'approved' THEN 1 ELSE 0 END ) * term ) AS payment FROM loans WHERE groupid = ${id} GROUP BY id`;
+
+    const groupDisbursedPromise = sql`SELECT SUM(amount) FROM loans WHERE groupid=${id} and status = 'approved'`;
+    const totalGroupLoan = sql`SELECT SUM((amount/term + (interest/4/100) * amount) * term) as payment FROM loans WHERE groupid=${id} AND status = 'approved'`;
     const groupsCollectedPromise = sql`SELECT SUM(CASE WHEN status = 'paid' THEN amount ELSE 0 END) FROM groupinvoice WHERE group_id = ${id}`;
     const groupsPendingPromise = sql`SELECT SUM(CASE WHEN status = 'pending' THEN amount ELSE 0 END) FROM groupinvoice WHERE group_id = ${id}`;
     const totalMembersPromise = sql`SELECT COUNT(*) AS total FROM members WHERE groupid = ${id}`;
@@ -585,13 +590,14 @@ export async function fetchGroupCardData(id: string, name: string) {
       groupsPendingPromise,
       totalMembersPromise,
       collectedMpesaPromise,
+      totalGroupLoan,
     ]);
 
     const groupDisbusredAmount = formatCurrencyToLocal(
       Number(data[0][0]?.sum || "0")
     );
     const totalPayment = formatCurrencyToLocal(
-      Number(data[0][0]?.payment ?? "0")
+      Number(data[5][0]?.payment ?? "0")
     );
 
     const groupCollectedAmount = formatCurrencyToLocal(
@@ -603,7 +609,7 @@ export async function fetchGroupCardData(id: string, name: string) {
     );
     const totalMembers = Number(data[3][0]?.total ?? "0");
     const balance = formatCurrencyToLocal(
-      Number(data[0][0]?.payment ?? "0") - Number(data[4][0]?.mpesa ?? "0")
+      Number(data[5][0]?.payment ?? "0") - Number(data[4][0]?.mpesa ?? "0")
     );
     const totalMpesa = formatCurrencyToLocal(Number(data[4][0]?.mpesa ?? "0"));
 

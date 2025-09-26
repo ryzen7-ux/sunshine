@@ -73,21 +73,21 @@ export default async function CardWrapper({
         value={balance}
         type="loanBalance"
         color="text-cyan-800"
-        span=""
+        span="col-span-1 md:col-span-2"
       />
-      <Card
+      {/* <Card
         title="Pending Payments"
         value={groupPendingPayments}
         type="pending"
         color="text-yellow-800"
         span="col-span-1 md:col-span-2"
-      />
+      /> */}
       <Card
         title="Total Members"
         value={totalMembers}
         type="total"
         color="text-indigo-800"
-        span="col-span-1 md:col-span-2"
+        span="col-span-1 md:col-span-1"
       />
     </>
   );
