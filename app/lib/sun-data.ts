@@ -447,6 +447,10 @@ export async function fetchFilteredMpesaInvoices(
       SELECT
         mpesainvoice.id,
         mpesainvoice.transid,
+        mpesainvoice.first_name,
+        mpesainvoice.middle_name,
+        mpesainvoice.last_name,
+        mpesainvoice.phone_number,
         mpesainvoice.transtime,
         mpesainvoice.transamount,
         mpesainvoice.refnumber

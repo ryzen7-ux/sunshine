@@ -21,6 +21,7 @@
     "dotenv": "^16.4.7",
     "framer-motion": "^12.9.2",
     "lucide-react": "^0.511.0",
+    "luxon": "^3.7.2",
     "next": "15.3.0-canary.21",
     "next-auth": "5.0.0-beta.25",
     "ngrok": "5.0.0-beta.2",
@@ -36,6 +37,7 @@
   },
   "devDependencies": {
     "@types/bcrypt": "^5.0.2",
+    "@types/luxon": "^3.7.1",
     "@types/node": "22.10.7",
     "@types/react": "19.0.7",
     "@types/react-dom": "19.0.3"

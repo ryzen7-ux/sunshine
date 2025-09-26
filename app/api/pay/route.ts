@@ -10,13 +10,14 @@ export async function POST() {
   try {
     const requestBody = {
       ShortCode: 107031,
-      ResponseType: "Completed",
-      ConfirmationURL: "https://1969da5fe22d.ngrok-free.app/api/confirmation",
-      ValidationURL: "https://1969da5fe22d.ngrok-free.app/api/validation",
+      CommandID: "CustomerPayBillOnline",
+      amount: "50",
+      MSISDN: "254705912645",
+      BillRefNumber: "Test Group",
     };
 
     const response = await fetch(
-      "https://sandbox.safaricom.co.ke/mpesa/c2b/v1/registerurl",
+      "https://sandbox.safaricom.co.ke/mpesa/c2b/v1/simulate",
       {
         method: "POST",
         headers: {

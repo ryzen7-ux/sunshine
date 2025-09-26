@@ -46,7 +46,7 @@ export function DeleteInvoice({ id }: { id: string }) {
     <>
       <button
         onClick={onOpen}
-        className="rounded-md border p-2 bg-red-100 hover:bg-red-200"
+        className="rounded-md border bg-red-100 hover:bg-red-200"
       >
         <span className="sr-only">Delete</span>
         <TrashIcon className="w-5 text-red-500" />

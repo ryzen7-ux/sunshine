@@ -1,4 +1,11 @@
-import { ArrowPathIcon, UserGroupIcon } from "@heroicons/react/24/solid";
+import {
+  ArrowPathIcon,
+  UserGroupIcon,
+  UserIcon,
+  PhoneIcon,
+  ClockIcon,
+  DocumentArrowDownIcon,
+} from "@heroicons/react/24/solid";
 import clsx from "clsx";
 import Image from "next/image";
 import { lusitana } from "@/app/ui/fonts";
@@ -20,50 +27,48 @@ export default async function LatestInvoices() {
       <div className="flex grow flex-col justify-between rounded-xl bg-gray-200 p-2">
         {/* NOTE: Uncomment this code in Chapter 7 */}
 
-        <div className="bg-white px-6 rounded-xl shadow-lg">
+        <div className="bg-white pr-2 rounded-xl shadow-lg">
           {latestInvoices.map((invoice, i) => {
             return (
               <div
                 key={i}
-                className={clsx(
-                  "flex flex-row items-center justify-between py-4",
-                  {
-                    "border-t": i !== 0,
-                  }
-                )}
+                className={clsx(" py-4 pr-2", {
+                  "border-t": i !== 0,
+                })}
               >
-                <div className="flex items-center">
-                  <UserGroupIcon
-                    className="h-8
-                   w-8 text-indigo-500"
-                  />
-                  <div className="min-w-0 ml-6">
-                    <p className="truncate text-sm font-semibold md:text-base">
-                      {invoice.refnumber}
+                <div className="pl-2">
+                  <DocumentArrowDownIcon className="h-5 w-5 fill-green-700" />
+                </div>
+                <div className="flex flex-row items-center justify-between">
+                  <div className="flex items-center flex-wrap">
+                    <div className="min-w-0 ml-6">
+                      <p className="truncate text-sm font-semibold md:text-base">
+                        Group: {invoice.refnumber}
+                      </p>
+                      <p className=" text-sm text-gray-700 sm:block">
+                        Name: {invoice.first_name} {invoice.middle_name}{" "}
+                        {invoice.last_name}
+                      </p>
+                      <p className=" text-sm text-gray-500 sm:block flex flex-wrap">
+                        Phone Number: {invoice.phone_number?.slice(0, 20)}
+                      </p>
+                      <p className=" text-sm text-gray-500 sm:block">
+                        Time: {invoice.transtime}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex flex-col">
+                    <p
+                      className={`truncate text-sm font-extrabold md:text-lg flex justify-center`}
+                    >
+                      {invoice.transamount}
                     </p>
-                    <p className=" text-sm text-gray-500 sm:block">
-                      {invoice.first_name} {invoice.middle_name}{" "}
-                      {invoice.last_name}
-                    </p>
-                    <p className=" text-sm text-gray-500 sm:block">
-                      {invoice.phone_number}
-                    </p>
-                    <p className=" text-sm text-gray-500 sm:block">
-                      {invoice.transtime}
+                    <p
+                      className={`truncate text-md text-green-500 font-extrabold pt-2 flex justify-center`}
+                    >
+                      {invoice.transid}
                     </p>
                   </div>
-                </div>
-                <div className="flex flex-col">
-                  <p
-                    className={`truncate text-sm font-extrabold md:text-lg flex justify-center`}
-                  >
-                    {invoice.transamount}
-                  </p>
-                  <p
-                    className={`truncate text-md text-green-500 font-extrabold pt-2 flex justify-center`}
-                  >
-                    {invoice.transid}
-                  </p>
                 </div>
               </div>
             );

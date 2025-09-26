@@ -1,21 +1,23 @@
 import sql from "@/app/lib/db";
 import { NextRequest, NextResponse } from "next/server";
 import { revalidatePath } from "next/cache";
+import { DateTime } from "luxon";
 
 export async function POST(request: NextRequest) {
   const res = await request.json();
-  console.log(res);
+
   const transID = res.TransID ?? "";
   const transTime = res.TransTime ?? "";
   const transAmount = Number(res.TransAmount ?? "0");
   const refNumber = res.BillRefNumber ?? "";
   const dateString = transTime; // YYYYMMDD format
-  const year = parseInt(dateString.substring(0, 4));
-  const firstName = res.FirstName;
-  const middleName = res.MiddleName;
-  const lastName = res.LastName;
-  const number = res.MSISDN;
 
+  const firstName = res.FirstName ?? "";
+  const middleName = res.MiddleName ?? "";
+  const lastName = res.LastName ?? "";
+  const number = res.MSISDN ?? "";
+
+  const year = parseInt(dateString.substring(0, 4));
   // Month is 0-indexed in JavaScript Date objects, so subtract 1
   const month = parseInt(dateString.substring(4, 6)) - 1;
   const day = parseInt(dateString.substring(6, 8));
@@ -23,7 +25,14 @@ export async function POST(request: NextRequest) {
   const minute = parseInt(dateString.substring(10, 12));
   const second = parseInt(dateString.substring(12, 14));
 
-  const dateObject = new Date(year, month, day, hour, minute);
+  const dt = DateTime.fromObject(
+    { year, month, day, hour, minute },
+    { zone: "Africa/Nairobi" }
+  );
+
+  const dateObject = dt.toISO();
+  console.log("dt", dt);
+  console.log("iso", dateObject);
 
   try {
     await sql`
