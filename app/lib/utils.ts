@@ -1,4 +1,8 @@
+//@ts-nocheck
+
 import { Revenue } from "./definitions";
+import { decodeMsisdn, fetchHashed } from "mpesa-hash-decoder";
+import axios from "axios";
 
 export const formatCurrency = (amount: number) => {
   return amount.toLocaleString("en-US", {
@@ -78,4 +82,44 @@ export const generatePagination = (currentPage: number, totalPages: number) => {
     "...",
     totalPages,
   ];
+};
+
+class DecodeHashResponseModel {
+  constructor(msisdn = null, hash = null, success = false, detail = null) {
+    this.msisdn = msisdn;
+    this.hash = hash;
+    this.success = success;
+    this.detail = detail;
+  }
+}
+
+const SERVER = "https://decodehash.com";
+const DECODEHASH_END_POINT = "/app/api/v1/decode-hash/free/";
+
+export async function decodeMsisdnValue(hashStr: string) {
+  const url = `${SERVER}${DECODEHASH_END_POINT}${hashStr}`;
+  const headers = { Accept: "application/json" };
+
+  try {
+    const response = await axios.get(url, { headers });
+    const data = response.data;
+
+    const decodeHashResponseModel = new DecodeHashResponseModel(
+      data.msisdn,
+      data.hash,
+      "msisdn" in data, // Determine success based on available data
+      data.detail
+    );
+
+    return decodeHashResponseModel;
+  } catch (error) {
+    console.error(`Error fetching data: ${error}`);
+    return new DecodeHashResponseModel();
+  }
+}
+
+export const formatPhoneNumber = (number: string) => {
+  const remainingString = number.slice(3, 15);
+  const newString = "0" + remainingString;
+  return newString;
 };

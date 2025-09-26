@@ -5,6 +5,7 @@ import {
   formatDateToLocal,
   formatCurrency,
   formatCurrencyToLocal,
+  formatPhoneNumber,
 } from "@/app/lib/utils";
 import { fetchFilteredInvoices } from "@/app/lib/data";
 import { fetchFilteredMpesaInvoices } from "@/app/lib/sun-data";
@@ -16,7 +17,6 @@ export default async function InvoicesTable({
   query: string;
   currentPage: number;
 }) {
-  const invoices = await fetchFilteredInvoices(query, currentPage);
   const ginvoices = await fetchFilteredMpesaInvoices(query, currentPage);
 
   if (!ginvoices || ginvoices.length === 0) {
@@ -51,7 +51,7 @@ export default async function InvoicesTable({
                       {invoice.last_name}
                     </p>
                     <p className="text-sm text-gray-500">
-                      {invoice.phone_number.slice(0, 20)}
+                      {formatPhoneNumber(invoice.phone_number)}
                     </p>
                     <p className="text-sm text-gray-500">
                       {formatDateToLocal(invoice.transtime)}
@@ -68,7 +68,7 @@ export default async function InvoicesTable({
           <table className="hidden min-w-full text-gray-900 md:table">
             <thead className="rounded-lg text-left text-sm font-normal">
               <tr>
-                <th scope="col" className=" py-2 font-medium  pl-6">
+                <th scope="col" className=" py-2 font-medium  pl-2">
                   Group
                 </th>
                 <th>Name</th>
@@ -94,34 +94,33 @@ export default async function InvoicesTable({
                   key={index}
                   className="w-full border-b py-3 text-sm last-of-type:border-none [&:first-child>td:first-child]:rounded-tl-lg [&:first-child>td:last-child]:rounded-tr-lg [&:last-child>td:first-child]:rounded-bl-lg [&:last-child>td:last-child]:rounded-br-lg"
                 >
-                  <td className="whitespace-nowrap py-1 pl-6 pr-3">
+                  <td className="whitespace-nowrap py-1 pr-3 pl-2">
                     <div className="flex items-center gap-3">
                       <p className="text-xs">{invoice.refnumber}</p>
                     </div>
                   </td>
-                  <td className="whitespace-nowrap">
+                  <td className="whitespace-nowrap pr-3">
                     <div className="flex items-center gap-3">
                       <p className="text-xs">
-                        {invoice.first_name} {invoice.middle_name}{" "}
-                        {invoice.last_name}
+                        {invoice.first_name} {invoice.last_name}
                       </p>
                     </div>
                   </td>
-                  <td className="whitespace-nowrap ">
+                  <td className="whitespace-nowrap pr-3 ">
                     <div className="flex items-center gap-3">
                       <p className="text-xs">
-                        {invoice.phone_number.slice(0, 20)}
+                        {formatPhoneNumber(invoice.phone_number)}
                       </p>
                     </div>
                   </td>
 
-                  <td className="whitespace-nowrap  text-xs">
+                  <td className="whitespace-nowrap pr-3 text-xs">
                     {formatCurrencyToLocal(invoice.transamount)}
                   </td>
-                  <td className="whitespace-nowrap py-3 text-xs flex justify-start">
+                  <td className="whitespace-nowrap py-3 text-xs flex justify-start pr-3">
                     {formatDateToLocal(invoice.transtime)}
                   </td>
-                  <td className="whitespace-nowrap px-1 py-3 text-xs text-green-500 font-extrabold ">
+                  <td className="whitespace-nowrap px-1 py-3 pr-3 text-xs text-green-500 font-extrabold ">
                     {invoice.transid}
                   </td>
                   <td className="whitespace-nowrap  pl-6 pr-3">

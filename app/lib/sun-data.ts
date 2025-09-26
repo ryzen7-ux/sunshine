@@ -25,7 +25,7 @@ export async function fetchFilteredGroups(query: string, currentPage: number) {
         groups.location,
         groups.date , 
         (SELECT COUNT(*) FROM members WHERE members.groupid = groups.id:: text ) as members_count,
-        SUM(CASE WHEN loans.status = 'approved' THEN loans.amount ELSE 0 END) AS disbursed
+        (SELECT SUM(loans.amount) FROM loans WHERE loans.status = 'approved') AS disbursed
       FROM groups
       JOIN members ON groups.id:: text = members.groupid
       LEFT JOIN loans ON groups.id = loans.groupid
@@ -424,6 +424,10 @@ export async function fetchMpesaInvoicesPages(query: string) {
       mpesainvoice.transid ILIKE ${`%${query}%`} OR
       mpesainvoice.transtime::text ILIKE ${`%${query}%`} OR
       mpesainvoice.transamount::text ILIKE ${`%${query}%`} OR
+      mpesainvoice.first_name::text ILIKE ${`%${query}%`} OR
+      mpesainvoice.middle_name::text ILIKE ${`%${query}%`} OR
+      mpesainvoice.last_name::text ILIKE ${`%${query}%`} OR
+      mpesainvoice.phone_number::text ILIKE ${`%${query}%`} OR
       mpesainvoice.refnumber ILIKE ${`%${query}%`}
   `;
 
@@ -556,7 +560,7 @@ export async function fetchLatestMpesaInvoices() {
       transamount: formatCurrencyToLocal(invoice.transamount),
       transtime: formatDateToLocal(invoice.transtime),
     }));
-    console.log(latestInvoices);
+
     return latestInvoices;
   } catch (error) {
     console.error("Database Error:", error);

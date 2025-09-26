@@ -22,6 +22,7 @@
     "framer-motion": "^12.9.2",
     "lucide-react": "^0.511.0",
     "luxon": "^3.7.2",
+    "mpesa-hash-decoder": "^1.0.1",
     "next": "15.3.0-canary.21",
     "next-auth": "5.0.0-beta.25",
     "ngrok": "5.0.0-beta.2",

@@ -15,7 +15,7 @@ import {
   fetchLatestGroupInvoices,
   fetchLatestMpesaInvoices,
 } from "@/app/lib/sun-data";
-import { formatDateToLocal } from "@/app/lib/utils";
+import { formatDateToLocal, formatPhoneNumber } from "@/app/lib/utils";
 
 export default async function LatestInvoices() {
   // const latestInvoices = await fetchLatestInvoices();
@@ -50,7 +50,7 @@ export default async function LatestInvoices() {
                         {invoice.last_name}
                       </p>
                       <p className=" text-sm text-gray-500 sm:block flex flex-wrap">
-                        Phone Number: {invoice.phone_number?.slice(0, 20)}
+                        Phone Number: {formatPhoneNumber(invoice.phone_number)}
                       </p>
                       <p className=" text-sm text-gray-500 sm:block">
                         Time: {invoice.transtime}

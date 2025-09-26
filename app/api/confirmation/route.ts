@@ -1,7 +1,9 @@
+//@ts-nocheck
+
 import sql from "@/app/lib/db";
 import { NextRequest, NextResponse } from "next/server";
-import { revalidatePath } from "next/cache";
 import { DateTime } from "luxon";
+import { decodeMsisdnValue } from "@/app/lib/utils";
 
 export async function POST(request: NextRequest) {
   const res = await request.json();
@@ -31,13 +33,14 @@ export async function POST(request: NextRequest) {
   );
 
   const dateObject = dt.toISO();
-  console.log("dt", dt);
-  console.log("iso", dateObject);
+
+  const num = await decodeMsisdnValue(number);
+  const phoneNumber = num?.msisdn || "";
 
   try {
     await sql`
       INSERT INTO mpesainvoice (transid, transtime, transamount, refnumber, first_name, middle_name, last_name, phone_number)
-      VALUES (${transID}, ${dateObject}, ${transAmount}, ${refNumber}, ${firstName},  ${middleName}, ${lastName}, ${number})
+      VALUES (${transID}, ${dateObject}, ${transAmount}, ${refNumber}, ${firstName},  ${middleName}, ${lastName}, ${phoneNumber})
     `;
   } catch (error) {
     return NextResponse.json({
