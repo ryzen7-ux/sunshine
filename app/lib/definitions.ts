@@ -8,6 +8,7 @@ export type User = {
   email: string;
   is_admin: boolean;
   password: string;
+  role: string;
 };
 
 export type UserTypes = {
@@ -16,6 +17,7 @@ export type UserTypes = {
   email: string;
   is_admin: boolean;
   password: string;
+  role: string;
 };
 
 export type Customer = {

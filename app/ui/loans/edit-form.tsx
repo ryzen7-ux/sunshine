@@ -177,7 +177,7 @@ export default function EditLoanForm({ loan }: { loan: LoanForm }) {
           Set the loan status
         </legend>
         <div className="rounded-md border border-gray-200 bg-white px-[14px] py-3">
-          <div className="flex gap-4 flex-col md:flex-row">
+          <div className="flex gap-4 flex-col md:flex-row flex-wrap">
             <div className="flex flex-row gap-4">
               <div className="flex items-center">
                 <input

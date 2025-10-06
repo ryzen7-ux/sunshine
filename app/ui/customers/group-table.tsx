@@ -12,18 +12,19 @@ import {
   Chip,
   Tooltip,
 } from "@heroui/react";
-import { Trash2Icon, Trash2, Eye, Pen } from "lucide-react";
-import { Input, Button, addToast } from "@heroui/react";
-import { useAppContext } from "@/app/app-context";
+
 import Link from "next/link";
 import { deleteGroup } from "@/app/lib/sun-actions";
 import { DeleteGroupAction } from "@/app/ui/customers/table-actions";
 import { formatCurrencyToLocal } from "@/app/lib/utils";
+import EditGroupModal from "@/app/ui/customers/edit-group-modal";
+import Regions from "../system-management/regions";
 
 export const columns = [
   { name: "REG NO", uid: "reg" },
   { name: "NAME", uid: "name" },
   { name: "LOCATION", uid: "location" },
+  { name: "REGION", uid: "region_name" },
   { name: "DISBURSED", uid: "disbursed" },
   { name: "MEMBERS", uid: "members_count" },
   { name: "ACTIONS", uid: "actions" },
@@ -156,7 +157,13 @@ const statusColorMap = {
   vacation: "warning",
 };
 
-export default function GroupTable({ groups }: { groups: any }) {
+export default function GroupTable({
+  groups,
+  regions,
+}: {
+  groups: any;
+  regions: any;
+}) {
   const renderCell = React.useCallback((group: any, columnKey: any) => {
     const cellValue = group[columnKey];
 
@@ -174,6 +181,12 @@ export default function GroupTable({ groups }: { groups: any }) {
           </div>
         );
       case "location":
+        return (
+          <div>
+            <p className="text-bold text-xs">{cellValue}</p>
+          </div>
+        );
+      case "region_name":
         return (
           <div>
             <p className="text-bold text-xs">{cellValue}</p>
@@ -198,7 +211,7 @@ export default function GroupTable({ groups }: { groups: any }) {
 
       case "actions":
         return (
-          <div className="relative flex justify-center gap-2">
+          <div className="relative flex justify-center gap-3">
             <Tooltip color="warning" content="Group details">
               <Link href={`/dashboard/customers/${group.id}/details`}>
                 <span className="text-lg text-default-400 cursor-pointer active:opacity-50">
@@ -206,12 +219,9 @@ export default function GroupTable({ groups }: { groups: any }) {
                 </span>
               </Link>
             </Tooltip>
+
             <Tooltip color="success" content="Edit group">
-              <Link href={`/dashboard/customers/${group.id}/edit`}>
-                <span className="text-lg text-default-400 cursor-pointer active:opacity-50">
-                  <EditIcon className="h-5 w-5 text-green-500" />
-                </span>
-              </Link>
+              <EditGroupModal group={group} regions={regions} />
             </Tooltip>
             <Tooltip color="danger" content="Delete group info">
               <DeleteGroupAction id={group.id} />

@@ -52,6 +52,7 @@ export default function CreateLoanForm({
 
   const principal = Number.parseFloat(amount);
   const rate = Number.parseFloat(interest) / 100 / 4;
+  console.log(rate);
   const Loanterm = Number.parseInt(term);
 
   const wpay = Math.ceil(principal / Loanterm + principal * rate);

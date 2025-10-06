@@ -5,6 +5,8 @@ import { z } from "zod";
 import type { UserTypes } from "@/app/lib/definitions";
 import bcrypt from "bcryptjs";
 import sql from "@/app/lib/db";
+import { createSession, deleteSession } from "@/app/lib/session";
+import { redirect } from "next/navigation";
 
 async function getUser(email: string): Promise<UserTypes | undefined> {
   try {
@@ -19,7 +21,7 @@ async function getUser(email: string): Promise<UserTypes | undefined> {
   }
 }
 
-export const { auth, signIn, signOut } = NextAuth({
+export const { auth } = NextAuth({
   ...authConfig,
   providers: [
     Credentials({
@@ -41,3 +43,31 @@ export const { auth, signIn, signOut } = NextAuth({
     }),
   ],
 });
+
+export async function signIn(data: any, formData: FormData) {
+  const email = formData.get("email") as string;
+  const password = formData.get("password") as string;
+
+  const user = await getUser(email);
+  if (!user) {
+    return { success: false, message: "No account found with that email!" };
+  }
+  const passwordMatch = await bcrypt.compare(password, user?.password);
+  const userObj = {
+    name: user?.name,
+    email: user?.email,
+    role: user?.role,
+  };
+  if (passwordMatch && user) {
+    await createSession(JSON.stringify(userObj));
+
+    return { success: true, message: "Success" };
+  }
+
+  return { success: false, message: "Invalid credentials!" };
+}
+
+export async function signOut() {
+  await deleteSession();
+  redirect("/login");
+}

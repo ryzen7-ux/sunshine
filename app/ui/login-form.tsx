@@ -1,26 +1,50 @@
 "use client";
-
+import { useState } from "react";
 import { lusitana } from "@/app/ui/fonts";
 import {
   AtSymbolIcon,
   KeyIcon,
   ExclamationCircleIcon,
 } from "@heroicons/react/24/outline";
+
 import { ArrowRightIcon } from "@heroicons/react/20/solid";
 import { Button } from "./button";
 import { useActionState } from "react";
 import { authenticate } from "@/app/lib/actions";
 import { useSearchParams } from "next/navigation";
+import { addToast } from "@heroui/react";
+import { redirect } from "next/navigation";
 
 export default function LoginForm() {
+  const [isPending, setIspending] = useState(false);
   const searchParams = useSearchParams();
   const callbackUrl = searchParams.get("callbackUrl") || "/dashboard";
-  const [errorMessage, formAction, isPending] = useActionState(
-    authenticate,
-    undefined
-  );
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setIspending(true);
+    const formData = new FormData(e.currentTarget);
+    const result = await authenticate(formData);
+    console.log(result);
+    if (result?.success === false) {
+      setIspending(false);
+      addToast({
+        color: "danger",
+        title: result.message,
+      });
+    }
+    if (result?.success === true) {
+      setIspending(false);
+      addToast({
+        color: "success",
+        title: result.message,
+      });
+      redirect("/dashboard");
+    }
+  };
+
   return (
-    <form action={formAction} className="">
+    <form onSubmit={handleSubmit} className="">
       <div className="flex-1 rounded-b-lg bg-gray-50 px-6 pb-4 pt-8">
         <h1 className={`${lusitana.className} mb-3 text-2xl`}>
           Please log in to continue.
@@ -75,12 +99,12 @@ export default function LoginForm() {
         </Button>
         <div className="flex h-8 items-end space-x-1">
           {/* Add form errors here */}
-          {errorMessage && (
+          {/* {errorMessage && (
             <>
               <ExclamationCircleIcon className="h-5 w-5 text-red-500" />
               <p className="text-sm text-red-500">{errorMessage}</p>
             </>
-          )}
+          )} */}
         </div>
       </div>
     </form>

@@ -6,15 +6,15 @@ import { createGroup, State } from "@/app/lib/sun-actions";
 import React from "react";
 
 export default function GroupForm() {
-  const initialState: State = { message: null, errors: {} };
-  const [state, formAction, isLoading] = useActionState(
-    createGroup,
-    initialState
-  );
+  // const initialState: State = { message: null, errors: {} };
+  // const [state, formAction, isLoading] = useActionState(
+  //   createGroup,
+  //   initialState
+  // );
 
   return (
-    <Form action={formAction}>
-      <div className="flex flex-col py-4 border rounded-md px-6 w-full">
+    <Form>
+      {/* <div className="flex flex-col py-4 border rounded-md px-6 w-full">
         <div className="flex w-full items-center">
           <h1 className={`text-xl font-bold text-gray-900`}>Create Group</h1>
         </div>
@@ -100,7 +100,7 @@ export default function GroupForm() {
             )}
           </Button>
         </div>
-      </div>
+      </div> */}
     </Form>
   );
 }

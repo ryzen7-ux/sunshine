@@ -40,18 +40,33 @@ const config = {
   content: [
     "./components/**/*.{js,ts,jsx,tsx,mdx}",
     "./app/**/*.{js,ts,jsx,tsx,mdx}",
-    "./node_modules/@heroui/theme/dist/**/*.{js,ts,jsx,tsx}"
+    "./node_modules/@heroui/theme/dist/**/*.{js,ts,jsx,tsx}",
   ],
   theme: {
     extend: {
       fontFamily: {
         sans: ["var(--font-sans)"],
-        mono: ["var(--font-mono)"]
-      }
-    }
+        mono: ["var(--font-mono)"],
+      },
+    },
   },
   darkMode: "class",
-  plugins: [heroui()]
+  plugins: [
+    heroui(),
+    function ({ addUtilities }: { addUtilities: any }) {
+      addUtilities({
+        ".no-scrollbar": {
+          /* Hide scrollbar for Chrome, Safari and Opera */
+          "&::-webkit-scrollbar": {
+            display: "none",
+          },
+          /* Hide scrollbar for IE, Edge and Firefox */
+          "-ms-overflow-style": "none" /* IE and Edge */,
+          "scrollbar-width": "none" /* Firefox */,
+        },
+      });
+    },
+  ],
 };
 
 export default config;

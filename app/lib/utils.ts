@@ -123,3 +123,14 @@ export const formatPhoneNumber = (number: string) => {
   const newString = "0" + remainingString;
   return newString;
 };
+
+export const computeTotalLoan = (
+  amount: number,
+  interest: number,
+  term: number
+) => {
+  const rate = interest / 100 / 4;
+  const wpay = Math.ceil(amount / term + amount * rate);
+  const payment = Math.ceil(wpay * term);
+  return Math.trunc(payment);
+};

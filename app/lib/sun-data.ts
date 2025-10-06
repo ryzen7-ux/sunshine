@@ -10,9 +10,291 @@ import {
   LatestInvoice,
   MpesaInvoice,
 } from "./sun-defination";
-import { formatCurrencyToLocal, formatDateToLocal } from "@/app/lib/utils";
+import {
+  formatCurrencyToLocal,
+  formatDateToLocal,
+  computeTotalLoan,
+} from "@/app/lib/utils";
+
+// CLSOE DB COONECTIONS
 
 const ITEMS_PER_PAGE = 6;
+// USERS FETCH
+export async function fetchUserByEmail(email: string) {
+  try {
+    const user = await sql<[]>`
+    SELECT
+      users.email,
+      users.name,
+      users.phone,
+      users.role,
+      users.status,
+      users.password
+    FROM users
+    WHERE email = ${email}`;
+
+    return user;
+  } catch (error) {
+    console.log(error);
+  }
+}
+
+export async function fetchUserById(id: string) {
+  try {
+    const user = await sql<any[]>`
+    SELECT
+    users.id,
+      users.email,
+      users.name,
+      users.phone,
+      users.role,
+      users.status,
+      users.password
+    FROM users
+    WHERE users.id = ${id}`;
+
+    return user;
+  } catch (error) {
+    console.log(error);
+  }
+}
+
+export async function fetchUsers() {
+  try {
+    const user = await sql<any[]>`
+    SELECT
+      users.id,
+      users.email,
+      users.name,
+      users.phone,
+      users.role,
+      users.status
+    FROM users
+    ORDER BY users.id`;
+
+    return user;
+  } catch (error) {
+    console.log(error);
+  }
+}
+
+// REGIONS FETCH
+export async function fetchRegions() {
+  try {
+    const regions = await sql<any[]>`
+    SELECT
+      regions.id,
+      regions.name,
+      regions.county,
+      regions.manager,
+      users.name as custodian
+    FROM regions
+    JOIN users on regions.manager = users.id
+    ORDER BY regions.id`;
+
+    return regions;
+  } catch (error) {
+    console.log(error);
+  }
+}
+// INDIVIDUALS FETCH
+export async function fetchIndividualsByIdNumber(idnumber: number) {
+  try {
+    const individuals = await sql<any[]>`
+    SELECT
+      individuals.id,
+      individuals.name,
+      individuals.region,
+      individuals.phone,
+      individuals.idnumber,
+      individuals.business
+    FROM individuals
+    WHERE individuals.idnumber =${idnumber}`;
+
+    return individuals;
+  } catch (error) {
+    console.log(error);
+  }
+}
+
+export async function fetchIndividuals() {
+  try {
+    const regions = await sql<any[]>`
+    SELECT
+      individuals.id,
+      individuals.name,
+      individuals.region,
+      individuals.phone,
+      individuals.idnumber,
+      individuals.business
+    FROM individuals
+    ORDER BY name`;
+
+    return regions;
+  } catch (error) {
+    console.log(error);
+  }
+}
+
+export async function fetchIndividualsById(id: string) {
+  try {
+    const individual = await sql<any[]>`
+    SELECT
+      individuals.id,
+      individuals.name,
+      individuals.region,
+      individuals.phone,
+      individuals.idnumber,
+      individuals.business
+    FROM individuals
+    WHERE individuals.region::TEXT = ${id}
+    ORDER BY individuals.name
+ `;
+
+    return individual;
+  } catch (error) {
+    console.log(error);
+  }
+}
+
+export async function fetchIndividualById(id: string) {
+  try {
+    const individual = await sql<any[]>`
+    SELECT
+      individuals.id,
+      individuals.name,
+      individuals.region,
+      individuals.phone,
+      individuals.idnumber,
+      individuals.business
+    FROM individuals
+    WHERE individuals.id = ${id}
+    ORDER BY individuals.name
+ `;
+
+    return individual;
+  } catch (error) {
+    console.log(error);
+  }
+}
+
+export async function fetchIndividualPages(query: string) {
+  try {
+    const data = await sql`SELECT COUNT(*)
+    FROM individuals
+  `;
+    const totalPages = Math.ceil(Number(data[0].count) / ITEMS_PER_PAGE);
+    return totalPages;
+  } catch (error) {
+    console.error("Database Error:", error);
+    throw new Error("Failed to fetch total number of invoices.");
+  }
+}
+
+export async function fetchFilteredIndividuals(
+  query: string,
+  currentPage: number
+) {
+  const offset = (currentPage - 1) * ITEMS_PER_PAGE;
+
+  try {
+    const groups = await sql<any[]>`
+      SELECT
+      individuals.id,
+      individuals.name,
+      individuals.region,
+      individuals.phone,
+      individuals.idnumber,
+      individuals.business,
+      regions.name as regionname
+      FROM individuals
+      JOIN regions ON regions.id = individuals.region
+      WHERE
+        individuals.name ILIKE ${`%${query}%`} OR
+        individuals.phone ILIKE ${`%${query}%`} OR
+        individuals.idnumber::TEXT ILIKE ${`%${query}%`} OR
+        individuals.business ILIKE ${`%${query}%`} OR
+        individuals.created::text ILIKE ${`%${query}%`}
+      ORDER BY individuals.created DESC
+      LIMIT ${ITEMS_PER_PAGE} OFFSET ${offset}
+    `;
+
+    return groups;
+  } catch (error) {
+    console.error("Database Error:", error);
+    throw new Error("Failed to fetch groups.");
+  }
+}
+
+export async function fetchFilteredIndividualLoans(
+  query: string,
+  currentPage: number
+) {
+  const offset = (currentPage - 1) * ITEMS_PER_PAGE;
+
+  try {
+    const individual_loans = await sql<any[]>`
+      SELECT
+      individuals_loans.id,
+      individuals_loans.region,
+      individuals_loans.loanee,
+      individuals_loans.amount,
+      individuals_loans.interest,
+      individuals_loans.term,
+      individuals_loans.status,
+      individuals_loans.created,
+      individuals.name,
+      individuals.idnumber,
+      regions.name as region
+            
+      FROM individuals_loans
+      INNER JOIN individuals ON individuals.id = individuals_loans.loanee
+      iNNER JOIN regions ON regions.id = individuals.region
+      WHERE
+        individuals_loans.amount::TEXT ILIKE ${`%${query}%`} OR
+        individuals_loans.status ILIKE ${`%${query}%`} OR
+        individuals_loans.created::TEXT ILIKE ${`%${query}%`} OR
+        individuals.name ILIKE ${`%${query}%`} OR
+        regions.name ILIKE ${`%${query}%`}
+      ORDER BY individuals.created DESC
+      LIMIT ${ITEMS_PER_PAGE} OFFSET ${offset}
+    `;
+
+    const loan = individual_loans
+      .map((item: any) => ({
+        ...item,
+        payment: computeTotalLoan(
+          Math.trunc(item.amount),
+          Math.trunc(item.interest),
+          Math.trunc(item.term)
+        ),
+        interest: Math.trunc(item.interest),
+        term: Math.trunc(item.term),
+        created: formatDateToLocal(item.created),
+      }))
+      .sort((a: any, b: any) => b.created.localeCompare(a.created));
+
+    return loan;
+  } catch (error) {
+    console.error("Database Error:", error);
+    throw new Error("Failed to fetch groups.");
+  }
+}
+
+export async function fetchIndividualLoansPages(query: string) {
+  try {
+    const data = await sql`SELECT COUNT(*)
+    FROM individuals_loans
+  `;
+    const totalPages = Math.ceil(Number(data[0].count) / ITEMS_PER_PAGE);
+    return totalPages;
+  } catch (error) {
+    console.error("Database Error:", error);
+    throw new Error("Failed to fetch total number of invoices.");
+  }
+}
+
+// GROUPS FETCH
 export async function fetchFilteredGroups(query: string, currentPage: number) {
   const offset = (currentPage - 1) * ITEMS_PER_PAGE;
 
@@ -25,17 +307,20 @@ export async function fetchFilteredGroups(query: string, currentPage: number) {
         groups.reg,
         groups.name,
         groups.location,
+        groups.region,
         groups.date, 
+        regions.name as region_name,
         (SELECT COUNT(*) FROM members WHERE members.groupid = groups.id:: text ) as members_count,
         s1.disbursed 
       FROM groups
       LEFT JOIN summary1 s1 ON groups.id = s1.groupid
+    JOIN regions ON regions.id = groups.region
       WHERE
         groups.reg ILIKE ${`%${query}%`} OR
         groups.name ILIKE ${`%${query}%`} OR
         groups.location ILIKE ${`%${query}%`} OR
         groups.date::text ILIKE ${`%${query}%`}
-      GROUP BY groups.id, s1.disbursed
+      GROUP BY groups.id, s1.disbursed, regions.name
       ORDER BY groups.date DESC
       LIMIT ${ITEMS_PER_PAGE} OFFSET ${offset}
     `;

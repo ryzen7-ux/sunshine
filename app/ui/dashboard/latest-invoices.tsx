@@ -16,6 +16,7 @@ import {
   fetchLatestMpesaInvoices,
 } from "@/app/lib/sun-data";
 import { formatDateToLocal, formatPhoneNumber } from "@/app/lib/utils";
+import { Coins } from "lucide-react";
 
 export default async function LatestInvoices() {
   // const latestInvoices = await fetchLatestInvoices();
@@ -23,7 +24,11 @@ export default async function LatestInvoices() {
 
   return (
     <div className="flex w-full flex-col md:col-span-4">
-      <h2 className={` mb-4 text-xl md:text-2xl`}>Latest Mpesa Invoices</h2>
+      <h2 className={` mb-4 text-md md:text-lg flex gap-2 items-center`}>
+        {" "}
+        <Coins className="h-6 w-6 text-yellow-600" />
+        Latest Mpesa Invoices
+      </h2>
       <div className="flex grow flex-col justify-between rounded-xl bg-gray-200 p-2">
         {/* NOTE: Uncomment this code in Chapter 7 */}
 

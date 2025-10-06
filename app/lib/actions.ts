@@ -34,6 +34,17 @@ export type State = {
   message?: string | null;
 };
 
+export async function createStaff(formData: FormData) {
+  const name = formData.get("name") as string;
+  const email = formData.get("email") as string;
+  const phone = formData.get("phone") as string;
+  const role = formData.get("role") as string;
+  const status = formData.get("status") as string;
+  const password = formData.get("passowrd") as string;
+
+  console.log(formData);
+}
+
 export async function createInvoice(prevState: State, formData: FormData) {
   const validatedFields = CreateInvoice.safeParse({
     customerId: formData.get("customerId"),
@@ -95,21 +106,13 @@ export async function deleteInvoice(id: string) {
   revalidatePath("/dashboard/invoices");
 }
 
-export async function authenticate(
-  prevState: string | undefined,
-  formData: FormData
-) {
+export async function authenticate(formData: FormData) {
   try {
-    await signIn("credentials", formData);
+    const result = await signIn("credentials", formData);
+    return result;
   } catch (error) {
-    if (error instanceof AuthError) {
-      switch (error.type) {
-        case "CredentialsSignin":
-          return "Invalid credentials.";
-        default:
-          return "Something went wrong.";
-      }
+    if (error) {
+      return { success: false, message: "Server Error!" };
     }
-    throw error;
   }
 }

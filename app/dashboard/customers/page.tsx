@@ -1,7 +1,11 @@
 import GroupTable from "@/app/ui/customers/group-table";
 import { Input } from "@heroui/react";
 import SearchGroup from "@/app/ui/customers/search-group";
-import { fetchFilteredGroups, fetchGroupPages } from "@/app/lib/sun-data";
+import {
+  fetchFilteredGroups,
+  fetchGroupPages,
+  fetchRegions,
+} from "@/app/lib/sun-data";
 import { Suspense } from "react";
 import { InvoicesTableSkeleton } from "@/app/ui/skeletons";
 import GroupPagination from "@/app/ui/customers/pagination";
@@ -22,6 +26,7 @@ export default async function Page(props: {
   const success = searchParams?.success || "false";
   const groups = await fetchFilteredGroups(query, currentPage);
   const totalPages = await fetchGroupPages(query);
+  const regions = await fetchRegions();
 
   return (
     <>
@@ -33,14 +38,14 @@ export default async function Page(props: {
         </div>
 
         <div>
-          <SearchGroup />
+          <SearchGroup regions={regions} />
         </div>
 
         <Suspense
           key={query + currentPage}
           fallback={<InvoicesTableSkeleton />}
         >
-          <GroupTable groups={groups} />
+          <GroupTable groups={groups} regions={regions} />
         </Suspense>
         <div className="mt-5 mb-5 flex w-full justify-center">
           <GroupPagination totalPages={totalPages} />

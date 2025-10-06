@@ -1,55 +1,59 @@
 "use client";
-
+import { useState } from "react";
 import {
-  Input,
-  Link,
   Modal,
   ModalContent,
   ModalHeader,
   ModalBody,
+  ModalFooter,
   useDisclosure,
   Form,
-  NumberInput,
-  Select,
-  SelectItem,
-  Button,
+  Input,
   Spinner,
   addToast,
+  Select,
+  SelectItem,
+  NumberInput,
 } from "@heroui/react";
-import { useState } from "react";
-import { Search, Plus } from "lucide-react";
-import { useSearchParams, usePathname, useRouter } from "next/navigation";
-import { useDebouncedCallback } from "use-debounce";
-import { createGroup, State } from "@/app/lib/sun-actions";
+import { Button } from "@heroui/react";
+import { EyeIcon, EyeSlashIcon } from "@heroicons/react/24/solid";
+import { createIndividual } from "@/app/lib/sun-actions";
+import { number } from "zod";
 
-export default function SearchGroup({ regions }: { regions: any }) {
-  const [isModalOpen, setIsModalOpen] = useState(false);
+const roles = [
+  { key: "admin", label: "Admin" },
+  { key: "manager", label: "Manager" },
+  { key: "staff", label: "Staff" },
+];
+const status = [
+  { key: "active", label: "Active" },
+  { key: "inactive", label: "Inactive" },
+  { key: "on-leave", label: "On-Leave" },
+];
+
+export default function EditIndividuals({ regions }: { regions: any }) {
+  const [formData, setFormData] = useState({
+    name: "",
+    phone: "",
+    business: "",
+  });
   const [isLoading, setIsloading] = useState(false);
   const [selectRegion, setRegion] = useState("");
+  const [idNumber, setIdNumber] = useState<number>();
+
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
 
-  const searchParams = useSearchParams();
-  const pathname = usePathname();
-  const { replace } = useRouter();
-
-  const handleSearch = useDebouncedCallback((term) => {
-    console.log(`Searching... ${term}`);
-
-    const params = new URLSearchParams(searchParams);
-    params.set("page", "1");
-    if (term) {
-      params.set("query", term);
-    } else {
-      params.delete("query");
-    }
-    replace(`${pathname}?${params.toString()}`);
-  }, 300);
+  const handleChange = (e: any) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setIsloading(true);
     const formData = new FormData(e.currentTarget);
-    const results = await createGroup(formData);
+    const results = await createIndividual(formData);
 
     if (results?.success === false) {
       setIsloading(false);
@@ -68,27 +72,20 @@ export default function SearchGroup({ regions }: { regions: any }) {
       setIsModalOpen(false);
     }
   };
+
   return (
-    <div className="py-4 flex gap-4">
-      <Input
-        placeholder="Search group...."
-        radius="lg"
-        size="md"
-        variant="faded"
-        color="success"
-        onChange={(e) => {
-          handleSearch(e.target.value);
-        }}
-        defaultValue={searchParams.get("query")?.toString()}
-        startContent={<Search className="h-6 w-6 text-gray-600" />}
-      />
-      <Button
-        onPress={() => setIsModalOpen(true)}
-        className="flex h-10 md:w-48 items-center rounded-lg bg-green-600 px-4 text-sm font-medium text-white transition-colors hover:bg-green-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-green-600"
-      >
-        <span className="hidden md:block">Create Group</span>{" "}
-        <Plus className="h-5 md:ml-4" />
-      </Button>
+    <>
+      <div className="flex justify-between w-full pt-6">
+        <p className="text-md font-bold">Manage Individuals Loanees </p>
+        <Button
+          color="success"
+          className="w-1/2 md:w-1/4"
+          onPress={() => setIsModalOpen(true)}
+        >
+          Add Loanee
+        </Button>
+      </div>
+      {/* Is add staff Modal */}
       <Modal
         isOpen={isModalOpen}
         onOpenChange={onOpenChange}
@@ -100,75 +97,67 @@ export default function SearchGroup({ regions }: { regions: any }) {
           {(onClose) => (
             <>
               <ModalHeader className="flex flex-col gap-1">
-                Add Group
+                Add Individual
               </ModalHeader>
               <ModalBody>
                 <Form onSubmit={handleSubmit}>
-                  <div className="flex flex-col  px-6 w-full">
+                  <div className="flex flex-col py-4  rounded-md  w-full">
                     <div className="flex flex-col md:flex-row  gap-4">
-                      <div className="w-full">
-                        <Input
-                          isRequired
-                          name="reg"
-                          type="text"
-                          className="outline-2 outline-blue-500  "
-                          label="Registration No/Code"
-                          labelPlacement="outside"
-                          color="success"
-                          size="md"
-                          description="Example: GRP001"
-                          variant="faded"
-                        />
-                        <div
-                          id="customer-error"
-                          aria-live="polite"
-                          aria-atomic="true"
-                        ></div>
-                      </div>
                       <div className="w-full">
                         <Input
                           isRequired
                           name="name"
                           type="text"
+                          className="outline-2 outline-blue-500  "
+                          label="Full Name"
+                          labelPlacement="outside"
+                          placeholder=""
+                          color="success"
+                          size="md"
+                          variant="faded"
+                          value={formData.name}
+                          onChange={handleChange}
+                        />
+                      </div>
+                      <div className="w-full">
+                        <NumberInput
+                          hideStepper
+                          isRequired
+                          name="idNumber"
                           className="outline-2 outline-blue-500 mb-4 "
-                          label="Name"
+                          label="ID Number"
                           color="success"
                           labelPlacement="outside"
                           size="md"
                           variant="faded"
+                          value={idNumber}
+                          formatOptions={{ useGrouping: false }}
+                          onValueChange={setIdNumber}
                         />
-                        <div
-                          id="customer-error"
-                          aria-live="polite"
-                          aria-atomic="true"
-                        ></div>
                       </div>
                     </div>
-                    <div className="flex flex-col md:flex-row gap-4 ">
+                    <div className="flex flex-col md:flex-row gap-4 mb-4">
                       <div className="w-full">
                         <Input
                           isRequired
-                          name="location"
+                          name="phone"
                           type="text"
-                          className="outline-2 outline-blue-500  "
-                          label="Location"
-                          labelPlacement="outside"
+                          className="outline-2 outline-blue-500 "
+                          label="Phone Number"
                           color="success"
+                          labelPlacement="outside"
                           size="md"
                           variant="faded"
+                          value={formData.phone}
+                          onChange={handleChange}
                         />
-                        <div
-                          id="customer-error"
-                          aria-live="polite"
-                          aria-atomic="true"
-                        ></div>
                       </div>
                       <div className="w-full">
                         <Select
                           isRequired
                           name="region"
                           className=""
-                          label="Group Region"
+                          label="Loanee Region"
                           variant="faded"
                           size="md"
                           color="success"
@@ -186,7 +175,26 @@ export default function SearchGroup({ regions }: { regions: any }) {
                         </Select>
                       </div>
                     </div>
-                    <div className="my-6 py-6">
+                    <div className="flex flex-col md:flex-row gap-4 ">
+                      <div className="w-full">
+                        <Input
+                          name="business"
+                          type="text"
+                          className="outline-2 outline-blue-500  "
+                          label="Nature of Business"
+                          color="success"
+                          labelPlacement="outside"
+                          size="md"
+                          variant="faded"
+                          value={formData.business}
+                          onChange={handleChange}
+                        />
+                      </div>
+                    </div>
+                    <div className="my-6 py-6 flex gap-4">
+                      <Button color="danger" variant="light" onPress={onClose}>
+                        Close
+                      </Button>
                       <Button
                         type="submit"
                         color="success"
@@ -196,7 +204,7 @@ export default function SearchGroup({ regions }: { regions: any }) {
                         {isLoading ? (
                           <Spinner color="default" size="md" className="py-4" />
                         ) : (
-                          "Create Group"
+                          "Add Loanee"
                         )}
                       </Button>
                     </div>
@@ -207,6 +215,6 @@ export default function SearchGroup({ regions }: { regions: any }) {
           )}
         </ModalContent>
       </Modal>
-    </div>
+    </>
   );
 }

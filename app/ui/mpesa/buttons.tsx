@@ -44,13 +44,12 @@ export function DeleteInvoice({ id }: { id: string }) {
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
   return (
     <>
-      <button
-        onClick={onOpen}
-        className="rounded-md border bg-red-100 hover:bg-red-200"
-      >
-        <span className="sr-only">Delete</span>
-        <TrashIcon className="w-5 text-red-500" />
-      </button>
+      <Tooltip content="Delete transaction" color="danger" placement="bottom">
+        <button onClick={onOpen} className="">
+          <span className="sr-only">Delete</span>
+          <TrashIcon className="w-6 h-6 text-red-500" />
+        </button>
+      </Tooltip>
 
       <Modal isOpen={isOpen} onOpenChange={onOpenChange}>
         <ModalContent>

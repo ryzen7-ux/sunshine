@@ -15,41 +15,35 @@ import {
   Button,
   Spinner,
   addToast,
+  Tooltip,
 } from "@heroui/react";
 import { useState } from "react";
-import { Search, Plus } from "lucide-react";
+import { Search, Plus, Edit } from "lucide-react";
 import { useSearchParams, usePathname, useRouter } from "next/navigation";
 import { useDebouncedCallback } from "use-debounce";
-import { createGroup, State } from "@/app/lib/sun-actions";
+import { updateGroup, State } from "@/app/lib/sun-actions";
 
-export default function SearchGroup({ regions }: { regions: any }) {
+export default function EditGroupModal({
+  group,
+  regions,
+}: {
+  group: any;
+  regions: any;
+}) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isLoading, setIsloading] = useState(false);
-  const [selectRegion, setRegion] = useState("");
+  const [selectRegion, setRegion] = useState(group.region);
+  const [reg, setReg] = useState(group.reg);
+  const [name, setName] = useState(group.name);
+  const [location, setLocation] = useState(group.location);
+
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
-
-  const searchParams = useSearchParams();
-  const pathname = usePathname();
-  const { replace } = useRouter();
-
-  const handleSearch = useDebouncedCallback((term) => {
-    console.log(`Searching... ${term}`);
-
-    const params = new URLSearchParams(searchParams);
-    params.set("page", "1");
-    if (term) {
-      params.set("query", term);
-    } else {
-      params.delete("query");
-    }
-    replace(`${pathname}?${params.toString()}`);
-  }, 300);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setIsloading(true);
     const formData = new FormData(e.currentTarget);
-    const results = await createGroup(formData);
+    const results = await updateGroup(formData);
 
     if (results?.success === false) {
       setIsloading(false);
@@ -69,26 +63,10 @@ export default function SearchGroup({ regions }: { regions: any }) {
     }
   };
   return (
-    <div className="py-4 flex gap-4">
-      <Input
-        placeholder="Search group...."
-        radius="lg"
-        size="md"
-        variant="faded"
-        color="success"
-        onChange={(e) => {
-          handleSearch(e.target.value);
-        }}
-        defaultValue={searchParams.get("query")?.toString()}
-        startContent={<Search className="h-6 w-6 text-gray-600" />}
-      />
-      <Button
-        onPress={() => setIsModalOpen(true)}
-        className="flex h-10 md:w-48 items-center rounded-lg bg-green-600 px-4 text-sm font-medium text-white transition-colors hover:bg-green-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-green-600"
-      >
-        <span className="hidden md:block">Create Group</span>{" "}
-        <Plus className="h-5 md:ml-4" />
-      </Button>
+    <>
+      <button onClick={() => setIsModalOpen(true)}>
+        <Edit className="h-4 w-4 text-green-500" />
+      </button>
       <Modal
         isOpen={isModalOpen}
         onOpenChange={onOpenChange}
@@ -100,13 +78,19 @@ export default function SearchGroup({ regions }: { regions: any }) {
           {(onClose) => (
             <>
               <ModalHeader className="flex flex-col gap-1">
-                Add Group
+                Edit Group
               </ModalHeader>
               <ModalBody>
                 <Form onSubmit={handleSubmit}>
                   <div className="flex flex-col  px-6 w-full">
                     <div className="flex flex-col md:flex-row  gap-4">
                       <div className="w-full">
+                        <Input
+                          name="id"
+                          className="hidden"
+                          value={group.id}
+                          readOnly
+                        />
                         <Input
                           isRequired
                           name="reg"
@@ -118,12 +102,9 @@ export default function SearchGroup({ regions }: { regions: any }) {
                           size="md"
                           description="Example: GRP001"
                           variant="faded"
+                          value={reg}
+                          onChange={(e) => setReg(e.target.value)}
                         />
-                        <div
-                          id="customer-error"
-                          aria-live="polite"
-                          aria-atomic="true"
-                        ></div>
                       </div>
                       <div className="w-full">
                         <Input
@@ -136,12 +117,9 @@ export default function SearchGroup({ regions }: { regions: any }) {
                           labelPlacement="outside"
                           size="md"
                           variant="faded"
+                          value={name}
+                          onChange={(e) => setName(e.target.value)}
                         />
-                        <div
-                          id="customer-error"
-                          aria-live="polite"
-                          aria-atomic="true"
-                        ></div>
                       </div>
                     </div>
                     <div className="flex flex-col md:flex-row gap-4 ">
@@ -156,12 +134,9 @@ export default function SearchGroup({ regions }: { regions: any }) {
                           color="success"
                           size="md"
                           variant="faded"
+                          value={location}
+                          onChange={(e) => setLocation(e.target.value)}
                         />
-                        <div
-                          id="customer-error"
-                          aria-live="polite"
-                          aria-atomic="true"
-                        ></div>
                       </div>
                       <div className="w-full">
                         <Select
@@ -196,7 +171,7 @@ export default function SearchGroup({ regions }: { regions: any }) {
                         {isLoading ? (
                           <Spinner color="default" size="md" className="py-4" />
                         ) : (
-                          "Create Group"
+                          "Update Group"
                         )}
                       </Button>
                     </div>
@@ -207,6 +182,6 @@ export default function SearchGroup({ regions }: { regions: any }) {
           )}
         </ModalContent>
       </Modal>
-    </div>
+    </>
   );
 }

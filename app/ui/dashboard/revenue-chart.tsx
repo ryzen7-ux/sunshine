@@ -3,6 +3,7 @@ import { CalendarIcon } from "@heroicons/react/24/outline";
 import { lusitana } from "@/app/ui/fonts";
 import { Revenue } from "@/app/lib/definitions";
 import { fetchRevenue } from "@/app/lib/data";
+import { TrendingUp } from "lucide-react";
 
 // This component is representational only.
 // For data visualization UI, check out:
@@ -36,7 +37,10 @@ export default async function RevenueChart() {
 
   return (
     <div className="w-full md:col-span-4">
-      <h2 className={`mb-4 text-xl md:text-2xl`}>Recent Revenue</h2>
+      <h2 className={`mb-4 text-md md:text-lg flex gap-2 items-center`}>
+        <TrendingUp className="h-5 w-5 text-indigo-500" />
+        Recent Revenue
+      </h2>
       {/* NOTE: Uncomment this code in Chapter 7 */}
 
       <div className="rounded-xl bg-gray-300 p-2">

@@ -1,4 +1,3 @@
-//@ts-nocheck
 "use server";
 
 import { revalidatePath } from "next/cache";
@@ -6,6 +5,14 @@ import fs from "node:fs/promises";
 import { redirect } from "next/navigation";
 import { date, z } from "zod";
 import sql from "@/app/lib/db";
+import {
+  fetchUserByEmail,
+  fetchUserById,
+  fetchIndividualsByIdNumber,
+  fetchIndividualById,
+} from "@/app/lib/sun-data";
+import bcrypt from "bcryptjs";
+import { inter } from "../ui/fonts";
 
 const FormSchema = z.object({
   id: z.string(),
@@ -132,61 +139,313 @@ export type DeleteState = {
   message?: string | null;
 };
 
-export async function createGroup(prevState: State, formData: FormData) {
-  const validatedFields = CreateGroup.safeParse({
-    reg: formData.get("reg"),
-    name: formData.get("name"),
-    location: formData.get("location"),
-  });
+export async function createStaff(formData: FormData) {
+  const name = formData.get("name") as string;
+  const email = formData.get("email") as string;
+  const phone = formData.get("phone") as string;
+  const role = formData.get("role") as string;
+  const status = formData.get("status") as string;
+  const password = formData.get("password") as string;
+
+  console.log(password);
+  const hashedPassword = await bcrypt.hash(password, 10);
+
+  const user = await fetchUserByEmail(email);
+  const created = new Date();
+
+  if (user?.length !== 0) {
+    return { success: false, message: "A user with that email exist!" };
+  }
+  try {
+    await sql`INSERT INTO users (name, email, phone, role, status, password, created) 
+    VALUES (${name}, ${email}, ${phone}, ${role}, ${status}, ${hashedPassword}, ${created})`;
+
+    revalidatePath("/dashboard/staff-management");
+    return { success: true, message: "Staff created successfully" };
+  } catch (error) {
+    console.log(error);
+    return { success: false, message: "Server error occured" };
+  }
+}
+
+export async function updateStaff(formData: FormData) {
+  const name = formData.get("name") as string;
+  const email = formData.get("email") as string;
+  const phone = formData.get("phone") as string;
+  const role = formData.get("role") as string;
+  const status = formData.get("status") as string;
+  let password = formData.get("password") as string;
+  const id = formData.get("id") as string;
+
+  const hashedPassword = await bcrypt.hash(password, 10);
+
+  const user = await fetchUserById(id);
+  const usr = user!;
+
+  if (email !== String(usr[0]?.email)) {
+    const userEmail = await fetchUserByEmail(email);
+    if (userEmail?.length !== 0) {
+      return { success: false, message: "A user with that email exist!" };
+    }
+  }
+
+  if (password !== "") {
+    const hashedPassword = await bcrypt.hash(password, 10);
+    password = hashedPassword;
+  }
+
+  try {
+    await sql`UPDATE users SET name =${name} , email =${email}, phone =${phone}, role = ${role}, status = ${status}, password =${password}
+   WHERE id= ${id}`;
+
+    revalidatePath("/dashboard/staff-management");
+    return { success: true, message: "Staff updated successfully" };
+  } catch (error) {
+    console.log(error);
+    return { success: false, message: "Server error occured" };
+  }
+}
+
+export async function deleteStaff(id: string) {
+  try {
+    await sql`DELETE FROM users WHERE id = ${id}`;
+    revalidatePath("/dashboard/staff-management");
+    return { success: false, message: "Member deleted!" };
+  } catch (error) {
+    console.log(error);
+    return { success: false, message: "Some error occured" };
+  }
+}
+
+// REGIONS
+export async function createRegion(formData: FormData) {
+  const name = formData.get("name") as string;
+  const county = formData.get("county") as string;
+  const manager = formData.get("manager") as string;
+
+  const created = new Date();
+
+  try {
+    await sql`INSERT INTO regions (name, county, manager,created) 
+    VALUES (${name}, ${county}, ${manager}, ${created})`;
+
+    revalidatePath("/dashboard/staff-management");
+    return { success: true, message: "Region created successfully" };
+  } catch (error) {
+    console.log(error);
+    return { success: false, message: "Server error occured" };
+  }
+}
+
+export async function updateRegion(formData: FormData) {
+  const name = formData.get("name") as string;
+  const county = formData.get("county") as string;
+  const manager = formData.get("manager") as string;
+  const id = formData.get("id") as string;
+
+  try {
+    await sql`UPDATE regions SET name = ${name}, county = ${county}, manager = ${manager} WHERE id=${id}`;
+
+    revalidatePath("/dashboard/staff-management");
+    return { success: true, message: "Region update successfully" };
+  } catch (error) {
+    console.log(error);
+    return { success: false, message: "Server error occured" };
+  }
+}
+
+export async function deleteRegion(id: string) {
+  try {
+    await sql`DELETE FROM regions WHERE id = ${id}`;
+    revalidatePath("/dashboard/staff-management");
+    return { success: true, message: "Region deleted!" };
+  } catch (error) {
+    console.log(error);
+    return { success: false, message: "Some error occured" };
+  }
+}
+
+// INDIVIDUALS
+
+export async function createIndividual(formData: FormData) {
+  const name = formData.get("name") as string;
+  const idNumber = formData.get("idNumber") as string;
+  const phone = formData.get("phone") as string;
+  const region = formData.get("region") as string;
+  const business = formData.get("business") as string;
+
+  const created = new Date();
+  const newIdNumber = Number(idNumber);
+  const individuals = await fetchIndividualsByIdNumber(newIdNumber);
+  if (individuals?.length !== 0) {
+    return { success: false, message: "ID number already exists" };
+  }
+
+  try {
+    await sql`INSERT INTO individuals (name, idnumber, phone, region, business, created)
+    VALUES (${name}, ${newIdNumber}, ${phone}, ${region}, ${business}, ${created})`;
+    revalidatePath("/dashboard/individuals");
+    return { success: true, message: "Loanee created successfully" };
+  } catch (error) {
+    console.log(error);
+    return { success: false, message: "Server error occured" };
+  }
+}
+
+export async function updateIndividual(formData: FormData) {
+  const name = formData.get("name") as string;
+  const idNumber = formData.get("idNumber") as string;
+  const phone = formData.get("phone") as string;
+  const region = formData.get("region") as string;
+  const business = formData.get("business") as string;
+  const id = formData.get("id") as string;
+
+  const newIdNumber = Number(idNumber);
+  const individual = await fetchIndividualById(id);
+  const individualByIdNumber = await fetchIndividualsByIdNumber(newIdNumber);
+
+  const indv = individual!;
+  console.log(id);
+  if (individualByIdNumber?.length !== 0 && indv[0]?.idnumber !== idNumber) {
+    return { success: false, message: "ID number already exists" };
+  }
+
+  try {
+    await sql`UPDATE individuals SET name=${name}, idnumber=${newIdNumber}, phone=${phone}, region=${region}, business=${business}
+    WHERE id=${id}`;
+
+    revalidatePath("/dashboard/individuals");
+    return { success: true, message: "Loanee updated successfully" };
+  } catch (error) {
+    console.log(error);
+    return { success: false, message: "Server error occured" };
+  }
+}
+
+export async function deleteIndividual(id: string) {
+  try {
+    await sql`DELETE FROM individuals WHERE id = ${id}`;
+    revalidatePath("/dashboard/individuals");
+    return { success: true, message: "Indivudal deleted!" };
+  } catch (error) {
+    console.log(error);
+    return { success: false, message: "Some error occured" };
+  }
+}
+
+export async function createIndividualLoan(formData: FormData) {
+  const region = formData.get("region") as string;
+  const loannee = formData.get("loanee") as string;
+  const amount = formData.get("amount") as unknown;
+  const interest = formData.get("interest") as unknown;
+  const term = formData.get("term") as unknown;
+  const status = formData.get("status") as string;
+
+  const created = new Date();
+  if (status === null) {
+    return { success: false, message: "Please select loan status!" };
+  }
+
+  if (Number(amount) > 50000000) {
+    return { success: false, message: "Invalid amount!" };
+  }
+
+  try {
+    await sql`INSERT INTO individuals_loans (region, loanee, amount, interest, term, status, created)
+    VALUES (${region}, ${loannee}, ${Number(amount)}, ${Number(
+      interest
+    )}, ${Number(term)},${status}, ${created})`;
+
+    revalidatePath("/dashboard/individuals");
+    return { success: true, message: "Loan created successfully" };
+  } catch (error) {
+    console.log(error);
+    return { success: false, message: "Server error occured" };
+  }
+}
+
+export async function updateIndividualLoan(formData: FormData) {
+  const id = formData.get("id") as string;
+  const amount = formData.get("amount") as unknown;
+  const interest = formData.get("interest") as unknown;
+  const term = formData.get("term") as unknown;
+  const status = formData.get("term") as string;
+
+  if (Number(amount) > 50000000) {
+    return { success: false, message: "Invalid amount!" };
+  }
+
+  try {
+    await sql`UPDATE  individuals_loans SET amount = ${Number(
+      amount
+    )} , interest = ${Number(interest)}, term = ${Number(
+      term
+    )}, status = ${status} WHERE id = ${id}`;
+
+    revalidatePath("/dashboard/individuals");
+    return { success: true, message: "Loan Updated successfully" };
+  } catch (error) {
+    console.log(error);
+    return { success: false, message: "Server error occured" };
+  }
+}
+
+export async function deleteIndividualLoan(id: string) {
+  try {
+    await sql`DELETE FROM individuals_loans WHERE id = ${id}`;
+    revalidatePath("/dashboard/individuals");
+    return { success: true, message: "Item deleted" };
+  } catch (error) {
+    console.log(error);
+    return { success: false, message: "Server error occured" };
+  }
+}
+// GROUPS
+export async function createGroup(formData: FormData) {
+  const reg = formData.get("reg") as string;
+  const name = formData.get("name") as string;
+  const location = formData.get("location") as string;
+  const region = formData.get("region") as string;
 
   const utcDate = new Date(); // UTC time
   const offset = utcDate.getTimezoneOffset() * 60000; // Offset in milliseconds
   const localDate = new Date(utcDate.getTime() - offset);
 
-  if (!validatedFields.success) {
-    return {
-      errors: validatedFields.error.flatten().fieldErrors,
-      message: "Missing Fields. Failed to Create Invoice.",
-    };
-  }
-
-  const { reg, name, location } = validatedFields.data;
-
   try {
     await sql`
-        INSERT INTO groups (reg, name, location, date)
-        VALUES (${reg}, ${name}, ${location}, ${localDate})
+        INSERT INTO groups (reg, name, location, date, region)
+        VALUES (${reg}, ${name}, ${location}, ${localDate}, ${region})
       `;
+    revalidatePath("/dashboard/customers");
+    return { success: true, message: "Group created successfuly!" };
   } catch (error) {
     return {
-      message: "Database Error: Failed to Create Invoice.",
-      err: error,
+      success: false,
+      message: "Database Error: Failed to Create Group.",
     };
   }
-  revalidatePath("/dashboard/customers");
-  redirect("/dashboard/customers");
 }
 
-export async function updateGroup(id: string, formData: FormData) {
-  const { reg, name, location } = UpdateGroup.parse({
-    reg: formData.get("reg"),
-    name: formData.get("name"),
-    location: formData.get("location"),
-  });
-
+export async function updateGroup(formData: FormData) {
+  const reg = formData.get("reg") as string;
+  const name = formData.get("name") as string;
+  const location = formData.get("location") as string;
+  const region = formData.get("region") as string;
+  const id = formData.get("id") as string;
+  console.log(formData);
   try {
     await sql`
         UPDATE groups
-        SET reg = ${reg}, name = ${name}, location = ${location}
+        SET reg = ${reg}, name = ${name}, location = ${location}, region= ${region}
         WHERE id = ${id}
       `;
+    revalidatePath("/dashboard/customers");
+    return { success: true, message: "Group updated successfulluy" };
   } catch (error) {
     // We'll log the error to the console for now
     console.error(error);
+    return { success: false, message: "Failed to update group" };
   }
-
-  revalidatePath("/dashboard/customers");
-  redirect("/dashboard/customers");
 }
 
 export async function deleteGroup(prevState: any, formData: FormData) {
@@ -348,6 +607,7 @@ export async function deleteMember(id: string, gid: string) {
   revalidatePath(`/dashboard/customers/${gid}/details`);
 }
 
+// LOANS
 export async function createLoan(prevState: LoanState, formData: FormData) {
   const validatedFields = CreateLoan.safeParse({
     group_id: formData.get("group_id"),
@@ -395,7 +655,7 @@ export async function updateLoan(id: string, formData: FormData) {
   });
   const date = formData.get("start_date") as string;
   const newDate = date?.split("T")[0];
-  const notes = formData.get("notes");
+  const notes = formData.get("notes") as string;
   try {
     await sql`
       UPDATE loans
@@ -482,6 +742,21 @@ export async function deleteGroupInvoice(id: string) {
   }
 
   revalidatePath("/dashboard/invoices");
+}
+
+// MPESA
+
+export async function updateMpesaInvoice(formData: FormData) {
+  const refNumber = formData.get("group") as string;
+  const id = formData.get("id") as string;
+  try {
+    await sql`UPDATE mpesainvoice SET refnumber = ${refNumber} WHERE id=${id}`;
+    revalidatePath("dashboard/mpesa");
+    return { success: true, message: "Transaction updated" };
+  } catch (error) {
+    console.log(error);
+    return { success: false, message: "Server error occured" };
+  }
 }
 
 export async function deleteMpesaInvoice(id: string) {

@@ -7,6 +7,7 @@ import { InvoicesTableSkeleton } from "@/app/ui/skeletons";
 import { Suspense } from "react";
 import { fetchMpesaInvoicesPages } from "@/app/lib/sun-data";
 import { Metadata } from "next";
+import { Coins } from "lucide-react";
 
 export const metadata: Metadata = {
   title: "Invoices",
@@ -25,8 +26,12 @@ export default async function Page(props: {
 
   return (
     <div className="w-full">
-      <div className="flex w-full items-center justify-between">
-        <h1 className={`text-2xl`}>Mpesa Invoices</h1>
+      <div className="">
+        <h1
+          className={`text-2xl flex gap-2 items-center border p-2 rounded-md`}
+        >
+          <Coins className="h-6 w-6 text-green-500" /> Mpesa Invoices
+        </h1>
       </div>
 
       <div className="mt-4 flex items-center justify-between gap-2 md:mt-8">

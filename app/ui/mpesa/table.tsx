@@ -9,6 +9,7 @@ import {
 } from "@/app/lib/utils";
 import { fetchFilteredInvoices } from "@/app/lib/data";
 import { fetchFilteredMpesaInvoices } from "@/app/lib/sun-data";
+import EditMpesa from "@/app/ui/mpesa/edit-mpesa";
 
 export default async function InvoicesTable({
   query,
@@ -57,8 +58,8 @@ export default async function InvoicesTable({
                       {formatDateToLocal(invoice.transtime)}
                     </p>
                   </div>
-                  <div className="flex justify-end gap-2">
-                    {/* <UpdateInvoice id={invoice.id} /> */}
+                  <div className="flex flex-col gap-2">
+                    <EditMpesa mpesa={invoice} />
                     <DeleteInvoice id={invoice.id} />
                   </div>
                 </div>
@@ -123,10 +124,9 @@ export default async function InvoicesTable({
                   <td className="whitespace-nowrap px-1 py-3 pr-3 text-xs text-green-500 font-extrabold ">
                     {invoice.transid}
                   </td>
-                  <td className="whitespace-nowrap  pl-6 pr-3">
-                    <div className="flex justify-end gap-3">
-                      <DeleteInvoice id={invoice.id} />
-                    </div>
+                  <td className=" flex pr-4 py-2">
+                    <EditMpesa mpesa={invoice} />
+                    <DeleteInvoice id={invoice.id} />
                   </td>
                 </tr>
               ))}

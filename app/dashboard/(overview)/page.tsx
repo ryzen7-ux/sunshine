@@ -9,13 +9,18 @@ import {
   LatestInvoicesSkeleton,
   CardsSkeleton,
 } from "@/app/ui/skeletons";
+import { LayoutDashboard } from "lucide-react";
 import { auth } from "@/auth";
 
 export default async function Page() {
   return (
     <main>
-      <h1 className={`mb-4 text-xl md:text-xl`}>Dashboard</h1>
-      <div className="grid gap-6 grid-cols-2 lg:grid-cols-5">
+      <h1
+        className={`mb-4 text-xl md:text-xl flex gap-2 p-2 border rounded-md border-green-400`}
+      >
+        <LayoutDashboard className="h-6 w-6 text-green-500" /> Dashboard
+      </h1>
+      <div className="grid gap-6 grid-cols-2 lg:grid-cols-5 ">
         <Suspense fallback={<CardsSkeleton />}>
           <CardWrapper />
         </Suspense>

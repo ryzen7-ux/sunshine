@@ -18,25 +18,75 @@ async function seedUsers() {
   await sql`
     CREATE TABLE IF NOT EXISTS users (
       id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
-      is_admin BOOLEAN DEFAULT FALSE,
       name VARCHAR(255) NOT NULL,
       email TEXT NOT NULL UNIQUE,
-      password TEXT NOT NULL
+      phone VARCHAR(255),
+      role VARCHAR(255) NOT NULL,
+      status VARCHAR(255) NOT NULL,
+      password TEXT NOT NULL,
+      created TIMESTAMPTZ NOT NULL
     );
   `;
 
-  const insertedUsers = await Promise.all(
-    users.map(async (user) => {
-      const hashedPassword = await bcrypt.hash(user.password, 10);
-      return sql`
-        INSERT INTO users (id, is_admin, name, email, password)
-        VALUES (${user.id},${user.is_admin}, ${user.name}, ${user.email}, ${hashedPassword})
-        ON CONFLICT (id) DO NOTHING;
-      `;
-    })
-  );
+  // const insertedUsers = await Promise.all(
+  //   users.map(async (user) => {
+  //     const hashedPassword = await bcrypt.hash(user.password, 10);
+  //     return sql`
+  //       INSERT INTO users (id, is_admin, name, email, password)
+  //       VALUES (${user.id},${user.is_admin}, ${user.name}, ${user.email}, ${hashedPassword})
+  //       ON CONFLICT (id) DO NOTHING;
+  //     `;
+  //   })
+  // );
 
-  return insertedUsers;
+  return;
+}
+
+async function seedRegions() {
+  await sql`CREATE EXTENSION IF NOT EXISTS "uuid-ossp"`;
+
+  await sql`
+  CREATE TABLE IF NOT EXISTS regions (
+      id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+      manager UUID NOT NULL,
+      name VARCHAR(255) NOT NULL,
+      county VARCHAR(255) NOT NULL,
+      created TIMESTAMPTZ NOT NULL
+    );
+  `;
+}
+
+async function seedIndividuals() {
+  await sql`CREATE EXTENSION IF NOT EXISTS "uuid-ossp"`;
+
+  await sql`
+  CREATE TABLE IF NOT EXISTS individuals (
+      id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+      region UUID NOT NULL,
+      name VARCHAR(255) NOT NULL,
+      idnumber BIGINT NOT NULL UNIQUE,
+      phone VARCHAR(255) NOT NULL,
+      business VARCHAR(255) NOT NULL,
+      created TIMESTAMPTZ NOT NULL
+    );
+  `;
+}
+
+async function seedIndividualLoans() {
+  await sql`CREATE EXTENSION IF NOT EXISTS "uuid-ossp"`;
+
+  await sql`
+  CREATE TABLE IF NOT EXISTS individuals_loans (
+      id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+      region UUID NOT NULL,
+      loanee UUID NOT NULL,
+      amount NUMERIC(10, 2) NOT NULL,
+      interest NUMERIC(10, 2) NOT NULL,
+      term NUMERIC(10, 2) NOT NULL,
+      status VARCHAR(255) NOT NULL,
+      created TIMESTAMPTZ NOT NULL
+    );
+  `;
 }
 
 async function seedInvoices() {
@@ -276,15 +326,18 @@ export async function GET() {
   try {
     const result = await sql.begin((sql) => [
       seedUsers(),
-      seedInvoices(),
-      seedCustomers(),
-      seedRevenue(),
-      seedInvoicees(),
-      seedGroups(),
-      seedMembers(),
-      seedLoans(),
-      seedGroupInvoices(),
-      seedMpesaInvoices(),
+      seedRegions(),
+      seedIndividuals(),
+      seedIndividualLoans(),
+      // seedInvoices(),
+      // seedCustomers(),
+      // seedRevenue(),
+      // seedInvoicees(),
+      // seedGroups(),
+      // seedMembers(),
+      // seedLoans(),
+      // seedGroupInvoices(),
+      // seedMpesaInvoices(),
     ]);
 
     return Response.json({ message: "Database seeded successfully" });
