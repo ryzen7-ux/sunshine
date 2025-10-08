@@ -18,6 +18,14 @@ import {
 } from "@/app/lib/utils";
 import { fetchDashboardCardData } from "@/app/lib/sun-data";
 
+interface tabsProps {
+  groupAmount: any;
+  numberOfMembers: any;
+  totalLoans: any;
+  totalCollectedLoans: any;
+  loanBalance: any;
+}
+
 const iconMap = {
   disbursed: ScaleIcon,
   collected: BanknotesIcon,
@@ -26,22 +34,13 @@ const iconMap = {
   pending: CircleStackIcon,
 };
 
-export default async function CardWrapper() {
-  // const {
-  //   numberOfInvoices,
-  //   numberOfCustomers,
-  //   totalPaidInvoices,
-  //   totalPendingInvoices,
-  // } = await fetchCardData();
-
-  const {
-    groupAmount,
-    numberOfMembers,
-    totalLoans,
-    totalCollectedLoans,
-    loanBalance,
-  } = await fetchDashboardCardData();
-
+export default function CardWrapper({
+  groupAmount,
+  numberOfMembers,
+  totalLoans,
+  totalCollectedLoans,
+  loanBalance,
+}: tabsProps) {
   return (
     <>
       {/* NOTE: Uncomment this code in Chapter 9 */}

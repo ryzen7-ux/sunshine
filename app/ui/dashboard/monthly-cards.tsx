@@ -26,14 +26,19 @@ const iconMap = {
   pending: CircleStackIcon,
 };
 
-export default async function MothlyCardWrapper() {
-  const {
-    monthlyDisbursement,
-    monthlyTotalLoan,
-    monthlyLoanBalance,
-    monthlyCollected,
-  } = await fetchDashboardCardData();
+interface tabsProps {
+  monthlyDisbursement: any;
+  monthlyTotalLoan: any;
+  monthlyLoanBalance: any;
+  monthlyCollected: any;
+}
 
+export default function MothlyCardWrapper({
+  monthlyDisbursement,
+  monthlyTotalLoan,
+  monthlyLoanBalance,
+  monthlyCollected,
+}: tabsProps) {
   return (
     <>
       {/* NOTE: Uncomment this code in Chapter 9 */}
@@ -63,7 +68,7 @@ export default async function MothlyCardWrapper() {
         title="Loan Balance"
         value={monthlyLoanBalance}
         type="active"
-        color="text-indigo-800"
+        color="text-indigo-800 "
         span=""
       />
     </>
