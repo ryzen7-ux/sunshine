@@ -41,8 +41,8 @@ export default function EditStaff({ user }: { user: any }) {
     password: user.password || "",
   });
   const [isLoading, setIsloading] = useState(false);
-  const [selectRole, setRole] = useState("");
-  const [selectStatus, setStatus] = useState("");
+  const [selectRole, setRole] = useState(user.role);
+  const [selectStatus, setStatus] = useState(user.status);
   const [isVisible, setIsVisible] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
@@ -198,9 +198,7 @@ export default function EditStaff({ user }: { user: any }) {
                           color="success"
                           labelPlacement="outside"
                           selectedKeys={[selectStatus]}
-                          onChange={(e) =>
-                            setStatus(e.target.validationMessage)
-                          }
+                          onChange={(e) => setStatus(e.target.value)}
                         >
                           {status.map((item: any, index: any) => (
                             <SelectItem key={item.key}>{item.label}</SelectItem>

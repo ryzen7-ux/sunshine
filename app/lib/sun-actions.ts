@@ -147,7 +147,6 @@ export async function createStaff(formData: FormData) {
   const status = formData.get("status") as string;
   const password = formData.get("password") as string;
 
-  console.log(password);
   const hashedPassword = await bcrypt.hash(password, 10);
 
   const user = await fetchUserByEmail(email);
@@ -156,6 +155,14 @@ export async function createStaff(formData: FormData) {
   if (user?.length !== 0) {
     return { success: false, message: "A user with that email exist!" };
   }
+
+  if (password.length < 6) {
+    return {
+      success: false,
+      message: "Password must be at least 6 characters!",
+    };
+  }
+
   try {
     await sql`INSERT INTO users (name, email, phone, role, status, password, created) 
     VALUES (${name}, ${email}, ${phone}, ${role}, ${status}, ${hashedPassword}, ${created})`;
@@ -177,11 +184,10 @@ export async function updateStaff(formData: FormData) {
   let password = formData.get("password") as string;
   const id = formData.get("id") as string;
 
-  const hashedPassword = await bcrypt.hash(password, 10);
-
-  const user = await fetchUserById(id);
-  const usr = user!;
-
+  const user: any = await fetchUserById(id);
+  const usr: any = user!;
+  // console.log(user);
+  // console.log(formData);
   if (email !== String(usr[0]?.email)) {
     const userEmail = await fetchUserByEmail(email);
     if (userEmail?.length !== 0) {
@@ -189,9 +195,23 @@ export async function updateStaff(formData: FormData) {
     }
   }
 
-  if (password !== "") {
-    const hashedPassword = await bcrypt.hash(password, 10);
-    password = hashedPassword;
+  if (password.length > 0) {
+    if (password.length < 6) {
+      return {
+        success: false,
+        message: "Password must be at least 6 characters!",
+      };
+    }
+    const passwordsMatch = await bcrypt.compare(password, user[0].password);
+
+    if (passwordsMatch) {
+      password = user[0].password;
+    } else {
+      const hashedPassword = await bcrypt.hash(password, 10);
+      password = hashedPassword;
+    }
+  } else {
+    password = user[0].password;
   }
 
   try {
@@ -210,7 +230,7 @@ export async function deleteStaff(id: string) {
   try {
     await sql`DELETE FROM users WHERE id = ${id}`;
     revalidatePath("/dashboard/staff-management");
-    return { success: false, message: "Member deleted!" };
+    return { success: true, message: "Member deleted!" };
   } catch (error) {
     console.log(error);
     return { success: false, message: "Some error occured" };

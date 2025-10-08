@@ -612,8 +612,18 @@ export async function fetchDashboardCardData() {
          SUM(CASE WHEN status = 'pending' THEN amount ELSE 0 END) AS "pending",
          SUM(CASE WHEN status = 'inactive' THEN amount ELSE 0 END) AS "inactive"
          FROM loans`;
-    const totalLoanPromise = sql`SELECT SUM((CASE WHEN status = 'approved' THEN amount ELSE 0 END/term + CASE WHEN status = 'approved' THEN amount ELSE 0 END * (interest/4/100) + CASE WHEN status = 'approved' THEN 1 ELSE 0 END ) * term ) AS sum FROM loans`;
+    const totalLoanPromise = sql`SELECT SUM((CASE WHEN status = 'approved' THEN amount ELSE 0 END/term + CASE WHEN status = 'approved' 
+    THEN amount ELSE 0 END * (interest/4/100) + CASE WHEN status = 'approved' THEN 1 ELSE 0 END ) * term ) AS sum FROM loans`;
     const collectedLoanPromise = sql`SELECT SUM(transamount) AS total FROM mpesainvoice`;
+
+    // THIS MONTH
+    const groupCountThisMonthPromise = sql`SELECT SUM(CASE WHEN status = 'approved' THEN amount ELSE 0 END) 
+    FROM loans WHERE date >= DATE_TRUNC('month', current_timestamp) AND date < DATE_TRUNC('month', current_timestamp) + INTERVAL '1 month'`;
+    const totalLoanThisMonthPromise = sql`SELECT SUM((CASE WHEN status = 'approved' THEN amount ELSE 0 END/term + CASE WHEN status = 'approved' 
+    THEN amount ELSE 0 END * (interest/4/100) + CASE WHEN status = 'approved' THEN 1 ELSE 0 END ) * term ) AS sum FROM loans
+     WHERE date >= DATE_TRUNC('month', current_timestamp) AND date < DATE_TRUNC('month', current_timestamp) + INTERVAL '1 month'`;
+    const collectedThisMonthPromise = sql`SELECT SUM(transamount) AS total FROM mpesainvoice WHERE transtime >= DATE_TRUNC('month', current_timestamp)
+     AND transtime < DATE_TRUNC('month', current_timestamp) + INTERVAL '1 month'`;
 
     const data = await Promise.all([
       groupCountPromise,
@@ -621,6 +631,9 @@ export async function fetchDashboardCardData() {
       loanStatusPromise,
       totalLoanPromise,
       collectedLoanPromise,
+      groupCountThisMonthPromise,
+      totalLoanThisMonthPromise,
+      collectedThisMonthPromise,
     ]);
 
     const groupAmount = formatCurrencyToLocal(Number(data[0][0]?.sum || "0"));
@@ -636,6 +649,24 @@ export async function fetchDashboardCardData() {
     const loanBalance = formatCurrencyToLocal(
       Number(data[3][0]?.sum || "0") - Number(data[4][0]?.total || "0")
     );
+
+    const monthlyDisbursement = formatCurrencyToLocal(
+      Number(data[5][0]?.sum ?? "0")
+    );
+
+    const monthlyTotalLoan = formatCurrencyToLocal(
+      Number(data[6][0]?.sum ?? "0")
+    );
+
+    const monthlyLoanBalance = formatCurrencyToLocal(
+      Number(data[6][0]?.sum ?? "0") - Number(data[7][0]?.total ?? "0")
+    );
+
+    const monthlyCollected = formatCurrencyToLocal(
+      Number(data[7][0]?.total ?? "0")
+    );
+
+    console.log(data[7][0]);
     return {
       groupAmount,
       numberOfMembers,
@@ -643,10 +674,15 @@ export async function fetchDashboardCardData() {
       totalCollectedLoans,
       pendingPayments,
       loanBalance,
+      monthlyDisbursement,
+      monthlyTotalLoan,
+      monthlyLoanBalance,
+      monthlyCollected,
     };
   } catch (error) {
     console.error("Database Error:", error);
     throw new Error("Failed to fetch card data.");
+  } finally {
   }
 }
 

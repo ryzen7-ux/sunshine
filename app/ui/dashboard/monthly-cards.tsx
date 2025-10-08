@@ -26,60 +26,45 @@ const iconMap = {
   pending: CircleStackIcon,
 };
 
-export default async function CardWrapper() {
-  // const {
-  //   numberOfInvoices,
-  //   numberOfCustomers,
-  //   totalPaidInvoices,
-  //   totalPendingInvoices,
-  // } = await fetchCardData();
-
+export default async function MothlyCardWrapper() {
   const {
-    groupAmount,
-    numberOfMembers,
-    totalLoans,
-    totalCollectedLoans,
-    loanBalance,
+    monthlyDisbursement,
+    monthlyTotalLoan,
+    monthlyLoanBalance,
+    monthlyCollected,
   } = await fetchDashboardCardData();
 
   return (
     <>
       {/* NOTE: Uncomment this code in Chapter 9 */}
+
       <Card
         title="Disbursed"
-        value={groupAmount}
+        value={monthlyDisbursement}
         type="disbursed"
-        color="text-blue-800"
+        color="text-indigo-800"
         span=""
       />
       <Card
         title="Collected"
-        value={totalCollectedLoans}
+        value={monthlyCollected}
         type="collected"
         color="text-green-800"
         span=""
       />
       <Card
         title="Loans"
-        value={totalLoans}
+        value={monthlyTotalLoan}
         type="pending"
         color="text-yellow-800"
         span=""
       />
       <Card
-        title=" Loan Balance"
-        value={loanBalance}
+        title="Loan Balance"
+        value={monthlyLoanBalance}
         type="active"
         color="text-indigo-800"
         span=""
-      />
-
-      <Card
-        title="Total Borrowers"
-        value={numberOfMembers}
-        type="customers"
-        color="text-pink-800"
-        span="col-span-2 md:col-span-1"
       />
     </>
   );
@@ -101,7 +86,7 @@ export function Card({
   const Icon = iconMap[type];
 
   return (
-    <div className={`ring-2 ring-blue-700 rounded-xl bg-gray-50  ${span}`}>
+    <div className={`ring-2 ring-pink-700 rounded-xl bg-gray-50  ${span}`}>
       <div className="flex p-2">
         {Icon ? <Icon className={`h-6 w-6 ${color}`} /> : null}
         <h3 className="ml-2 text-sm font-medium">{title}</h3>

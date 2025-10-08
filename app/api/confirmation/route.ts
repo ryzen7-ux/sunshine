@@ -21,7 +21,7 @@ export async function POST(request: NextRequest) {
 
   const year = parseInt(dateString.substring(0, 4));
   // Month is 0-indexed in JavaScript Date objects, so subtract 1
-  const month = parseInt(dateString.substring(4, 6)) - 1;
+  const month = parseInt(dateString.substring(4, 6));
   const day = parseInt(dateString.substring(6, 8));
   const hour = parseInt(dateString.substring(8, 10));
   const minute = parseInt(dateString.substring(10, 12));
