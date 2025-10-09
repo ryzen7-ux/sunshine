@@ -624,6 +624,30 @@ export async function fetchDashboardCardData() {
      WHERE date >= DATE_TRUNC('month', current_timestamp) AND date < DATE_TRUNC('month', current_timestamp) + INTERVAL '1 month'`;
     const collectedThisMonthPromise = sql`SELECT SUM(transamount) AS total FROM mpesainvoice WHERE transtime >= DATE_TRUNC('month', current_timestamp)
      AND transtime < DATE_TRUNC('month', current_timestamp) + INTERVAL '1 month'`;
+    const groupCountLastFourPromise = sql`WITH months AS (
+    SELECT to_char(generate_series(date_trunc('year', CURRENT_DATE), date_trunc('year', CURRENT_DATE) + interval '1 year - 1 day', '1 month'), 'YYYY-MM') AS month
+),
+monthly_data AS (
+    SELECT
+        to_char(date, 'YYYY-MM') AS month,
+        SUM(CASE WHEN status = 'approved' THEN amount ELSE 0 END) AS total
+    FROM
+        loans
+    WHERE
+        date >= date_trunc('year', CURRENT_DATE)
+        AND date < date_trunc('year', CURRENT_DATE) + interval '1 year'
+    GROUP BY
+        1
+)
+SELECT
+    m.month,
+    COALESCE(md.total, 0) AS disbursed
+FROM
+    months m
+LEFT JOIN
+    monthly_data md ON m.month = md.month
+ORDER BY
+    m.month`;
 
     const data = await Promise.all([
       groupCountPromise,
@@ -634,6 +658,7 @@ export async function fetchDashboardCardData() {
       groupCountThisMonthPromise,
       totalLoanThisMonthPromise,
       collectedThisMonthPromise,
+      groupCountLastFourPromise,
     ]);
 
     const groupAmount = formatCurrencyToLocal(Number(data[0][0]?.sum || "0"));
@@ -666,7 +691,8 @@ export async function fetchDashboardCardData() {
       Number(data[7][0]?.total ?? "0")
     );
 
-    console.log(data[7][0]);
+    const lastFourDisbursement = data[8];
+
     return {
       groupAmount,
       numberOfMembers,
@@ -678,6 +704,7 @@ export async function fetchDashboardCardData() {
       monthlyTotalLoan,
       monthlyLoanBalance,
       monthlyCollected,
+      lastFourDisbursement,
     };
   } catch (error) {
     console.error("Database Error:", error);

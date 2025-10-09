@@ -17,6 +17,8 @@ import { LayoutDashboard } from "lucide-react";
 import { auth } from "@/auth";
 import { formatCurrencyToLocal, formatDateToLocal } from "@/app/lib/utils";
 import { fetchDashboardCardData } from "@/app/lib/sun-data";
+import { fetchRevenue } from "@/app/lib/data";
+import RevenueChart2 from "@/app/ui/dashboard/revenue-chart-2";
 
 const months = [
   "January",
@@ -43,7 +45,10 @@ export default async function Page() {
     monthlyTotalLoan,
     monthlyLoanBalance,
     monthlyCollected,
+    lastFourDisbursement,
   } = await fetchDashboardCardData();
+
+  const revenue = await fetchRevenue();
 
   return (
     <main>
@@ -90,13 +95,17 @@ export default async function Page() {
         </div>
       </div> */}
       <div className="mt-6 grid grid-cols-1 gap-6 md:grid-cols-4 lg:grid-cols-8">
-        <Suspense fallback={<RevenueChartSkeleton />}>
-          <RevenueChart />
-        </Suspense>
         <Suspense fallback={<LatestInvoicesSkeleton />}>
           <LatestInvoices />
         </Suspense>
+        <Suspense fallback={<RevenueChartSkeleton />}>
+          <RevenueChart2
+            revenue={revenue}
+            lastFourDisbursement={lastFourDisbursement}
+          />
+        </Suspense>
       </div>
+      <div></div>
     </main>
   );
 }

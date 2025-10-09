@@ -57,7 +57,7 @@ FROM
 LEFT JOIN
     monthly_data md ON m.month = md.month
 ORDER BY
-    m.month;`;
+    m.month`;
 
     return data2;
   } catch (error) {
