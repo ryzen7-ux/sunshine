@@ -119,7 +119,7 @@ export async function decodeMsisdnValue(hashStr: string) {
 }
 
 export const formatPhoneNumber = (number: string) => {
-  const remainingString = number.slice(3, 15);
+  const remainingString = number?.slice(3, 15);
   const newString = "0" + remainingString;
   return newString;
 };

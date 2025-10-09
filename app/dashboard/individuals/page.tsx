@@ -14,6 +14,7 @@ import {
   fetchIndividualLoansPages,
   fetchFilteredIndividuals,
   fetchFilteredIndividualLoans,
+  fetchIndividualsCardsData,
 } from "@/app/lib/sun-data";
 import { getCurrentUser } from "@/app/lib/current-user";
 import Table from "@/app/ui/individuals/table";
@@ -62,6 +63,9 @@ export default async function Page(props: {
   const individual = await fetchIndividualsById(indiviudalId);
   const regions = await fetchRegions();
   const user = await getCurrentUser();
+  const individualsCards = await fetchIndividualsCardsData();
+  console.log(individualsCards);
+
   return (
     <main className="">
       <h1 className={`mb-4 text-xl md:text-xl font-bold flex gap-2`}>

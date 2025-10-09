@@ -29,7 +29,7 @@ export default async function LatestInvoices() {
         <Coins className="h-6 w-6 text-yellow-600" />
         Latest Mpesa Invoices
       </h2>
-      <div className="flex grow flex-col justify-between rounded-xl bg-gray-200 p-2">
+      <div className="flex grow flex-col justify-between rounded-xl bg-green-200 p-2">
         {/* NOTE: Uncomment this code in Chapter 7 */}
 
         <div className="bg-white pr-2 rounded-xl shadow-lg">

@@ -245,17 +245,20 @@ export async function fetchFilteredIndividualLoans(
       individuals_loans.created,
       individuals.name,
       individuals.idnumber,
-      regions.name as region
+      regions.name as region,
+      COALESCE(SUM(transamount), 0) as paid
             
       FROM individuals_loans
       INNER JOIN individuals ON individuals.id = individuals_loans.loanee
       iNNER JOIN regions ON regions.id = individuals.region
+      LEFT JOIN mpesainvoice ON mpesainvoice.refnumber = individuals.idnumber::TEXT
       WHERE
         individuals_loans.amount::TEXT ILIKE ${`%${query}%`} OR
         individuals_loans.status ILIKE ${`%${query}%`} OR
         individuals_loans.created::TEXT ILIKE ${`%${query}%`} OR
         individuals.name ILIKE ${`%${query}%`} OR
         regions.name ILIKE ${`%${query}%`}
+      GROUP BY individuals_loans.id, individuals.name, individuals.idnumber, regions.name, individuals.created 
       ORDER BY individuals.created DESC
       LIMIT ${ITEMS_PER_PAGE} OFFSET ${offset}
     `;
@@ -271,13 +274,24 @@ export async function fetchFilteredIndividualLoans(
         interest: Math.trunc(item.interest),
         term: Math.trunc(item.term),
         created: formatDateToLocal(item.created),
+        paid: formatCurrencyToLocal(Number(item.paid)),
       }))
       .sort((a: any, b: any) => b.created.localeCompare(a.created));
 
+    console.log(loan);
     return loan;
   } catch (error) {
     console.error("Database Error:", error);
     throw new Error("Failed to fetch groups.");
+  }
+}
+
+export async function fetchIndividualsCardsData() {
+  try {
+    const individualsCollected =
+      await sql`SELECT SUM(transamount) AS mpesa, individuals.idnumber::TEXT FROM mpesainvoice JOIN individuals ON individuals.idnumber::TEXT = mpesainvoice.refnumber WHERE mpesainvoice.refnumber ILIKE individuals.idnumber::TEXT GROUP BY individuals.idnumber`;
+  } catch (error) {
+    console.log(error);
   }
 }
 
@@ -612,8 +626,8 @@ export async function fetchDashboardCardData() {
          SUM(CASE WHEN status = 'pending' THEN amount ELSE 0 END) AS "pending",
          SUM(CASE WHEN status = 'inactive' THEN amount ELSE 0 END) AS "inactive"
          FROM loans`;
-    const totalLoanPromise = sql`SELECT SUM((CASE WHEN status = 'approved' THEN amount ELSE 0 END/term + CASE WHEN status = 'approved' 
-    THEN amount ELSE 0 END * (interest/4/100) + CASE WHEN status = 'approved' THEN 1 ELSE 0 END ) * term ) AS sum FROM loans`;
+    const totalLoanPromise = sql`SELECT CEIL(SUM((CASE WHEN status = 'approved' THEN amount ELSE 0 END/term + CASE WHEN status = 'approved' 
+    THEN amount ELSE 0 END * (interest/4/100) + CASE WHEN status = 'approved' THEN 1 ELSE 0 END ) * term )) AS sum FROM loans`;
     const collectedLoanPromise = sql`SELECT SUM(transamount) AS total FROM mpesainvoice`;
 
     // THIS MONTH
@@ -648,6 +662,37 @@ LEFT JOIN
     monthly_data md ON m.month = md.month
 ORDER BY
     m.month`;
+    const individualCountLastFourPromise = sql`WITH months AS (
+    SELECT to_char(generate_series(date_trunc('year', CURRENT_DATE), date_trunc('year', CURRENT_DATE) + interval '1 year - 1 day', '1 month'), 'YYYY-MM') AS month
+),
+monthly_data AS (
+    SELECT
+        to_char(created, 'YYYY-MM') AS month,
+        SUM(CASE WHEN status = 'approved' THEN amount ELSE 0 END) AS total
+    FROM
+        individuals_loans
+    WHERE
+        created >= date_trunc('year', CURRENT_DATE)
+        AND created < date_trunc('year', CURRENT_DATE) + interval '1 year'
+    GROUP BY
+        1
+)
+SELECT
+    m.month,
+    COALESCE(md.total, 0) AS disbursed
+FROM
+    months m
+LEFT JOIN
+    monthly_data md ON m.month = md.month
+ORDER BY
+    m.month`;
+
+    const individualDisbursedPromsie = sql`SELECT SUM(CASE WHEN status = 'approved' THEN amount ELSE 0 END) FROM individuals_loans`;
+    const countIndividualsPromsie = sql`SELECT COUNT(*) from individuals`;
+    const totalIndividualLoanPromise = sql`SELECT SUM((CASE WHEN status = 'approved' THEN amount ELSE 0 END/term + CASE WHEN status = 'approved' 
+    THEN amount ELSE 0 END * (interest/4/100) + CASE WHEN status = 'approved' THEN 1 ELSE 0 END ) * term ) AS sum FROM individuals_loans`;
+    const individualDisbursedThisMonthPromise = sql`SELECT CEIL(SUM(CASE WHEN status = 'approved' THEN amount ELSE 0 END) ) as disbursed
+    FROM individuals_loans WHERE created >= DATE_TRUNC('month', current_timestamp) AND created < DATE_TRUNC('month', current_timestamp) + INTERVAL '1 month'`;
 
     const data = await Promise.all([
       groupCountPromise,
@@ -659,12 +704,23 @@ ORDER BY
       totalLoanThisMonthPromise,
       collectedThisMonthPromise,
       groupCountLastFourPromise,
+      individualDisbursedPromsie,
+      countIndividualsPromsie,
+      totalIndividualLoanPromise,
+      individualDisbursedThisMonthPromise,
+      individualCountLastFourPromise,
     ]);
 
-    const groupAmount = formatCurrencyToLocal(Number(data[0][0]?.sum || "0"));
-    const numberOfMembers = Number(data[1][0]?.count ?? "0");
+    const groupAmount = formatCurrencyToLocal(
+      Number(data[0][0]?.sum || "0") + Number(data[9][0]?.sum ?? "0")
+    );
+    const numberOfMembers =
+      Number(data[1][0]?.count ?? "0") + Number(data[10][0]?.count ?? "0");
 
-    const totalLoans = formatCurrencyToLocal(Number(data[3][0]?.sum ?? "0"));
+    const totalLoans = formatCurrencyToLocal(
+      Number(data[3][0]?.sum ?? "0") +
+        Math.ceil(Number(data[11][0]?.sum) ?? "0")
+    );
     const totalCollectedLoans = formatCurrencyToLocal(
       Number(data[4][0]?.total ?? "0")
     );
@@ -672,7 +728,9 @@ ORDER BY
       Number(data[0][0].sum ?? "0") - Number(data[4][0]?.total ?? "0")
     );
     const loanBalance = formatCurrencyToLocal(
-      Number(data[3][0]?.sum || "0") - Number(data[4][0]?.total || "0")
+      Number(data[3][0]?.sum ?? "0") +
+        Math.ceil(Number(data[11][0]?.sum) ?? "0") -
+        Number(data[4][0]?.total || "0")
     );
 
     const monthlyDisbursement = formatCurrencyToLocal(
@@ -680,18 +738,26 @@ ORDER BY
     );
 
     const monthlyTotalLoan = formatCurrencyToLocal(
-      Number(data[6][0]?.sum ?? "0")
+      Number(data[6][0]?.sum ?? "0") + Number(data[12][0].disbursed ?? "0")
     );
 
     const monthlyLoanBalance = formatCurrencyToLocal(
-      Number(data[6][0]?.sum ?? "0") - Number(data[7][0]?.total ?? "0")
+      Number(data[6][0]?.sum ?? "0") +
+        Number(data[12][0].disbursed ?? "0") -
+        Number(data[7][0]?.total ?? "0")
     );
 
     const monthlyCollected = formatCurrencyToLocal(
       Number(data[7][0]?.total ?? "0")
     );
 
-    const lastFourDisbursement = data[8];
+    const disbursedSeries = data[8];
+    const lastFourDisbursement = disbursedSeries.map(
+      (item: any, index: any) => ({
+        ...item,
+        disbursed: Number(item.disbursed) + Number(data[13][index].disbursed),
+      })
+    );
 
     return {
       groupAmount,

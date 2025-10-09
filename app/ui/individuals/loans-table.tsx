@@ -38,7 +38,7 @@ export default function LoansTable({
                 key={individual?.id}
                 className="mb-2 w-full rounded-md bg-white p-4"
               >
-                <div className="pb-4">
+                <div className="pb-1">
                   <div>
                     <div className="mb-2 flex justify-between w-full">
                       <p>{individual.name}</p>
@@ -58,8 +58,14 @@ export default function LoansTable({
                         <p className="text-sm text-gray-500">
                           Region: {individual.region}
                         </p>
-                        <p className="text-md font-bold pt-4">
+                        <p className="text-sm font-bold pt-2">
+                          Paid: {individual.paid}
+                        </p>
+                        <p className="text-md font-bold">
                           Total: {formatCurrencyToLocal(individual.payment)}
+                        </p>
+                        <p className="pt-2">
+                          <InvoiceStatus status={individual.status} />
                         </p>
                       </div>
                       <div>
@@ -102,10 +108,16 @@ export default function LoansTable({
                   Term
                 </th>
                 <th scope="col" className="px-3 py-2 font-medium">
+                  Paid
+                </th>
+                <th scope="col" className="px-3 py-2 font-medium">
                   Total
                 </th>
                 <th scope="col" className="px-3 py-2 font-medium">
                   Date
+                </th>
+                <th scope="col" className="px-3 py-2 font-medium">
+                  Status
                 </th>
 
                 <th scope="col" className="relative py-2 pl-6 pr-3">
@@ -140,10 +152,16 @@ export default function LoansTable({
                     {individual.term} Weeks
                   </td>
                   <td className="whitespace-nowrap px-3 py-3 text-xs">
+                    {individual.paid}
+                  </td>
+                  <td className="whitespace-nowrap px-3 py-3 text-xs">
                     {formatCurrencyToLocal(individual.payment)}
                   </td>
                   <td className="whitespace-nowrap px-3 py-3 text-xs">
                     {individual.created}
+                  </td>
+                  <td className="whitespace-nowrap px-3 py-3 text-xs">
+                    <InvoiceStatus status={individual.status} />
                   </td>
                   <td className="whitespace-nowrap py-3 pl-6 pr-3">
                     <div className="flex justify-end gap-3">

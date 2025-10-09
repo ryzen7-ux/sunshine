@@ -389,7 +389,7 @@ export async function updateIndividualLoan(formData: FormData) {
   const amount = formData.get("amount") as unknown;
   const interest = formData.get("interest") as unknown;
   const term = formData.get("term") as unknown;
-  const status = formData.get("term") as string;
+  const status = formData.get("status") as string;
 
   if (Number(amount) > 50000000) {
     return { success: false, message: "Invalid amount!" };
