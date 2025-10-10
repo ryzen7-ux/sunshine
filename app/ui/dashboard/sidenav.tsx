@@ -5,7 +5,7 @@ import { PowerIcon } from "@heroicons/react/24/solid";
 import { signOut } from "@/auth";
 import Image from "next/image";
 
-export default async function SideNav() {
+export default async function SideNav({ user }: { user: any }) {
   return (
     <div className="flex h-full flex-col py-4  pb-4 md:px-0 md:py-0 ">
       <Link
@@ -24,7 +24,7 @@ export default async function SideNav() {
       </Link>
 
       <div className="flex px-2 grow flex-row justify-between space-x-2 md:flex-col md:space-x-0 md:space-y-2  md:px-0">
-        <NavLinks />
+        <NavLinks user={user} />
         <div className="hidden h-auto w-full grow rounded-md bg-gray-50 md:block"></div>
         <form
           action={async () => {

@@ -21,6 +21,7 @@ interface tabsProps {
   monthlyTotalLoan: any;
   monthlyLoanBalance: any;
   monthlyCollected: any;
+  user: any;
 }
 
 export default function DashboardTabs({
@@ -33,6 +34,7 @@ export default function DashboardTabs({
   monthlyTotalLoan,
   monthlyLoanBalance,
   monthlyCollected,
+  user,
 }: tabsProps) {
   return (
     <div className="flex flex-col gap-4 w-full">
@@ -46,6 +48,9 @@ export default function DashboardTabs({
             </div>
           }
         >
+          {/* <div className=" mb-4">
+            <CardsSkeleton />
+          </div> */}
           <div className="grid gap-6 grid-cols-2 lg:grid-cols-5 ">
             <Suspense fallback={<CardsSkeleton />}>
               <CardWrapper
@@ -54,6 +59,7 @@ export default function DashboardTabs({
                 totalLoans={totalLoans}
                 totalCollectedLoans={totalCollectedLoans}
                 loanBalance={loanBalance}
+                user={user}
               />
             </Suspense>
           </div>

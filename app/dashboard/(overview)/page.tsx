@@ -19,6 +19,7 @@ import { formatCurrencyToLocal, formatDateToLocal } from "@/app/lib/utils";
 import { fetchDashboardCardData } from "@/app/lib/sun-data";
 import { fetchRevenue } from "@/app/lib/data";
 import RevenueChart2 from "@/app/ui/dashboard/revenue-chart-2";
+import { getSession } from "@/app/lib/session";
 
 const months = [
   "January",
@@ -49,6 +50,7 @@ export default async function Page() {
   } = await fetchDashboardCardData();
 
   const revenue = await fetchRevenue();
+  const user = await getSession();
 
   return (
     <main>
@@ -68,6 +70,7 @@ export default async function Page() {
           monthlyTotalLoan={monthlyTotalLoan}
           monthlyLoanBalance={monthlyLoanBalance}
           monthlyCollected={monthlyCollected}
+          user={user}
         />
       </div>
       {/* Total Cards stats */}

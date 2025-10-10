@@ -229,7 +229,7 @@ export default function CreateLoanForm({
                 id="pending"
                 name="status"
                 type="radio"
-                defaultValue="pending"
+                value="pending"
                 className="h-4 w-4 cursor-pointer border-gray-300 bg-gray-100 text-gray-600 focus:ring-2"
                 readOnly
               />
@@ -245,19 +245,19 @@ export default function CreateLoanForm({
                 id="approved"
                 name="status"
                 type="radio"
-                defaultValue="approved"
+                value="approved"
                 className="h-4 w-4 cursor-pointer border-gray-500 bg-gray-100 text-gray-600 focus:ring-2"
                 readOnly
               />
               <label
                 htmlFor="paid"
-                className="ml-2 flex cursor-pointer items-center gap-1.5 rounded-full bg-green-500 px-3 py-1.5 text-xs font-medium text-white"
+                className="ml-2 flex cursor-pointer items-center gap-1.5 rounded-full bg-green-500 hover:bg-green-700 hover:shadow-green-700 px-3 py-1.5 text-xs font-medium text-white"
               >
                 Approved <CheckIcon className="h-4 w-4" />
               </label>
             </div>
           </div>
-          <input className="hidden" name="group_id" value={select} />
+          <input className="hidden" name="group_id" value={select} readOnly />
         </div>
         <div id="status-error" aria-live="polite" aria-atomic="true">
           {state?.errors?.status &&

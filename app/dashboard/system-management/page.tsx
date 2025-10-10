@@ -15,13 +15,27 @@ import Regions from "@/app/ui/system-management/regions";
 import AddStaff from "@/app/ui/system-management/add-staff";
 import AddRegion from "@/app/ui/system-management/add-region";
 import { fetchUsers, fetchRegions, fetchUserById } from "@/app/lib/sun-data";
-import { getCurrentUser } from "@/app/lib/current-user";
 import { MonitorCog } from "lucide-react";
+import { getSession } from "@/app/lib/session";
+import { ExclamationCircleIcon } from "@heroicons/react/24/solid";
 
 export default async function Page() {
   const users = await fetchUsers();
   const regions = await fetchRegions();
-  const user = await getCurrentUser();
+  const user = await getSession();
+
+  if (user.role !== "admin") {
+    return (
+      <main>
+        <div className="p-6 flex items-center  justify-center">
+          <p className="text-lg bg-red-100 text-red-500 border rounded-md p-4 flex gap-2 items-center">
+            <ExclamationCircleIcon className="h-12 w-12 text-yellow-500" /> You
+            are not allowed to view this page!
+          </p>
+        </div>
+      </main>
+    );
+  }
 
   return (
     <main>

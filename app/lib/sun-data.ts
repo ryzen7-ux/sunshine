@@ -626,15 +626,15 @@ export async function fetchDashboardCardData() {
          SUM(CASE WHEN status = 'pending' THEN amount ELSE 0 END) AS "pending",
          SUM(CASE WHEN status = 'inactive' THEN amount ELSE 0 END) AS "inactive"
          FROM loans`;
-    const totalLoanPromise = sql`SELECT CEIL(SUM((CASE WHEN status = 'approved' THEN amount ELSE 0 END/term + CASE WHEN status = 'approved' 
-    THEN amount ELSE 0 END * (interest/4/100) + CASE WHEN status = 'approved' THEN 1 ELSE 0 END ) * term )) AS sum FROM loans`;
+    const totalLoanPromise = sql`SELECT CEIL(SUM(CEIL(CASE WHEN status = 'approved' THEN amount ELSE 0 END/term + CASE WHEN status = 'approved' 
+    THEN amount ELSE 0 END * (interest/4/100)) * term )) AS sum FROM loans`;
     const collectedLoanPromise = sql`SELECT SUM(transamount) AS total FROM mpesainvoice`;
 
     // THIS MONTH
     const groupCountThisMonthPromise = sql`SELECT SUM(CASE WHEN status = 'approved' THEN amount ELSE 0 END) 
     FROM loans WHERE date >= DATE_TRUNC('month', current_timestamp) AND date < DATE_TRUNC('month', current_timestamp) + INTERVAL '1 month'`;
-    const totalLoanThisMonthPromise = sql`SELECT SUM((CASE WHEN status = 'approved' THEN amount ELSE 0 END/term + CASE WHEN status = 'approved' 
-    THEN amount ELSE 0 END * (interest/4/100) + CASE WHEN status = 'approved' THEN 1 ELSE 0 END ) * term ) AS sum FROM loans
+    const totalLoanThisMonthPromise = sql`SELECT CEIL(SUM(CEIL(CASE WHEN status = 'approved' THEN amount ELSE 0 END/term + CASE WHEN status = 'approved' 
+    THEN amount ELSE 0 END * (interest/4/100)) * term )) AS sum FROM loans
      WHERE date >= DATE_TRUNC('month', current_timestamp) AND date < DATE_TRUNC('month', current_timestamp) + INTERVAL '1 month'`;
     const collectedThisMonthPromise = sql`SELECT SUM(transamount) AS total FROM mpesainvoice WHERE transtime >= DATE_TRUNC('month', current_timestamp)
      AND transtime < DATE_TRUNC('month', current_timestamp) + INTERVAL '1 month'`;
@@ -689,8 +689,10 @@ ORDER BY
 
     const individualDisbursedPromsie = sql`SELECT SUM(CASE WHEN status = 'approved' THEN amount ELSE 0 END) FROM individuals_loans`;
     const countIndividualsPromsie = sql`SELECT COUNT(*) from individuals`;
-    const totalIndividualLoanPromise = sql`SELECT SUM((CASE WHEN status = 'approved' THEN amount ELSE 0 END/term + CASE WHEN status = 'approved' 
-    THEN amount ELSE 0 END * (interest/4/100) + CASE WHEN status = 'approved' THEN 1 ELSE 0 END ) * term ) AS sum FROM individuals_loans`;
+    const totalIndividualLoanPromise = sql`SELECT CEIL(SUM(CEIL(CASE WHEN status = 'approved' THEN amount ELSE 0 END/term + CASE WHEN status = 'approved' 
+    THEN amount ELSE 0 END * (interest/4/100)) * term )) AS sum FROM individuals_loans`;
+    const individualLoanThisMonthPromise = sql`SELECT CEIL(SUM(CEIL(CASE WHEN status = 'approved' THEN amount ELSE 0 END/term + CASE WHEN status = 'approved' 
+    THEN amount ELSE 0 END * (interest/4/100)) * term )) AS sum FROM individuals_loans WHERE created >= DATE_TRUNC('month', current_timestamp) AND created < DATE_TRUNC('month', current_timestamp) + INTERVAL '1 month'`;
     const individualDisbursedThisMonthPromise = sql`SELECT CEIL(SUM(CASE WHEN status = 'approved' THEN amount ELSE 0 END) ) as disbursed
     FROM individuals_loans WHERE created >= DATE_TRUNC('month', current_timestamp) AND created < DATE_TRUNC('month', current_timestamp) + INTERVAL '1 month'`;
 
@@ -709,6 +711,7 @@ ORDER BY
       totalIndividualLoanPromise,
       individualDisbursedThisMonthPromise,
       individualCountLastFourPromise,
+      individualLoanThisMonthPromise,
     ]);
 
     const groupAmount = formatCurrencyToLocal(
@@ -734,16 +737,16 @@ ORDER BY
     );
 
     const monthlyDisbursement = formatCurrencyToLocal(
-      Number(data[5][0]?.sum ?? "0")
+      Number(data[5][0]?.sum ?? "0") + Number(data[12][0].disbursed ?? "0")
     );
 
     const monthlyTotalLoan = formatCurrencyToLocal(
-      Number(data[6][0]?.sum ?? "0") + Number(data[12][0].disbursed ?? "0")
+      Number(data[6][0]?.sum ?? "0") + Number(data[14][0].sum ?? "0")
     );
 
     const monthlyLoanBalance = formatCurrencyToLocal(
       Number(data[6][0]?.sum ?? "0") +
-        Number(data[12][0].disbursed ?? "0") -
+        Number(data[14][0].sum ?? "0") -
         Number(data[7][0]?.total ?? "0")
     );
 
@@ -992,7 +995,8 @@ export async function fetchGroupCardData(id: string, name: string) {
     // const groupDisbursedPromise = sql`SELECT SUM(CASE WHEN status = 'approved' THEN amount ELSE 0 END), SUM((CASE WHEN status = 'approved' THEN amount ELSE 0 END/term + CASE WHEN status = 'approved' THEN amount ELSE 0 END * (interest/4/100) + CASE WHEN status = 'approved' THEN 1 ELSE 0 END ) * term ) AS payment FROM loans WHERE groupid = ${id} GROUP BY id`;
 
     const groupDisbursedPromise = sql`SELECT SUM(amount) FROM loans WHERE groupid=${id} and status = 'approved'`;
-    const totalGroupLoan = sql`SELECT SUM((amount/term + (interest/4/100) * amount) * term) as payment FROM loans WHERE groupid=${id} AND status = 'approved'`;
+    const totalGroupLoan = sql`SELECT CEIL(SUM(CEIL(CASE WHEN status = 'approved' THEN amount ELSE 0 END/term + CASE WHEN status = 'approved' 
+    THEN amount ELSE 0 END * (interest/4/100)) * term )) AS sum FROM loans WHERE groupid=${id}`;
     const groupsCollectedPromise = sql`SELECT SUM(CASE WHEN status = 'paid' THEN amount ELSE 0 END) FROM groupinvoice WHERE group_id = ${id}`;
     const groupsPendingPromise = sql`SELECT SUM(CASE WHEN status = 'pending' THEN amount ELSE 0 END) FROM groupinvoice WHERE group_id = ${id}`;
     const totalMembersPromise = sql`SELECT COUNT(*) AS total FROM members WHERE groupid = ${id}`;
@@ -1010,9 +1014,7 @@ export async function fetchGroupCardData(id: string, name: string) {
     const groupDisbusredAmount = formatCurrencyToLocal(
       Number(data[0][0]?.sum || "0")
     );
-    const totalPayment = formatCurrencyToLocal(
-      Number(data[5][0]?.payment ?? "0")
-    );
+    const totalPayment = formatCurrencyToLocal(Number(data[5][0]?.sum ?? "0"));
 
     const groupCollectedAmount = formatCurrencyToLocal(
       Number(data[1][0]?.sum ?? "0")

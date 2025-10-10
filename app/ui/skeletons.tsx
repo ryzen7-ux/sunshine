@@ -1,18 +1,23 @@
+"use client";
+import { Skeleton } from "@heroui/react";
+
 // Loading animation
 const shimmer =
-  'before:absolute before:inset-0 before:-translate-x-full before:animate-[shimmer_2s_infinite] before:bg-gradient-to-r before:from-transparent before:via-white/60 before:to-transparent';
+  "before:absolute before:inset-0 before:-translate-x-full before:animate-[shimmer_2s_infinite] before:bg-gradient-to-r before:from-transparent before:via-white/60 before:to-transparent";
 
 export function CardSkeleton() {
   return (
-    <div
-      className={`${shimmer} relative overflow-hidden rounded-xl bg-gray-100 p-2 shadow-sm`}
-    >
-      <div className="flex p-4">
-        <div className="h-5 w-5 rounded-md bg-gray-200" />
-        <div className="ml-2 h-6 w-16 rounded-md bg-gray-200 text-sm font-medium" />
-      </div>
-      <div className="flex items-center justify-center truncate rounded-xl bg-white px-4 py-8">
-        <div className="h-7 w-20 rounded-md bg-gray-200" />
+    <div>
+      <div
+        className={`${shimmer} relative overflow-hidden rounded-xl bg-gray-100 shadow-sm`}
+      >
+        <div className="flex p-2 items-center">
+          <div className="h-6 w-6 rounded-md bg-gray-200 " />
+          <div className="ml-2 h-4 w-20 rounded-md bg-gray-200 text-sm font-medium p-2" />
+        </div>
+        <div className="flex items-center justify-center truncate bg-white px-4 py-4">
+          <div className="h-4 w-40 rounded-md bg-gray-200" />
+        </div>
       </div>
     </div>
   );
@@ -21,10 +26,24 @@ export function CardSkeleton() {
 export function CardsSkeleton() {
   return (
     <>
-      <CardSkeleton />
-      <CardSkeleton />
-      <CardSkeleton />
-      <CardSkeleton />
+      <Skeleton className=" h-12 rounded-lg mb-5 bg-gray-100">
+        <div className="flex p-2 items-center">
+          <div className="h-6 w-6 rounded-md bg-gray-200 " />
+          <div className="ml-2 h-4 w-20 rounded-md bg-gray-200 text-sm font-medium p-2" />
+        </div>
+        <div className={`   `}></div>
+      </Skeleton>
+      <Skeleton className=" h-9 rounded-lg w-60 mb-6 bg-gray-200">
+        {" "}
+        <div className={`   `}></div>
+      </Skeleton>
+      <div className="grid gap-6 grid-cols-2 lg:grid-cols-5">
+        <CardSkeleton />
+        <CardSkeleton />
+        <CardSkeleton />
+        <CardSkeleton />
+        <CardSkeleton />
+      </div>
     </>
   );
 }

@@ -24,6 +24,7 @@ interface tabsProps {
   totalLoans: any;
   totalCollectedLoans: any;
   loanBalance: any;
+  user: any;
 }
 
 const iconMap = {
@@ -40,6 +41,7 @@ export default function CardWrapper({
   totalLoans,
   totalCollectedLoans,
   loanBalance,
+  user,
 }: tabsProps) {
   return (
     <>
@@ -50,6 +52,7 @@ export default function CardWrapper({
         type="disbursed"
         color="text-blue-800"
         span=""
+        user={user}
       />
       <Card
         title="Collected"
@@ -57,6 +60,7 @@ export default function CardWrapper({
         type="collected"
         color="text-green-800"
         span=""
+        user={user}
       />
       <Card
         title="Loans"
@@ -64,6 +68,7 @@ export default function CardWrapper({
         type="pending"
         color="text-yellow-800"
         span=""
+        user={user}
       />
       <Card
         title=" Loan Balance"
@@ -71,6 +76,7 @@ export default function CardWrapper({
         type="active"
         color="text-indigo-800"
         span=""
+        user={user}
       />
 
       <Card
@@ -79,6 +85,7 @@ export default function CardWrapper({
         type="customers"
         color="text-pink-800"
         span="col-span-2 md:col-span-1"
+        user={user}
       />
     </>
   );
@@ -90,12 +97,14 @@ export function Card({
   type,
   color,
   span,
+  user,
 }: {
   title: string;
   value: number | string;
   type: "disbursed" | "collected" | "pending" | "active" | "customers";
   color: string;
   span: string;
+  user: any;
 }) {
   const Icon = iconMap[type];
 
@@ -107,9 +116,9 @@ export function Card({
       </div>
       <p
         className={`
-          truncate rounded-b-xl bg-white px-4 py-2 text-center text-green-600 text-lg font-black`}
+          truncate rounded-b-xl bg-white px-2 py-2 text-center text-green-600 text-sm font-black`}
       >
-        {value}
+        {user?.role === "admin" ? value : formatCurrencyToLocal(0)}
       </p>
     </div>
   );

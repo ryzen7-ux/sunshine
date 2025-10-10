@@ -98,7 +98,7 @@ export function Card({
       </div>
       <p
         className={`
-          truncate rounded-b-xl bg-white px-4 py-2 text-center text-green-600 text-lg font-black`}
+          truncate rounded-b-xl bg-white px-2 py-2 text-center text-green-600 text-sm font-black`}
       >
         {value}
       </p>

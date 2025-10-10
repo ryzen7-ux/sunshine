@@ -65,7 +65,7 @@ const links = [
   },
 ];
 
-export default function NavLinks() {
+export default function NavLinks({ user }: { user: any }) {
   const pathname = usePathname();
   return (
     <>
