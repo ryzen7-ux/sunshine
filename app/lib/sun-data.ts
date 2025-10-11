@@ -1025,7 +1025,7 @@ export async function fetchGroupCardData(id: string, name: string) {
     );
     const totalMembers = Number(data[3][0]?.total ?? "0");
     const balance = formatCurrencyToLocal(
-      Number(data[5][0]?.payment ?? "0") - Number(data[4][0]?.mpesa ?? "0")
+      Number(data[5][0]?.sum ?? "0") - Number(data[4][0]?.mpesa ?? "0")
     );
     const totalMpesa = formatCurrencyToLocal(Number(data[4][0]?.mpesa ?? "0"));
 
