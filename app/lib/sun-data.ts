@@ -481,6 +481,7 @@ export async function fetchLoanById(mid: string) {
         TO_CHAR(loans.date, 'YYYY-MM-DD HH24:MI:SS') AS date,
         loans.status,
         loans.notes,
+        loans.cycle,
         loans.start_date,
         loans.start_date + (COALESCE(loans.term, 0) * INTERVAL '1 week') AS end_date,
         (EXTRACT(days FROM (now() - loans.start_date)) / 7)::int as today,
@@ -491,6 +492,7 @@ export async function fetchLoanById(mid: string) {
       LIMIT 1
       
     `;
+
     return data[0];
   } catch (error) {
     console.error("Database Error:", error);
@@ -509,6 +511,7 @@ export async function fetchLoanByIdNew(id: string) {
         loans.term,
         TO_CHAR(loans.date, 'YYYY-MM-DD HH24:MI:SS') AS date,
         loans.status,
+        loans.cycle,
         loans.start_date,
         loans.notes,
         members.surname,
@@ -540,6 +543,7 @@ export async function fetchFilteredLoans(query: string, currentPage: number) {
         loans.status,
         loans.date,
         loans.notes,
+        loans.cycle,
         loans.start_date,
         members.surname,
         members.firstName,
@@ -562,7 +566,7 @@ export async function fetchFilteredLoans(query: string, currentPage: number) {
       ORDER BY loans.date DESC
       LIMIT ${ITEMS_PER_PAGE} OFFSET ${offset}
     `;
-
+    console.log(loans);
     return loans;
   } catch (error) {
     console.error("Database Error:", error);

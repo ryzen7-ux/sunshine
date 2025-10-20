@@ -1,10 +1,15 @@
-//@ts-nocheck
-
 "use client";
 
 import React from "react";
 import { LoanForm } from "@/app/lib/sun-defination";
-import { Input, Divider, DatePicker, Textarea } from "@heroui/react";
+import {
+  Input,
+  Divider,
+  DatePicker,
+  Textarea,
+  addToast,
+  NumberInput,
+} from "@heroui/react";
 import {
   CheckIcon,
   ClockIcon,
@@ -21,12 +26,24 @@ import { updateLoan, LoanState } from "@/app/lib/sun-actions";
 import { formatCurrencyToLocal, formatDateToLocal } from "@/app/lib/utils";
 import { now, getLocalTimeZone } from "@internationalized/date";
 
-export default function EditLoanForm({ loan }: { loan: LoanForm }) {
+export default function EditLoanForm({
+  loan,
+  onClose,
+}: {
+  loan: any;
+  onClose: any;
+}) {
   const [amount, setAmount] = React.useState(loan.amount.toString());
   const [interest, setInterest] = React.useState(loan.interest.toString());
   const [term, setTerm] = React.useState(loan.term.toString());
   const [weeklyPayment, setWeeklyPayment] = React.useState(0);
-  const [startDate, setStartDate] = React.useState(now(getLocalTimeZone()));
+  const [startDate, setStartDate] = React.useState<any>(
+    now(getLocalTimeZone())
+  );
+  console.log();
+  const [endDate, setEndDate] = React.useState<any>();
+  const [error, setError] = React.useState({ isError: false, type: "" });
+  const [cycle, setCycle] = React.useState<any>(loan?.cycle || 0);
 
   const principal = Number.parseFloat(amount);
   const rate = Number.parseFloat(interest) / 100 / 4;
@@ -47,14 +64,42 @@ export default function EditLoanForm({ loan }: { loan: LoanForm }) {
       setWeeklyPayment(Math.round(payment * 100) / 100);
     }
   };
-  const initialState: LoanState = { message: null, errors: {} };
-  const updateLoanWithId = updateLoan.bind(null, loan.id);
+
+  const handleUpdate = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const formData = new FormData(e.currentTarget);
+    const res = await updateLoan(formData);
+    if (res?.success === false) {
+      addToast({
+        title: "Error !",
+        description: res?.message,
+        color: "danger",
+      });
+    }
+
+    if (res?.success === true) {
+      addToast({
+        title: "Success !",
+        description: res?.message,
+        color: "success",
+      });
+      onClose();
+    }
+  };
+
+  const handleDateChange = (date: any) => {
+    if (term === "") {
+      setError({ isError: true, type: "startDate" });
+      return;
+    }
+    setStartDate(date);
+    const newDate = date;
+    const loanEndDate = newDate.add({ weeks: Number(term) });
+    setEndDate(loanEndDate);
+  };
 
   return (
-    <form
-      action={updateLoanWithId}
-      className="px-4 py-4 md:px-12 border md:rounded-lg py-12 mb-12"
-    >
+    <form onSubmit={handleUpdate} className="">
       <div className="flex gap-4  mb-2 items-center px-4 py-2 border rounded-lg bg-blue-100 ">
         <p>
           <strong>Borrower:</strong>{" "}
@@ -73,6 +118,7 @@ export default function EditLoanForm({ loan }: { loan: LoanForm }) {
         </p>
       </div>
       <div className="flex flex-row gap-2 ">
+        <input name="id" className="hidden" value={loan.id} readOnly />
         <div className="w-full ">
           <Input
             color="primary"
@@ -159,7 +205,36 @@ export default function EditLoanForm({ loan }: { loan: LoanForm }) {
           </div> */}
         </div>
       </div>
+      <div className="py-2">
+        {" "}
+        <NumberInput
+          isInvalid={error.isError && error.type === "cycle"}
+          errorMessage="Select a number greater than 0"
+          isRequired
+          name="cycle"
+          className="outline-2 outline-blue-500 "
+          label="Loan Cycle"
+          color="primary"
+          labelPlacement="outside"
+          size="md"
+          variant="faded"
+          value={cycle}
+          onValueChange={(e) => {
+            setCycle(e);
+            setError({ isError: false, type: "" });
+          }}
+          placeholder="0"
+          formatOptions={{ useGrouping: false }}
+          startContent={
+            <div className="pointer-events-none flex items-center">
+              <span className="text-default-400 text-small"></span>
+            </div>
+          }
+        />
+      </div>
       <DatePicker
+        isInvalid={error.isError && error.type === "startDate"}
+        errorMessage="Select loan term first"
         showMonthAndYearPickers
         name="start_date"
         className="pb-4"
@@ -168,8 +243,24 @@ export default function EditLoanForm({ loan }: { loan: LoanForm }) {
         label="Loan Start Date"
         size="md"
         labelPlacement="outside"
-        defaultValue={startDate}
-        onChange={(e: any) => setStartDate(e.target.value)}
+        value={startDate}
+        onChange={(val) => {
+          handleDateChange(val);
+        }}
+        inert={true}
+      />
+      <DatePicker
+        isDisabled
+        showMonthAndYearPickers
+        name="end_date"
+        className="pb-4"
+        variant="faded"
+        color="primary"
+        label="Loan End Date"
+        size="md"
+        labelPlacement="outside"
+        value={endDate}
+        isReadOnly
       />
       {/* Loans status fields */}
       <fieldset>

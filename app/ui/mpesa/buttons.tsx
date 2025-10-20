@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { PencilIcon, PlusIcon, TrashIcon } from "@heroicons/react/24/outline";
 import Link from "next/link";
 import { deleteInvoice } from "@/app/lib/actions";
@@ -15,16 +16,56 @@ import {
   useDisclosure,
 } from "@heroui/react";
 import { AlertTriangleIcon } from "lucide-react";
+import { useSearchParams, usePathname, useRouter } from "next/navigation";
+import { useDebouncedCallback } from "use-debounce";
 
 export function CreateInvoice() {
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const { isOpen, onOpen, onOpenChange, onClose } = useDisclosure();
+
+  const searchParams = useSearchParams();
+  const pathname = usePathname();
+  const { replace } = useRouter();
+
+  const handleDeleteParam = useDebouncedCallback(() => {
+    const params = new URLSearchParams(searchParams);
+    params.delete("memberQuery");
+
+    replace(`${pathname}?${params.toString()}`);
+  }, 100);
+
   return (
-    <Link
-      href="/dashboard/invoices/create"
-      className="flex h-10 items-center rounded-lg bg-blue-600 px-4 text-sm font-medium text-white transition-colors hover:bg-blue-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600"
-    >
-      <span className="hidden md:block">Create Invoice</span>{" "}
-      <PlusIcon className="h-5 md:ml-4" />
-    </Link>
+    <>
+      {" "}
+      <button
+        onClick={() => setIsAddModalOpen(true)}
+        className="flex h-10 items-center rounded-lg bg-blue-600 px-4 text-sm font-medium text-white transition-colors hover:bg-blue-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600"
+      >
+        <span className="hidden md:block">New Loan</span>{" "}
+        <PlusIcon className="h-5 md:ml-4" />
+      </button>
+      <Modal
+        isOpen={isAddModalOpen}
+        onOpenChange={onOpenChange}
+        onClose={() => {
+          setIsAddModalOpen(false);
+          handleDeleteParam();
+        }}
+        size="xl"
+        scrollBehavior="outside"
+      >
+        <ModalContent>
+          {(onClose) => (
+            <>
+              <ModalHeader className="flex flex-col gap-1">
+                Add Loan
+              </ModalHeader>
+              <ModalBody></ModalBody>
+            </>
+          )}
+        </ModalContent>
+      </Modal>
+    </>
   );
 }
 

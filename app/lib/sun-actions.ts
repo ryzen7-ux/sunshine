@@ -124,6 +124,7 @@ export type LoanState = {
     status?: string[];
   };
   message?: string | null;
+  success?: boolean | null;
 };
 
 export type InvoiceState = {
@@ -628,7 +629,7 @@ export async function deleteMember(id: string, gid: string) {
 }
 
 // LOANS
-export async function createLoan(prevState: LoanState, formData: FormData) {
+export async function createLoan(formData: FormData) {
   const validatedFields = CreateLoan.safeParse({
     group_id: formData.get("group_id"),
     member_id: formData.get("member_id"),
@@ -640,9 +641,15 @@ export async function createLoan(prevState: LoanState, formData: FormData) {
   });
 
   const localDate = new Date();
+  const cycle = formData.get("cycle") as string;
+  const start_date = formData.get("start_date") as string;
+  const splitDate1 = start_date.split("+");
+  const splitDate2 = splitDate1[0].split(".");
+  const newStartDate = new Date(splitDate2[0]);
 
   if (!validatedFields.success) {
     return {
+      success: false,
       errors: validatedFields.error.flatten().fieldErrors,
       message: "Missing Fields. Failed to Create Invoice.",
     };
@@ -652,20 +659,22 @@ export async function createLoan(prevState: LoanState, formData: FormData) {
 
   try {
     await sql`
-      INSERT INTO loans (groupid, memberid, amount, loanid, interest, term, status, date)
-      VALUES (${group_id}, ${member_id}, ${amount}, ${loan_id}, ${interest}, ${term}, ${status}, ${localDate})
+      INSERT INTO loans (groupid, memberid, amount, loanid, interest, term, status, cycle, start_date, date)
+      VALUES (${group_id}, ${member_id}, ${amount}, ${loan_id}, ${interest}, ${term}, ${status}, ${Number(
+      cycle
+    )}, ${newStartDate}, ${localDate})
     `;
+    revalidatePath(`/dashboard/loans`);
+    return { success: true, message: "Loan created successfully" };
   } catch (error) {
     console.log(error);
     return {
       message: "Database Error: Failed to Create Invoice.",
     };
   }
-  revalidatePath(`/dashboard/loans`);
-  redirect(`/dashboard/loans`);
 }
 
-export async function updateLoan(id: string, formData: FormData) {
+export async function updateLoan(formData: FormData) {
   const { amount, loan_id, interest, term, status } = UpdateLoan.parse({
     amount: formData.get("amount") as unknown,
     loan_id: formData.get("loan_id") as string,
@@ -676,20 +685,29 @@ export async function updateLoan(id: string, formData: FormData) {
   const date = formData.get("start_date") as string;
   const newDate = date?.split("T")[0];
   const notes = formData.get("notes") as string;
+
+  const id = formData.get("id") as string;
+
+  const cycle = formData.get("cycle") as string;
+  const start_date = formData.get("start_date") as string;
+  const splitDate1 = start_date.split("+");
+  const splitDate2 = splitDate1[0].split(".");
+  const newStartDate = new Date(splitDate2[0]);
   try {
     await sql`
       UPDATE loans
-      SET amount = ${amount}, loanid = ${loan_id}, interest = ${interest}, term = ${term}, status = ${status}, start_date=${newDate}, notes=${notes}
+      SET amount = ${amount}, loanid = ${loan_id}, interest = ${interest}, term = ${term}, status = ${status}, start_date=${newStartDate}, cycle = ${cycle}, notes=${notes}
       WHERE id= ${id}
     `;
   } catch (error) {
     console.log(error);
     return {
+      sucess: false,
       message: "Database Error: Failed to Update Loan.",
     };
   }
   revalidatePath("/dashboard/loans");
-  redirect("/dashboard/loans");
+  return { success: true, message: "Loan updated successfully!" };
 }
 
 export async function deleteLoan(id: string) {

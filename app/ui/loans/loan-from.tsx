@@ -2,7 +2,15 @@
 
 import React from "react";
 import { GroupsTable, MemberForm } from "@/app/lib/sun-defination";
-import { Input, Divider, Select, SelectItem } from "@heroui/react";
+import {
+  Input,
+  Divider,
+  Select,
+  SelectItem,
+  addToast,
+  DatePicker,
+  NumberInput,
+} from "@heroui/react";
 import {
   CheckIcon,
   ClockIcon,
@@ -19,13 +27,16 @@ import { useActionState } from "react";
 import { useSearchParams, usePathname, useRouter } from "next/navigation";
 import { useDebouncedCallback } from "use-debounce";
 import { formatCurrencyToLocal, formatDateToLocal } from "@/app/lib/utils";
+import { now, getLocalTimeZone, parseDate } from "@internationalized/date";
 
 export default function CreateLoanForm({
   groups,
   members,
+  onClose,
 }: {
   groups: GroupsTable[];
   members: MemberForm[];
+  onClose: any;
 }) {
   const searchParams = useSearchParams();
   const pathname = usePathname();
@@ -33,16 +44,23 @@ export default function CreateLoanForm({
 
   const handleSearch = useDebouncedCallback((term) => {
     const params = new URLSearchParams(searchParams);
+
     if (term) {
-      params.set("query", term);
+      params.set("memberQuery", term);
     } else {
-      params.delete("query");
+      params.delete("memberQuery");
     }
     replace(`${pathname}?${params.toString()}`);
   }, 300);
 
   const [select, setSelect] = React.useState("");
-  const [selectMember, setSelectMember] = React.useState("");
+  const [selectMember, setSelectMember] = React.useState(select ? "" : "");
+  const [startDate, setStartDate] = React.useState<any>(
+    now(getLocalTimeZone())
+  );
+  const [endDate, setEndDate] = React.useState<any>(null);
+  const [error, setError] = React.useState({ isError: false, type: "" });
+  const [cycle, setCycle] = React.useState(0);
 
   const [amount, setAmount] = React.useState("");
   const [interest, setInterest] = React.useState("");
@@ -52,7 +70,7 @@ export default function CreateLoanForm({
 
   const principal = Number.parseFloat(amount);
   const rate = Number.parseFloat(interest) / 100 / 4;
-  console.log(rate);
+
   const Loanterm = Number.parseInt(term);
 
   const wpay = Math.ceil(principal / Loanterm + principal * rate);
@@ -71,18 +89,59 @@ export default function CreateLoanForm({
     }
   };
 
-  const initialState: LoanState = { message: null, errors: {} };
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    if (cycle < 1) {
+      addToast({
+        title: "Error !",
+        description: "Please select loan cycle",
+        color: "danger",
+      });
+      setError({ isError: true, type: "cycle" });
+      return;
+    }
+    const formData = new FormData(e.currentTarget);
+    const res = await createLoan(formData);
 
-  const [state, formAction, isLoading] = useActionState(
-    createLoan,
-    initialState
-  );
+    if (res?.success === false) {
+      if (res?.errors?.status) {
+        addToast({
+          title: "Error !",
+          description: res?.errors.status,
+          color: "danger",
+        });
+      } else {
+        addToast({
+          title: "Error !",
+          description: res?.message,
+          color: "danger",
+        });
+      }
+    }
+
+    if (res?.success === true) {
+      addToast({
+        title: "Success !",
+        description: res?.message,
+        color: "success",
+      });
+      onClose();
+    }
+  };
+
+  const handleDateChange = (date: any) => {
+    if (term === "") {
+      setError({ isError: true, type: "startDate" });
+      return;
+    }
+    setStartDate(date);
+    const newDate = date;
+    const loanEndDate = newDate.add({ weeks: Number(term) });
+    setEndDate(loanEndDate);
+  };
 
   return (
-    <form
-      action={formAction}
-      className="px-4 py-4 md:px-12 border md:rounded-lg py-12 mb-12"
-    >
+    <form onSubmit={handleSubmit} className="">
       <div className="flex gap-4 pb-2">
         <div className="w-full">
           <Select
@@ -145,14 +204,6 @@ export default function CreateLoanForm({
             defaultValue={amount}
             onChange={(e: any) => setAmount(e.target.value)}
           />
-          <div id="amount-error" aria-live="polite" aria-atomic="true">
-            {state?.errors?.amount &&
-              state.errors.amount.map((error: string) => (
-                <p className="mt-2 text-sm text-red-500" key={error}>
-                  {error}
-                </p>
-              ))}
-          </div>
         </div>
         <div className="w-full">
           <Input
@@ -185,14 +236,6 @@ export default function CreateLoanForm({
             defaultValue={interest}
             onChange={(e: any) => setInterest(e.target.value)}
           />
-          <div id="amount-error" aria-live="polite" aria-atomic="true">
-            {state?.errors?.interest &&
-              state.errors.interest.map((error: string) => (
-                <p className="mt-2 text-sm text-red-500" key={error}>
-                  {error}
-                </p>
-              ))}
-          </div>
         </div>
         <div className="w-full">
           <Input
@@ -206,18 +249,69 @@ export default function CreateLoanForm({
             size="md"
             variant="faded"
             defaultValue={term}
-            onChange={(e: any) => setTerm(e.target.value)}
+            onChange={(e: any) => {
+              setTerm(e.target.value), setError({ isError: false, type: "" });
+            }}
           />
-          <div id="term-error" aria-live="polite" aria-atomic="true">
-            {state?.errors?.term &&
-              state.errors.term.map((error: string) => (
-                <p className="mt-2 text-sm text-red-500" key={error}>
-                  {error}
-                </p>
-              ))}
-          </div>
         </div>
       </div>
+      <div className="py-2">
+        {" "}
+        <NumberInput
+          isInvalid={error.isError && error.type === "cycle"}
+          errorMessage="Select a number greater than 0"
+          isRequired
+          name="cycle"
+          className="outline-2 outline-blue-500 "
+          label="Loan Cycle"
+          color="primary"
+          labelPlacement="outside"
+          size="md"
+          variant="faded"
+          value={cycle}
+          onValueChange={(e) => {
+            setCycle(e);
+            setError({ isError: false, type: "" });
+          }}
+          placeholder="0"
+          formatOptions={{ useGrouping: false }}
+          startContent={
+            <div className="pointer-events-none flex items-center">
+              <span className="text-default-400 text-small"></span>
+            </div>
+          }
+        />
+      </div>
+
+      <DatePicker
+        isInvalid={error.isError && error.type === "startDate"}
+        errorMessage="Select loan term first"
+        showMonthAndYearPickers
+        name="start_date"
+        className="pb-4"
+        variant="faded"
+        color="primary"
+        label="Loan Start Date"
+        size="md"
+        labelPlacement="outside"
+        value={startDate}
+        onChange={(val) => {
+          handleDateChange(val);
+        }}
+      />
+      <DatePicker
+        isDisabled
+        showMonthAndYearPickers
+        name="end_date"
+        className="pb-4"
+        variant="faded"
+        color="primary"
+        label="Loan End Date"
+        size="md"
+        labelPlacement="outside"
+        value={endDate}
+        isReadOnly
+      />
       <fieldset>
         <legend className="mb-2 block text-sm font-medium">
           Set the loan status
@@ -258,14 +352,6 @@ export default function CreateLoanForm({
             </div>
           </div>
           <input className="hidden" name="group_id" value={select} readOnly />
-        </div>
-        <div id="status-error" aria-live="polite" aria-atomic="true">
-          {state?.errors?.status &&
-            state.errors.status.map((error: string) => (
-              <p className="mt-2 text-sm text-red-500" key={error}>
-                {error}
-              </p>
-            ))}
         </div>
       </fieldset>
       <div className="py-2">

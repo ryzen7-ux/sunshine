@@ -13,9 +13,11 @@ import { Tooltip } from "@heroui/react";
 export default async function InvoicesTable({
   query,
   currentPage,
+  loan,
 }: {
   query: string;
   currentPage: number;
+  loan: any;
 }) {
   const loans = await fetchFilteredLoans(query, currentPage);
 
@@ -24,7 +26,7 @@ export default async function InvoicesTable({
       <div className="inline-block min-w-full align-middle">
         <div className="rounded-lg bg-gray-100 p-2 md:pt-0">
           <div className="md:hidden">
-            {loans?.map((loan) => (
+            {loans?.map((loan: any) => (
               <div
                 key={loan.id}
                 className="mb-2 w-full rounded-md bg-white p-4"
@@ -36,7 +38,14 @@ export default async function InvoicesTable({
                         {loan.firstname} {loan.surname}
                       </p>
                     </div>
+
                     <p className="text-sm text-gray-500">{loan.loanid}</p>
+                    <p className="text-sm text-gray-500">
+                      Start Date: {formatDateToLocal(loan.start_date) ?? "Nill"}
+                    </p>
+                    <p className="text-sm text-gray-500">
+                      Cycle: {loan.cycle ?? 0}
+                    </p>
                   </div>
                   <div>
                     <InvoiceStatus status={loan.status} />
@@ -45,12 +54,12 @@ export default async function InvoicesTable({
                 <div className="flex w-full items-center justify-between pt-4">
                   <div>
                     <p className="text-xl font-medium">
-                      {formatCurrencyToLocal(loan.amount)}
+                      Amount: {formatCurrencyToLocal(loan.amount)}
                     </p>
-                    <p>{formatDateToLocal(loan.date)}</p>
+                    <p>Created: {formatDateToLocal(loan.date)}</p>
                   </div>
                   <div className="flex justify-end gap-2">
-                    <UpdateLoan id={loan.id} />
+                    <UpdateLoan id={loan.id} loan={loan} />
                     <DeleteLoan id={loan.id} />
                   </div>
                 </div>
@@ -73,7 +82,13 @@ export default async function InvoicesTable({
                   Amount
                 </th>
                 <th scope="col" className="px-3 py-5 font-medium">
-                  Loan Created
+                  Created
+                </th>
+                <th scope="col" className="px-3 py-5 font-medium">
+                  Start Date
+                </th>
+                <th scope="col" className="px-3 py-5 font-medium">
+                  Cycle
                 </th>
                 <th scope="col" className="px-3 py-5 font-medium">
                   Rate
@@ -87,7 +102,7 @@ export default async function InvoicesTable({
               </tr>
             </thead>
             <tbody className="bg-white">
-              {loans?.map((loan) => (
+              {loans?.map((loan: any) => (
                 <tr
                   key={loan.id}
                   className="w-full border-b py-3 text-sm last-of-type:border-none [&:first-child>td:first-child]:rounded-tl-lg [&:first-child>td:last-child]:rounded-tr-lg [&:last-child>td:first-child]:rounded-bl-lg [&:last-child>td:last-child]:rounded-br-lg"
@@ -112,6 +127,12 @@ export default async function InvoicesTable({
                     {formatDateToLocal(loan.date)}
                   </td>
                   <td className="whitespace-nowrap px-3 py-3 text-xs">
+                    {formatDateToLocal(loan.start_date) ?? "Nil"}
+                  </td>
+                  <td className="whitespace-nowrap px-3 py-3 text-xs">
+                    {loan?.cycle ?? 0}
+                  </td>
+                  <td className="whitespace-nowrap px-3 py-3 text-xs">
                     {loan.interest} %
                   </td>
                   <td className="whitespace-nowrap px-3 py-3">
@@ -119,7 +140,7 @@ export default async function InvoicesTable({
                   </td>
                   <td className="whitespace-nowrap py-3 pl-6 pr-3">
                     <div className="flex justify-end gap-3">
-                      <UpdateLoan id={loan.id} />
+                      <UpdateLoan id={loan.id} loan={loan} />
                       <DeleteLoan id={loan.id} />
                     </div>
                   </td>
