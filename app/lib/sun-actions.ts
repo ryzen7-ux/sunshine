@@ -784,11 +784,49 @@ export async function deleteGroupInvoice(id: string) {
 
 // MPESA
 
+export async function createMpesaInvoice(formData: FormData) {
+  const refNumber = formData.get("group") as string;
+  const transId = formData.get("transId") as string;
+  const transTime = formData.get("transDate") as string;
+  const transAmount = formData.get("amount") as string;
+  const firstName = formData.get("name") as string;
+  const phone = formData.get("phone") as string;
+
+  const splitDate1 = transTime.split("+");
+  const splitDate2 = splitDate1[0].split(".");
+  const newTransDate = new Date(splitDate2[0]);
+
+  try {
+    await sql`INSERT INTO mpesainvoice (transid, transtime, transamount, refnumber, first_name, phone_number)
+          VALUES (${transId},${newTransDate}, ${Number(
+      transAmount
+    )}, ${refNumber}, ${firstName}, ${phone})`;
+    revalidatePath("dashboard/mpesa");
+    return { success: true, message: "Transaction created" };
+  } catch (error) {
+    console.log(error);
+    return { success: false, message: "Server error occured" };
+  }
+}
+
 export async function updateMpesaInvoice(formData: FormData) {
   const refNumber = formData.get("group") as string;
+  const transId = formData.get("transId") as string;
+  const transTime = formData.get("transDate") as string;
+  const transAmount = formData.get("amount") as string;
+  const firstName = formData.get("name") as string;
+  const phone = formData.get("phone") as string;
+
   const id = formData.get("id") as string;
+
+  const splitDate1 = transTime.split("+");
+  const splitDate2 = splitDate1[0].split(".");
+  const newTransDate = new Date(splitDate2[0]);
+
   try {
-    await sql`UPDATE mpesainvoice SET refnumber = ${refNumber} WHERE id=${id}`;
+    await sql`UPDATE mpesainvoice SET refnumber = ${refNumber}, transid =${transId}, transtime =${newTransDate}, transamount =${Number(
+      transAmount
+    )}, first_name = ${firstName}, phone_number = ${phone} WHERE id=${id}`;
     revalidatePath("dashboard/mpesa");
     return { success: true, message: "Transaction updated" };
   } catch (error) {

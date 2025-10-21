@@ -23,7 +23,11 @@ import {
 import Link from "next/link";
 import { Button } from "@/app/ui/button";
 import { updateLoan, LoanState } from "@/app/lib/sun-actions";
-import { formatCurrencyToLocal, formatDateToLocal } from "@/app/lib/utils";
+import {
+  formatCurrencyToLocal,
+  formatDateToLocal,
+  formatFormDateTime,
+} from "@/app/lib/utils";
 import { now, getLocalTimeZone } from "@internationalized/date";
 
 export default function EditLoanForm({
@@ -38,7 +42,7 @@ export default function EditLoanForm({
   const [term, setTerm] = React.useState(loan.term.toString());
   const [weeklyPayment, setWeeklyPayment] = React.useState(0);
   const [startDate, setStartDate] = React.useState<any>(
-    now(getLocalTimeZone())
+    formatFormDateTime(loan.start_date)
   );
   console.log();
   const [endDate, setEndDate] = React.useState<any>();

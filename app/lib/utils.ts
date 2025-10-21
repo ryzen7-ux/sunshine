@@ -3,6 +3,7 @@
 import { Revenue } from "./definitions";
 import { decodeMsisdn, fetchHashed } from "mpesa-hash-decoder";
 import axios from "axios";
+import { parseZonedDateTime } from "@internationalized/date";
 
 export const formatCurrency = (amount: number) => {
   return amount.toLocaleString("en-US", {
@@ -18,6 +19,27 @@ export const formatCurrencyToLocal = (
     style: "currency",
     currency: "KES",
   });
+};
+
+export const formatFormDateTime = (
+  dateStr: string,
+  locale: string = "en-US"
+) => {
+  const isoTime: any = new Date(dateStr).toLocaleDateString("fr-CA", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+  });
+
+  const isoTime2 = new Date(dateStr).toLocaleTimeString("en-CA", {
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false, // Use 24-hour format
+  });
+
+  const formatedDateTime = `${isoTime}T${isoTime2}[Africa/Nairobi]`;
+
+  return parseZonedDateTime(formatedDateTime);
 };
 
 export const formatDateToLocal = (
@@ -119,9 +141,12 @@ export async function decodeMsisdnValue(hashStr: string) {
 }
 
 export const formatPhoneNumber = (number: string) => {
-  const remainingString = number?.slice(3, 15);
-  const newString = "0" + remainingString;
-  return newString;
+  if (number.startsWith("254") || number.startsWith("+254")) {
+    const remainingString = number?.slice(3, 15);
+    const newString = "0" + remainingString;
+    return newString;
+  }
+  return number;
 };
 
 export const computeTotalLoan = (
