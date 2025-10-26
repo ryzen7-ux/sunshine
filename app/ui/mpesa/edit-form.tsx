@@ -13,34 +13,42 @@ import {
   addToast,
   Select,
   SelectItem,
-  NumberInput,
-  Divider,
-  DatePicker,
+  Tooltip,
 } from "@heroui/react";
-import { Button } from "@heroui/react";
-import { createMpesaInvoice } from "@/app/lib/sun-actions";
+import { Button, NumberInput, DatePicker } from "@heroui/react";
+import { Edit, Landmark } from "lucide-react";
+import { updateMpesaInvoice } from "@/app/lib/sun-actions";
 import {
   now,
   getLocalTimeZone,
+  parseAbsoluteToLocal,
   parseZonedDateTime,
 } from "@internationalized/date";
+import { formatDateToLocal, formatFormDateTime } from "@/app/lib/utils";
 
-export default function AddMpesaForm({ onClose }: { onClose: any }) {
+export default function EditMpesaForm({
+  mpesa,
+  onClose,
+}: {
+  mpesa: any;
+  onClose: any;
+}) {
   const [isLoading, setIsloading] = useState(false);
-  const [group, setGroup] = useState("");
-  const [phone, setPhone] = useState("");
-  const [transId, setTransId] = useState("");
-  const [amount, setAmount] = useState<any>();
-  const [cycle, setCycles] = useState<any>("");
-  const [name, setName] = useState<any>("");
-  const [transDate, setTransDate] = useState<any>(now(getLocalTimeZone()));
+  const [group, setGroup] = useState(mpesa?.refnumber);
+  const [phone, setPhone] = useState(mpesa.phone_number);
+  const [transId, setTransId] = useState(mpesa.transid);
+  const [amount, setAmount] = useState<any>(mpesa.transamount);
+  const [cycle, setCycles] = useState<any>(mpesa.cycle);
+  const [name, setName] = useState(mpesa.first_name);
+  const [transDate, setTransDate] = useState<any>(
+    formatFormDateTime(mpesa.transtime)
+  );
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setIsloading(true);
     const formData = new FormData(e.currentTarget);
-    const results = await createMpesaInvoice(formData);
-
+    const results = await updateMpesaInvoice(formData);
     if (results?.success === false) {
       setIsloading(false);
       addToast({
@@ -65,6 +73,7 @@ export default function AddMpesaForm({ onClose }: { onClose: any }) {
         <div className="flex flex-col   rounded-md  w-full">
           <div className="flex flex-col md:flex-row gap-4 mb-4">
             <div className="w-full">
+              <input className="hidden " name="id" value={mpesa.id} readOnly />
               <Input
                 isRequired
                 name="group"
@@ -151,7 +160,6 @@ export default function AddMpesaForm({ onClose }: { onClose: any }) {
                 variant="faded"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                inert={false}
               />
             </div>
             <div className="w-full">
@@ -172,7 +180,6 @@ export default function AddMpesaForm({ onClose }: { onClose: any }) {
             </div>
           </div>
           <DatePicker
-            isRequired
             errorMessage="Select loan term first"
             showMonthAndYearPickers
             name="transDate"
@@ -197,12 +204,12 @@ export default function AddMpesaForm({ onClose }: { onClose: any }) {
               type="submit"
               color="success"
               className="w-full"
-              isDisabled={isLoading}
+              disabled={isLoading}
             >
               {isLoading ? (
                 <Spinner color="default" size="md" className="py-4" />
               ) : (
-                "Add Transaction"
+                "Edit Transaction"
               )}
             </Button>
           </div>

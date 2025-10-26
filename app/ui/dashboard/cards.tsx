@@ -16,7 +16,6 @@ import {
   formatCurrency,
   formatCurrencyToLocal,
 } from "@/app/lib/utils";
-import { fetchDashboardCardData } from "@/app/lib/sun-data";
 
 interface tabsProps {
   groupAmount: any;
@@ -24,6 +23,8 @@ interface tabsProps {
   totalLoans: any;
   totalCollectedLoans: any;
   loanBalance: any;
+  selected: string;
+  groupCycle: any;
   user: any;
 }
 
@@ -41,22 +42,25 @@ export default function CardWrapper({
   totalLoans,
   totalCollectedLoans,
   loanBalance,
+  selected,
+  groupCycle,
   user,
 }: tabsProps) {
+  console.log("dsadsa", groupAmount);
   return (
     <>
       {/* NOTE: Uncomment this code in Chapter 9 */}
       <Card
         title="Disbursed"
-        value={groupAmount}
+        value={groupAmount ?? 0}
         type="disbursed"
         color="text-blue-800"
         span=""
         user={user}
       />
       <Card
-        title="Collected"
-        value={totalCollectedLoans}
+        title="Paid"
+        value={totalCollectedLoans ?? 0}
         type="collected"
         color="text-green-800"
         span=""
@@ -64,15 +68,15 @@ export default function CardWrapper({
       />
       <Card
         title="Loans"
-        value={totalLoans}
+        value={totalLoans ?? 0}
         type="pending"
         color="text-yellow-800"
         span=""
         user={user}
       />
       <Card
-        title=" Loan Balance"
-        value={loanBalance}
+        title={`Cycle: ${groupCycle} ~ Loan Balance`}
+        value={loanBalance ?? 0}
         type="active"
         color="text-indigo-800"
         span=""
@@ -80,11 +84,11 @@ export default function CardWrapper({
       />
 
       <Card
-        title="Total Borrowers"
-        value={numberOfMembers}
+        title="Total Loanees"
+        value={numberOfMembers ?? 0}
         type="customers"
         color="text-pink-800"
-        span="col-span-2 md:col-span-1"
+        span="col-span-2 md:col-span-2"
         user={user}
       />
     </>
@@ -100,7 +104,7 @@ export function Card({
   user,
 }: {
   title: string;
-  value: number | string;
+  value: number;
   type: "disbursed" | "collected" | "pending" | "active" | "customers";
   color: string;
   span: string;
@@ -118,7 +122,9 @@ export function Card({
         className={`
           truncate rounded-b-xl bg-white px-2 py-2 text-center text-green-600 text-sm font-black`}
       >
-        {user?.role === "admin" ? value : formatCurrencyToLocal(0)}
+        {type === "customers"
+          ? value
+          : formatCurrencyToLocal(Number(value ?? 0))}
       </p>
     </div>
   );

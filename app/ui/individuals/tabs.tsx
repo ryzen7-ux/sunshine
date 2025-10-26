@@ -24,6 +24,7 @@ interface tabsProps {
   filtredIndividuals: any;
   filteredLoanIndividuals: any;
   loans: any;
+  maxCycle: any;
 }
 export default function IndividualsTab({
   regions,
@@ -38,6 +39,7 @@ export default function IndividualsTab({
   filtredIndividuals,
   filteredLoanIndividuals,
   loans,
+  maxCycle,
 }: tabsProps) {
   return (
     <div className="flex w-full flex-col">
@@ -96,6 +98,7 @@ export default function IndividualsTab({
                   individual={individual}
                   individuals={individuals}
                   regions={regions}
+                  maxCycle={maxCycle}
                 />
               </div>
               <div className="">

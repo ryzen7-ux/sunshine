@@ -35,12 +35,12 @@ export async function POST(request: NextRequest) {
   const dateObject = dt.toISO();
 
   const num = await decodeMsisdnValue(number);
-  const phoneNumber = num?.msisdn || "";
-
+  const phoneNumber = num?.msisdn ?? "null";
+  const cycle: any = 0;
   try {
     await sql`
-      INSERT INTO mpesainvoice (transid, transtime, transamount, refnumber, first_name, middle_name, last_name, phone_number)
-      VALUES (${transID}, ${dateObject}, ${transAmount}, ${refNumber}, ${firstName},  ${middleName}, ${lastName}, ${phoneNumber})
+      INSERT INTO mpesainvoice (transid, transtime, transamount, refnumber, first_name, middle_name, last_name, phone_number, cycle)
+      VALUES (${transID}, ${dateObject}, ${transAmount}, ${refNumber}, ${firstName},  ${middleName}, ${lastName}, ${phoneNumber}, ${cycle})
     `;
   } catch (error) {
     return NextResponse.json({

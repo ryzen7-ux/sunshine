@@ -9,6 +9,7 @@ import {
   Textarea,
   addToast,
   NumberInput,
+  Spinner,
 } from "@heroui/react";
 import {
   CheckIcon,
@@ -37,6 +38,7 @@ export default function EditLoanForm({
   loan: any;
   onClose: any;
 }) {
+  const [isLoading, setIsLoading] = React.useState(false);
   const [amount, setAmount] = React.useState(loan.amount.toString());
   const [interest, setInterest] = React.useState(loan.interest.toString());
   const [term, setTerm] = React.useState(loan.term.toString());
@@ -44,17 +46,21 @@ export default function EditLoanForm({
   const [startDate, setStartDate] = React.useState<any>(
     formatFormDateTime(loan.start_date)
   );
-  console.log();
-  const [endDate, setEndDate] = React.useState<any>();
+
   const [error, setError] = React.useState({ isError: false, type: "" });
   const [cycle, setCycle] = React.useState<any>(loan?.cycle || 0);
+  const [fee, setFee] = React.useState(loan?.fee);
 
   const principal = Number.parseFloat(amount);
   const rate = Number.parseFloat(interest) / 100 / 4;
   const Loanterm = Number.parseInt(term);
 
   const wpay = Math.ceil(principal / Loanterm + principal * rate);
-  const payment = Math.ceil(wpay * Loanterm);
+  const payment = Math.ceil(wpay * Loanterm) + Number(fee);
+
+  const [endDate, setEndDate] = React.useState<any>(
+    startDate.add({ weeks: Number(term) })
+  );
 
   const calculateWeeklyPayment = () => {
     const principal = Number.parseFloat(amount);
@@ -71,9 +77,11 @@ export default function EditLoanForm({
 
   const handleUpdate = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    setIsLoading(true);
     const formData = new FormData(e.currentTarget);
     const res = await updateLoan(formData);
     if (res?.success === false) {
+      setIsLoading(false);
       addToast({
         title: "Error !",
         description: res?.message,
@@ -82,6 +90,7 @@ export default function EditLoanForm({
     }
 
     if (res?.success === true) {
+      setIsLoading(false);
       addToast({
         title: "Success !",
         description: res?.message,
@@ -156,7 +165,7 @@ export default function EditLoanForm({
             labelPlacement="outside"
             size="md"
             variant="faded"
-            defaultValue={loan.loanid}
+            defaultValue="NILL"
           />
         </div>
       </div>
@@ -209,32 +218,58 @@ export default function EditLoanForm({
           </div> */}
         </div>
       </div>
-      <div className="py-2">
+      <div className="flex flex-row gap-2 py-2">
         {" "}
-        <NumberInput
-          isInvalid={error.isError && error.type === "cycle"}
-          errorMessage="Select a number greater than 0"
-          isRequired
-          name="cycle"
-          className="outline-2 outline-blue-500 "
-          label="Loan Cycle"
-          color="primary"
-          labelPlacement="outside"
-          size="md"
-          variant="faded"
-          value={cycle}
-          onValueChange={(e) => {
-            setCycle(e);
-            setError({ isError: false, type: "" });
-          }}
-          placeholder="0"
-          formatOptions={{ useGrouping: false }}
-          startContent={
-            <div className="pointer-events-none flex items-center">
-              <span className="text-default-400 text-small"></span>
-            </div>
-          }
-        />
+        <div className="w-full">
+          {" "}
+          <NumberInput
+            isInvalid={error.isError && error.type === "cycle"}
+            errorMessage="Select a number greater than 0"
+            isRequired
+            name="cycle"
+            className="outline-2 outline-blue-500 "
+            label="Loan Cycle"
+            color="primary"
+            labelPlacement="outside"
+            size="md"
+            variant="faded"
+            value={cycle}
+            onValueChange={(e) => {
+              setCycle(e);
+              setError({ isError: false, type: "" });
+            }}
+            placeholder="0"
+            formatOptions={{ useGrouping: false }}
+            startContent={
+              <div className="pointer-events-none flex items-center">
+                <span className="text-default-400 text-small"></span>
+              </div>
+            }
+          />
+        </div>
+        <div className="w-full">
+          <NumberInput
+            isRequired
+            name="fee"
+            className="outline-2 outline-blue-500 "
+            label="Processing Fee and Charges"
+            color="primary"
+            labelPlacement="outside"
+            size="md"
+            variant="faded"
+            value={fee}
+            onValueChange={(e) => {
+              setFee(e);
+              setError({ isError: false, type: "" });
+            }}
+            errorMessage="Enter value greater than 0"
+            startContent={
+              <div className="pointer-events-none flex items-center">
+                <span className="text-default-400 text-small">Ksh</span>
+              </div>
+            }
+          />
+        </div>
       </div>
       <DatePicker
         isInvalid={error.isError && error.type === "startDate"}
@@ -420,9 +455,14 @@ export default function EditLoanForm({
       </div>
       <div className="flex justify-between">
         <div></div>
-        <div className="flex gap-4 pt-4">
-          <Button type="submit" color="success">
-            Submit
+        <div className="flex gap-4 py-4">
+          <Button
+            type="submit"
+            color="success"
+            disabled={isLoading}
+            className=""
+          >
+            {isLoading ? <Spinner color="default" /> : "SUBMIT"}
           </Button>
         </div>
       </div>

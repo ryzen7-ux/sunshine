@@ -298,6 +298,7 @@ export async function createIndividual(formData: FormData) {
   const created = new Date();
   const newIdNumber = Number(idNumber);
   const individuals = await fetchIndividualsByIdNumber(newIdNumber);
+
   if (individuals?.length !== 0) {
     return { success: false, message: "ID number already exists" };
   }
@@ -361,6 +362,9 @@ export async function createIndividualLoan(formData: FormData) {
   const interest = formData.get("interest") as unknown;
   const term = formData.get("term") as unknown;
   const status = formData.get("status") as string;
+  const cycle = formData.get("cycle") as string;
+  const startDate = formData.get("start_date") as string;
+  const fee = formData.get("fee") as string;
 
   const created = new Date();
   if (status === null) {
@@ -371,11 +375,16 @@ export async function createIndividualLoan(formData: FormData) {
     return { success: false, message: "Invalid amount!" };
   }
 
+  const splitDate1 = startDate.split("+");
+  const splitDate2 = splitDate1[0].split(".");
+  const newStartDate = new Date(splitDate2[0]);
   try {
-    await sql`INSERT INTO individuals_loans (region, loanee, amount, interest, term, status, created)
+    await sql`INSERT INTO individuals_loans (region, loanee, amount, interest, term, status, cycle, start_date, created, fee)
     VALUES (${region}, ${loannee}, ${Number(amount)}, ${Number(
       interest
-    )}, ${Number(term)},${status}, ${created})`;
+    )}, ${Number(
+      term
+    )},${status},${cycle}, ${newStartDate}, ${created}, ${Number(fee)})`;
 
     revalidatePath("/dashboard/individuals");
     return { success: true, message: "Loan created successfully" };
@@ -391,17 +400,25 @@ export async function updateIndividualLoan(formData: FormData) {
   const interest = formData.get("interest") as unknown;
   const term = formData.get("term") as unknown;
   const status = formData.get("status") as string;
+  const cycle = formData.get("cycle") as string;
+  const startDate = formData.get("start_date") as string;
+  const fee = formData.get("fee") as string;
 
   if (Number(amount) > 50000000) {
     return { success: false, message: "Invalid amount!" };
   }
 
+  const splitDate1 = startDate.split("+");
+  const splitDate2 = splitDate1[0].split(".");
+  const newStartDate = new Date(splitDate2[0]);
   try {
     await sql`UPDATE  individuals_loans SET amount = ${Number(
       amount
     )} , interest = ${Number(interest)}, term = ${Number(
       term
-    )}, status = ${status} WHERE id = ${id}`;
+    )}, status = ${status}, cycle=${cycle}, start_date=${newStartDate}, fee = ${Number(
+      fee
+    )} WHERE id = ${id}`;
 
     revalidatePath("/dashboard/individuals");
     return { success: true, message: "Loan Updated successfully" };
@@ -642,6 +659,8 @@ export async function createLoan(formData: FormData) {
 
   const localDate = new Date();
   const cycle = formData.get("cycle") as string;
+  const fee = formData.get("fee") as string;
+
   const start_date = formData.get("start_date") as string;
   const splitDate1 = start_date.split("+");
   const splitDate2 = splitDate1[0].split(".");
@@ -659,10 +678,10 @@ export async function createLoan(formData: FormData) {
 
   try {
     await sql`
-      INSERT INTO loans (groupid, memberid, amount, loanid, interest, term, status, cycle, start_date, date)
+      INSERT INTO loans (groupid, memberid, amount, loanid, interest, term, status, cycle, start_date, date, fee)
       VALUES (${group_id}, ${member_id}, ${amount}, ${loan_id}, ${interest}, ${term}, ${status}, ${Number(
       cycle
-    )}, ${newStartDate}, ${localDate})
+    )}, ${newStartDate}, ${localDate}, ${Number(fee)})
     `;
     revalidatePath(`/dashboard/loans`);
     return { success: true, message: "Loan created successfully" };
@@ -689,6 +708,8 @@ export async function updateLoan(formData: FormData) {
   const id = formData.get("id") as string;
 
   const cycle = formData.get("cycle") as string;
+  const fee = formData.get("fee") as string;
+
   const start_date = formData.get("start_date") as string;
   const splitDate1 = start_date.split("+");
   const splitDate2 = splitDate1[0].split(".");
@@ -696,7 +717,10 @@ export async function updateLoan(formData: FormData) {
   try {
     await sql`
       UPDATE loans
-      SET amount = ${amount}, loanid = ${loan_id}, interest = ${interest}, term = ${term}, status = ${status}, start_date=${newStartDate}, cycle = ${cycle}, notes=${notes}
+      SET amount = ${amount}, loanid = ${loan_id}, interest = ${interest}, term = ${term}, status = 
+      ${status}, start_date=${newStartDate}, cycle = ${cycle}, notes=${notes}, fee=${Number(
+      fee
+    )}
       WHERE id= ${id}
     `;
   } catch (error) {
@@ -791,16 +815,17 @@ export async function createMpesaInvoice(formData: FormData) {
   const transAmount = formData.get("amount") as string;
   const firstName = formData.get("name") as string;
   const phone = formData.get("phone") as string;
+  const cycle = formData.get("cycle") as string;
 
   const splitDate1 = transTime.split("+");
   const splitDate2 = splitDate1[0].split(".");
   const newTransDate = new Date(splitDate2[0]);
 
   try {
-    await sql`INSERT INTO mpesainvoice (transid, transtime, transamount, refnumber, first_name, phone_number)
+    await sql`INSERT INTO mpesainvoice (transid, transtime, transamount, refnumber, first_name, phone_number, cycle)
           VALUES (${transId},${newTransDate}, ${Number(
       transAmount
-    )}, ${refNumber}, ${firstName}, ${phone})`;
+    )}, ${refNumber}, ${firstName}, ${phone}, ${Number(cycle)})`;
     revalidatePath("dashboard/mpesa");
     return { success: true, message: "Transaction created" };
   } catch (error) {
@@ -816,6 +841,7 @@ export async function updateMpesaInvoice(formData: FormData) {
   const transAmount = formData.get("amount") as string;
   const firstName = formData.get("name") as string;
   const phone = formData.get("phone") as string;
+  const cycle = formData.get("cycle") as string;
 
   const id = formData.get("id") as string;
 
@@ -826,7 +852,9 @@ export async function updateMpesaInvoice(formData: FormData) {
   try {
     await sql`UPDATE mpesainvoice SET refnumber = ${refNumber}, transid =${transId}, transtime =${newTransDate}, transamount =${Number(
       transAmount
-    )}, first_name = ${firstName}, phone_number = ${phone} WHERE id=${id}`;
+    )}, first_name = ${firstName}, phone_number = ${phone}, cycle = ${Number(
+      cycle
+    )} WHERE id=${id}`;
     revalidatePath("dashboard/mpesa");
     return { success: true, message: "Transaction updated" };
   } catch (error) {
@@ -838,9 +866,12 @@ export async function updateMpesaInvoice(formData: FormData) {
 export async function deleteMpesaInvoice(id: string) {
   try {
     await sql`DELETE FROM mpesainvoice WHERE id = ${id}`;
+
+    revalidatePath("/dashboard/mpesa");
+    return { success: true };
   } catch (error) {
     // We'll log the error to the console for now
     console.error(error);
+    return { success: false };
   }
-  revalidatePath("/dashboard/mpesa");
 }

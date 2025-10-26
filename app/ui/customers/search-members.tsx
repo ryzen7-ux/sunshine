@@ -25,7 +25,7 @@ export default function SearchMembers({ group }: { group: any }) {
 
   return (
     <div className="py-4 flex gap-4">
-      {/* <Input
+      <Input
         placeholder="Search members...."
         radius="lg"
         size="md"
@@ -36,7 +36,7 @@ export default function SearchMembers({ group }: { group: any }) {
         }}
         defaultValue={searchParams.get("query")?.toString()}
         startContent={<Search className="h-6 w-6 text-gray-600" />}
-      /> */}
+      />
       <Link
         href={`/dashboard/customers/${group.id}/details/create-member`}
         className="flex h-10 md:w-48 items-center rounded-lg bg-green-600 px-4 text-sm font-medium text-white transition-colors hover:bg-green-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-green-600"

@@ -1,5 +1,3 @@
-//@ts-nocheck
-
 import React from "react";
 import {
   Modal,
@@ -11,26 +9,44 @@ import {
   Divider,
   Input,
   Spinner,
+  addToast,
+  useDisclosure,
+  DatePicker,
+  NumberInput,
 } from "@heroui/react";
 import { MemberForm } from "@/app/lib/sun-defination";
 import { ClockIcon, CheckIcon } from "@heroicons/react/20/solid";
 import { createLoan, LoanState } from "@/app/lib/sun-actions";
 import { useActionState } from "react";
 import { formatCurrencyToLocal, formatDateToLocal } from "@/app/lib/utils";
+import { now, getLocalTimeZone, parseDate } from "@internationalized/date";
 
 export default function LoanModal({
   isOpen,
   onOpenChange,
   memberData,
+  onClose,
 }: {
   isOpen: boolean;
-  onOpenChange: () => void;
-  memberData: MemberForm;
+  onOpenChange: any;
+  memberData: any;
+  onClose: any;
 }) {
   const [amount, setAmount] = React.useState("");
   const [interest, setInterest] = React.useState("");
   const [term, setTerm] = React.useState("");
+  const [loanId, setLoanId] = React.useState("NILL");
+  const [isLoading, setIsLoading] = React.useState(false);
   const [weeklyPayment, setWeeklyPayment] = React.useState(0);
+  const [startDate, setStartDate] = React.useState<any>(
+    now(getLocalTimeZone())
+  );
+  const [endDate, setEndDate] = React.useState<any>(
+    startDate.add({ weeks: Number(term) })
+  );
+  const [error, setError] = React.useState({ isError: false, type: "" });
+  const [cycle, setCycle] = React.useState<any>(0);
+  const [fee, setFee] = React.useState(0);
 
   const principal = Number.parseFloat(amount);
   const rate = Number.parseFloat(interest) / 100 / 4;
@@ -51,24 +67,69 @@ export default function LoanModal({
       setWeeklyPayment(Math.round(payment * 100) / 100);
     }
   };
-  const initialState: LoanState = { message: null, errors: {} };
 
-  const [state, formAction, isLoading] = useActionState(
-    createLoan,
-    initialState
-  );
-  // React.useEffect(() => {
-  //   if (state?.status === "success") {
-  //     onOpenChange();
-  //   }
-  // }, [state.status, onOpenChange]);
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setIsLoading(true);
+    if (cycle < 1) {
+      setIsLoading(false);
+      addToast({
+        title: "Error !",
+        description: "Please select loan cycle",
+        color: "danger",
+      });
+      setError({ isError: true, type: "cycle" });
+      return;
+    }
+    const formData = new FormData(e.currentTarget);
+    const res = await createLoan(formData);
+
+    if (res?.success === false) {
+      setIsLoading(false);
+      if (res?.errors?.status) {
+        addToast({
+          title: "Error !",
+          description: res?.errors.status,
+          color: "danger",
+        });
+      } else {
+        setIsLoading(false);
+        addToast({
+          title: "Error !",
+          description: res?.message,
+          color: "danger",
+        });
+      }
+    }
+
+    if (res?.success === true) {
+      addToast({
+        title: "Success !",
+        description: res?.message,
+        color: "success",
+      });
+      setIsLoading(false);
+      onOpenChange(false);
+    }
+  };
+
+  const handleDateChange = (date: any) => {
+    if (Number(term) < 1) {
+      setError({ isError: true, type: "startDate" });
+      return;
+    }
+    setStartDate(date);
+    const newDate = date;
+    const loanEndDate = newDate.add({ weeks: Number(term) });
+    setEndDate(loanEndDate);
+  };
   return (
     <>
       <Modal
         isOpen={isOpen}
         onOpenChange={onOpenChange}
         size="xl"
-        className="overflow-auto"
+        scrollBehavior="outside"
       >
         <ModalContent>
           {(onClose) => (
@@ -78,7 +139,7 @@ export default function LoanModal({
               </ModalHeader>
               <Divider />
               <ModalBody>
-                <form action={formAction}>
+                <form onSubmit={handleSubmit}>
                   <div className="flex gap-4  items-center ">
                     <p>
                       <strong>Borrower:</strong>{" "}
@@ -111,22 +172,19 @@ export default function LoanModal({
                         variant="faded"
                         defaultValue={amount}
                         onChange={(e: any) => setAmount(e.target.value)}
+                        startContent={
+                          <div className="pointer-events-none flex items-center">
+                            <span className="text-default-400 text-small">
+                              Ksh
+                            </span>
+                          </div>
+                        }
                       />
                       <div
                         id="amount-error"
                         aria-live="polite"
                         aria-atomic="true"
-                      >
-                        {state?.errors?.amount &&
-                          state.errors.amount.map((error: string) => (
-                            <p
-                              className="mt-2 text-sm text-red-500"
-                              key={error}
-                            >
-                              {error}
-                            </p>
-                          ))}
-                      </div>
+                      ></div>
                     </div>
                     <div className="w-full">
                       <Input
@@ -138,6 +196,8 @@ export default function LoanModal({
                         labelPlacement="outside"
                         size="md"
                         variant="faded"
+                        value={loanId}
+                        onChange={(e) => setLoanId(e.target.value)}
                       />
                     </div>
                   </div>
@@ -149,28 +209,25 @@ export default function LoanModal({
                         name="interest"
                         type="number"
                         className="outline-2 outline-blue-500  "
-                        label="Interest Rate (%)"
+                        label="Interest Rate "
                         labelPlacement="outside"
                         size="md"
                         variant="faded"
                         defaultValue={interest}
                         onChange={(e: any) => setInterest(e.target.value)}
+                        endContent={
+                          <div className="pointer-events-none flex items-center">
+                            <span className="text-default-400 text-small">
+                              %
+                            </span>
+                          </div>
+                        }
                       />
                       <div
                         id="amount-error"
                         aria-live="polite"
                         aria-atomic="true"
-                      >
-                        {state?.errors?.interest &&
-                          state.errors.interest.map((error: string) => (
-                            <p
-                              className="mt-2 text-sm text-red-500"
-                              key={error}
-                            >
-                              {error}
-                            </p>
-                          ))}
-                      </div>
+                      ></div>
                     </div>
                     <div className="w-full">
                       <Input
@@ -179,30 +236,113 @@ export default function LoanModal({
                         name="term"
                         type="number"
                         className="outline-2 outline-blue-500  "
-                        label="Loan Term (Weeks)"
+                        label="Loan Term "
                         labelPlacement="outside"
                         size="md"
                         variant="faded"
                         defaultValue={term}
                         onChange={(e: any) => setTerm(e.target.value)}
+                        endContent={
+                          <div className="pointer-events-none flex items-center">
+                            <span className="text-default-400 text-small">
+                              Weeks
+                            </span>
+                          </div>
+                        }
                       />
                       <div
                         id="term-error"
                         aria-live="polite"
                         aria-atomic="true"
-                      >
-                        {state?.errors?.term &&
-                          state.errors.term.map((error: string) => (
-                            <p
-                              className="mt-2 text-sm text-red-500"
-                              key={error}
-                            >
-                              {error}
-                            </p>
-                          ))}
-                      </div>
+                      ></div>
                     </div>
                   </div>
+                  <div className="flex flex-row gap-4 py-2">
+                    <div className="w-full">
+                      {" "}
+                      <NumberInput
+                        isInvalid={error.isError && error.type === "cycle"}
+                        errorMessage="Select a number greater than 0"
+                        isRequired
+                        name="cycle"
+                        className="outline-2 outline-blue-500 "
+                        label="Loan Cycle"
+                        color="primary"
+                        labelPlacement="outside"
+                        size="md"
+                        variant="faded"
+                        value={cycle}
+                        onValueChange={(e) => {
+                          setCycle(e);
+                          setError({ isError: false, type: "" });
+                        }}
+                        placeholder="0"
+                        formatOptions={{ useGrouping: false }}
+                        startContent={
+                          <div className="pointer-events-none flex items-center">
+                            <span className="text-default-400 text-small"></span>
+                          </div>
+                        }
+                      />
+                    </div>
+                    <div className="w-full">
+                      <NumberInput
+                        isRequired
+                        name="fee"
+                        className="outline-2 outline-blue-500 "
+                        label="Processing Fee and Charges"
+                        color="primary"
+                        labelPlacement="outside"
+                        size="md"
+                        variant="faded"
+                        value={fee}
+                        onValueChange={(e) => {
+                          setFee(e);
+                          setError({ isError: false, type: "" });
+                        }}
+                        errorMessage="Enter value greater than 0"
+                        startContent={
+                          <div className="pointer-events-none flex items-center">
+                            <span className="text-default-400 text-small">
+                              Ksh
+                            </span>
+                          </div>
+                        }
+                      />
+                    </div>
+                  </div>
+                  <DatePicker
+                    isInvalid={error.isError && error.type === "startDate"}
+                    errorMessage="Select loan term first"
+                    showMonthAndYearPickers
+                    name="start_date"
+                    className="pb-4"
+                    variant="faded"
+                    color="primary"
+                    label="Loan Start Date"
+                    size="md"
+                    labelPlacement="outside"
+                    value={startDate}
+                    onChange={(val) => {
+                      handleDateChange(val);
+                      setError({ isError: false, type: "" });
+                    }}
+                    inert={false}
+                  />
+                  <DatePicker
+                    isDisabled
+                    showMonthAndYearPickers
+                    name="end_date"
+                    className="pb-4"
+                    variant="faded"
+                    color="primary"
+                    label="Loan End Date"
+                    size="md"
+                    labelPlacement="outside"
+                    value={endDate}
+                    isReadOnly
+                    inert={false}
+                  />
                   <fieldset>
                     <legend className="mb-2 block text-sm font-medium">
                       Set the loan status
@@ -245,14 +385,7 @@ export default function LoanModal({
                       id="status-error"
                       aria-live="polite"
                       aria-atomic="true"
-                    >
-                      {state?.errors?.status &&
-                        state.errors.status.map((error: string) => (
-                          <p className="mt-2 text-sm text-red-500" key={error}>
-                            {error}
-                          </p>
-                        ))}
-                    </div>
+                    ></div>
                   </fieldset>
                   <div className="py-2">
                     <p className="text-xl py-2">Loan Summary</p>

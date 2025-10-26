@@ -10,9 +10,12 @@ import {
   fetchGroups,
   fetchGroupMembers,
   fetchLoanByIdNew,
+  fetchUserByEmail,
 } from "@/app/lib/sun-data";
+import { fetchGroups2, fetchLoansPages2 } from "@/app/lib/sun-data2";
 import { Metadata } from "next";
 import { ProcessDisbursement } from "@/app/ui/loans/buttons";
+import { getSession } from "@/app/lib/session";
 
 export const metadata: Metadata = {
   title: "Loans",
@@ -30,18 +33,32 @@ export default async function Page(props: {
   const query = searchParams?.query || "";
   const memberQuery = searchParams?.memberQuery || "";
   const currentPage = Number(searchParams?.page) || 1;
-  const totalPages = await fetchLoansPages(query);
+
+  const user = await getSession();
+  const isAdmin = user?.role === "admin";
+  const curentUser: any = await fetchUserByEmail(user?.email);
 
   const params = await props.params;
   const id = params.id;
 
   let loan: any = [];
+  let groups: any = [];
+  let totalPages: any = 0;
 
   if (id) {
     [loan] = await Promise.all([fetchLoanByIdNew(id)]);
   }
 
-  const groups = await fetchGroups();
+  if (isAdmin) {
+    groups = await fetchGroups();
+    totalPages = await fetchLoansPages(query);
+  }
+
+  if (!isAdmin) {
+    groups = await fetchGroups2(curentUser[0]?.id);
+    totalPages = await fetchLoansPages2(query, curentUser[0]?.id);
+  }
+
   const members = await fetchGroupMembers(memberQuery);
 
   return (
@@ -58,7 +75,12 @@ export default async function Page(props: {
         <CreateInvoice groups={groups} members={members} />
       </div>
       <Suspense key={query + currentPage} fallback={<InvoicesTableSkeleton />}>
-        <Table query={query} currentPage={currentPage} loan={loan} />
+        <Table
+          query={query}
+          currentPage={currentPage}
+          loan={loan}
+          user={curentUser}
+        />
       </Suspense>
       <div className="mt-5 flex w-full justify-center">
         <Pagination totalPages={totalPages} />

@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Modal,
   ModalContent,
@@ -15,6 +15,7 @@ import {
   SelectItem,
   NumberInput,
   Divider,
+  DatePicker,
 } from "@heroui/react";
 import { Button } from "@heroui/react";
 import {
@@ -29,6 +30,8 @@ import { useSearchParams, usePathname, useRouter } from "next/navigation";
 import { useDebouncedCallback } from "use-debounce";
 import { formatCurrencyToLocal, formatDateToLocal } from "@/app/lib/utils";
 import { Cuboid } from "lucide-react";
+import { now, getLocalTimeZone, parseDate } from "@internationalized/date";
+import { fetchIndividualsMaxCycle } from "@/app/lib/sun-data";
 
 const roles = [
   { key: "admin", label: "Admin" },
@@ -45,10 +48,12 @@ export default function AddLoan({
   individual,
   individuals,
   regions,
+  maxCycle,
 }: {
   individual: any;
   individuals: any;
   regions: any;
+  maxCycle: any;
 }) {
   const [formData, setFormData] = useState({
     idNumber: "",
@@ -56,12 +61,21 @@ export default function AddLoan({
   const [isLoading, setIsloading] = useState(false);
   const [selectIndividual, setSelectIndividual] = useState("");
   const [select, setSelect] = useState("");
+  const [cycle, setCycle] = useState(maxCycle[0].max ? maxCycle[0].max : 0);
+  const [error, setError] = useState({ isError: false, type: "" });
+  const [startDate, setStartDate] = useState<any>(now(getLocalTimeZone()));
 
   const [selectRegion, setSelectRegion] = useState("");
-  const [amount, setAmount] = useState<number>();
-  const [interest, setInterest] = useState<number>();
-  const [term, setTerm] = useState<number>();
-
+  const [amount, setAmount] = useState<number>(0);
+  const [interest, setInterest] = useState<number>(0);
+  const [term, setTerm] = useState<number>(0);
+  const [fee, setFee] = useState<number>(0);
+  const [endDate, setEndDate] = useState<any>(
+    startDate.add({ weeks: Number(term) })
+  );
+  const [maxCycleControl, setMaxCycleControl] = useState(
+    maxCycle[0].max ? maxCycle[0].max : 0
+  );
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
@@ -71,7 +85,7 @@ export default function AddLoan({
   const rate = interest! / 100 / 4;
 
   const wpay = Math.ceil(principal / term! + principal * rate);
-  const payment = Math.ceil(wpay * term!);
+  const payment = Math.ceil(wpay * term! + Number(fee));
 
   // Search params
   const searchParams = useSearchParams();
@@ -91,6 +105,16 @@ export default function AddLoan({
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setIsloading(true);
+    if (term < 1) {
+      setIsloading(false);
+      setError({ type: "term", isError: true });
+      return;
+    }
+    if (cycle > maxCycleControl + 1) {
+      setIsloading(false);
+      setError({ type: "cycle", isError: true });
+      return;
+    }
     const formData = new FormData(e.currentTarget);
     const results = await createIndividualLoan(formData);
 
@@ -112,6 +136,16 @@ export default function AddLoan({
     }
   };
 
+  const handleDateChange = (date: any) => {
+    if (term < 1) {
+      setError({ isError: true, type: "startDate" });
+      return;
+    }
+    setStartDate(date);
+    const newDate = date;
+    const loanEndDate = newDate.add({ weeks: Number(term) });
+    setEndDate(loanEndDate);
+  };
   return (
     <>
       <div className="flex justify-between w-full py-2">
@@ -139,7 +173,7 @@ export default function AddLoan({
               </ModalHeader>
               <ModalBody>
                 <Form onSubmit={handleSubmit}>
-                  <div className="flex flex-col py-4  rounded-md  w-full">
+                  <div className="flex flex-col rounded-md  w-full">
                     <div className="flex flex-col md:flex-row gap-4 mb-4">
                       <div className="w-full">
                         <Select
@@ -212,6 +246,7 @@ export default function AddLoan({
                       </div>
                       <div className="w-full">
                         <NumberInput
+                          minValue={1}
                           isRequired
                           name="interest"
                           className="outline-2 outline-blue-500 "
@@ -230,6 +265,9 @@ export default function AddLoan({
                     <div className="flex flex-col md:flex-row gap-4 ">
                       <div className="w-full">
                         <NumberInput
+                          isInvalid={
+                            error.isError === true && error.type === "term"
+                          }
                           isRequired
                           name="term"
                           className="outline-2 outline-blue-500 "
@@ -239,7 +277,11 @@ export default function AddLoan({
                           size="md"
                           variant="faded"
                           value={term}
-                          onValueChange={setTerm}
+                          onValueChange={(e) => {
+                            setTerm(e);
+                            setError({ isError: false, type: "" });
+                          }}
+                          errorMessage="Enter value greater than 0"
                           endContent={
                             <div className="pointer-events-none flex items-center">
                               <span className="text-default-400 text-small">
@@ -249,7 +291,92 @@ export default function AddLoan({
                           }
                         />
                       </div>
+                      <div className="w-full">
+                        <NumberInput
+                          isRequired
+                          name="fee"
+                          className="outline-2 outline-blue-500 "
+                          label="Processing Fee"
+                          color="success"
+                          labelPlacement="outside"
+                          size="md"
+                          variant="faded"
+                          value={fee}
+                          onValueChange={(e) => {
+                            setFee(e);
+                            setError({ isError: false, type: "" });
+                          }}
+                          errorMessage="Enter value greater than 0"
+                          startContent={
+                            <div className="pointer-events-none flex items-center">
+                              <span className="text-default-400 text-small">
+                                Ksh
+                              </span>
+                            </div>
+                          }
+                        />
+                      </div>
                     </div>
+                    <div className="py-4">
+                      {" "}
+                      <NumberInput
+                        isInvalid={error.isError && error.type === "cycle"}
+                        errorMessage={`Enter a number greater than 0 or less than ${
+                          maxCycleControl + 2
+                        }`}
+                        isRequired
+                        name="cycle"
+                        className="outline-2 outline-blue-500 "
+                        label="Loan Cycle"
+                        color="success"
+                        labelPlacement="outside"
+                        size="md"
+                        variant="faded"
+                        value={cycle}
+                        onValueChange={(e) => {
+                          setCycle(e);
+                          setError({ isError: false, type: "" });
+                        }}
+                        placeholder="0"
+                        formatOptions={{ useGrouping: false }}
+                        startContent={
+                          <div className="pointer-events-none flex items-center">
+                            <span className="text-default-400 text-small"></span>
+                          </div>
+                        }
+                      />
+                    </div>
+                    <DatePicker
+                      isInvalid={error.isError && error.type === "startDate"}
+                      errorMessage="Set loan term first with value greater than 0"
+                      showMonthAndYearPickers
+                      name="start_date"
+                      className="pb-4"
+                      variant="faded"
+                      color="success"
+                      label="Loan Start Date"
+                      size="md"
+                      labelPlacement="outside"
+                      value={startDate}
+                      onChange={(val) => {
+                        handleDateChange(val);
+                      }}
+                      inert={false}
+                    />
+                    <DatePicker
+                      isDisabled
+                      showMonthAndYearPickers
+                      name="end_date"
+                      className="pb-4"
+                      variant="faded"
+                      color="success"
+                      label="Loan End Date"
+                      size="md"
+                      labelPlacement="outside"
+                      value={endDate}
+                      isReadOnly
+                      inert={false}
+                    />
                     <fieldset>
                       <legend className="mb-2 block text-sm font-medium pt-4">
                         Set the loan status

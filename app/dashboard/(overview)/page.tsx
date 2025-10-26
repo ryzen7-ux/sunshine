@@ -7,7 +7,9 @@ import CardWrapper from "@/app/ui/dashboard/cards";
 import MothlyCardWrapper from "@/app/ui/dashboard/monthly-cards";
 import DashboardTabs from "@/app/ui/dashboard/tabs";
 import { DashboardTab2 } from "@/app/ui/dashboard/tabs";
-
+import DisbursementCycle from "@/app/ui/dashboard/disbursement-cycle";
+import IndividualFilters from "@/app/ui/dashboard/individuals-filters";
+import RegionFilter from "@/app/ui/dashboard/region-filter";
 import {
   RevenueChartSkeleton,
   LatestInvoicesSkeleton,
@@ -16,10 +18,20 @@ import {
 import { LayoutDashboard } from "lucide-react";
 import { auth } from "@/auth";
 import { formatCurrencyToLocal, formatDateToLocal } from "@/app/lib/utils";
-import { fetchDashboardCardData } from "@/app/lib/sun-data";
+import {
+  fetchDashboardCardData,
+  fetchDashboardMaxCycle,
+  fetchRegions,
+  fetchIndividualsDashbordCards,
+  fetchIndividualsMaxCycle,
+  fetchUserByEmail,
+} from "@/app/lib/sun-data";
 import { fetchRevenue } from "@/app/lib/data";
 import RevenueChart2 from "@/app/ui/dashboard/revenue-chart-2";
 import { getSession } from "@/app/lib/session";
+import Regions from "@/app/ui/system-management/regions";
+import { map } from "zod";
+import { decodeMsisdnValue } from "@/app/lib/utils";
 
 const months = [
   "January",
@@ -35,22 +47,68 @@ const months = [
   "November",
   "December",
 ];
-export default async function Page() {
-  const {
-    groupAmount,
-    numberOfMembers,
-    totalLoans,
-    totalCollectedLoans,
-    loanBalance,
-    monthlyDisbursement,
-    monthlyTotalLoan,
-    monthlyLoanBalance,
-    monthlyCollected,
-    lastFourDisbursement,
-  } = await fetchDashboardCardData();
+export default async function Page(props: {
+  searchParams?: Promise<{
+    query?: string;
+    iQuery?: string;
+    regionQuery?: string;
+  }>;
+}) {
+  const searchParams = await props.searchParams;
+  const query = searchParams?.query || "";
+  const iQuery = searchParams?.iQuery || "";
+  const regionQuery = searchParams?.regionQuery || "";
+  const regions = await fetchRegions();
+  const user = await getSession();
+  const isAdmin = user?.role === "admin";
+  const curentUser: any = await fetchUserByEmail(user?.email);
+
+  let regionArr: any = [];
+  let selectRegions: any = regions;
+
+  if (isAdmin) {
+    regionArr = regions?.map((item: any) => item.id);
+    if (regionQuery) {
+      if (regionQuery !== "all") {
+        regionArr = [regionQuery];
+      }
+    }
+  }
+
+  if (!isAdmin) {
+    const filteredRegions = regions?.filter(
+      (item: any) => item?.manager === curentUser[0].id
+    );
+    selectRegions = filteredRegions;
+    regionArr = filteredRegions?.map((item: any) => item.id);
+    if (regionQuery) {
+      if (regionQuery !== "all") {
+        regionArr = [regionQuery];
+      }
+    }
+  }
+
+  const groupLoansData = await fetchDashboardCardData(query, regionArr);
 
   const revenue = await fetchRevenue();
-  const user = await getSession();
+
+  const maxCycle: any = await fetchDashboardMaxCycle();
+
+  const individualsMaxCyle: any = await fetchIndividualsMaxCycle();
+
+  const individualLoanData = await fetchIndividualsDashbordCards(
+    iQuery,
+    regionArr
+  );
+
+  let groupCycle = String(maxCycle[0]?.max ?? 0);
+  if (query) {
+    groupCycle = query;
+  }
+  let individualsCycle = String(individualsMaxCyle[0]?.max ?? 0);
+  if (iQuery) {
+    individualsCycle = iQuery;
+  }
 
   return (
     <main>
@@ -59,44 +117,78 @@ export default async function Page() {
       >
         <LayoutDashboard className="h-6 w-6 text-green-500" /> Dashboard
       </h1>
-      <div className="flex ">
-        <DashboardTabs
-          groupAmount={groupAmount}
-          numberOfMembers={numberOfMembers}
-          totalLoans={totalLoans}
-          totalCollectedLoans={totalCollectedLoans}
-          loanBalance={loanBalance}
-          monthlyDisbursement={monthlyDisbursement}
-          monthlyTotalLoan={monthlyTotalLoan}
-          monthlyLoanBalance={monthlyLoanBalance}
-          monthlyCollected={monthlyCollected}
-          user={user}
-        />
+      <RegionFilter maxCycle={maxCycle} selectRegions={selectRegions} />
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="border border-green-500 rounded-md p-2">
+          <h2 className="text-md font-bold  pb-2">Group Stats</h2>
+          <div className=" border-b mb-2 pb-2">
+            <DisbursementCycle maxCycle={maxCycle} />{" "}
+          </div>
+          <DashboardTabs
+            groupAmount={groupLoansData?.groupAmount}
+            numberOfMembers={groupLoansData?.numberOfMembers}
+            totalLoans={groupLoansData?.totalLoans}
+            totalCollectedLoans={groupLoansData?.totalCollectedLoans}
+            loanBalance={groupLoansData?.loanBalance}
+            monthlyDisbursement={groupLoansData?.monthlyDisbursement}
+            monthlyTotalLoan={groupLoansData?.monthlyTotalLoan}
+            monthlyLoanBalance={groupLoansData?.loanBalance}
+            monthlyCollected={groupLoansData?.monthlyCollected}
+            weeklyDisbursed={groupLoansData?.weeklyDisbursed}
+            weeklyTotalLoan={groupLoansData?.weeklyTotalLoan}
+            weeklyCollected={groupLoansData?.weeklyCollected}
+            weeklyLoanBalance={groupLoansData?.loanBalance}
+            todayDisbursed={groupLoansData?.todayDisbursed}
+            todayTotalLoan={groupLoansData?.todayTotalLoan}
+            todayCollected={groupLoansData?.todayCollected}
+            todayLoanBalance={groupLoansData?.loanBalance}
+            groupCycle={groupCycle}
+            user={user}
+          />
+        </div>
+        <div className="border border-green-500 rounded-md p-2">
+          <h2 className="text-md font-bold  pb-2">Individuals Stats</h2>
+          <div className="border-b mb-2 pb-2">
+            <IndividualFilters
+              regions={regions}
+              maxCycle={individualsMaxCyle}
+            />
+          </div>
+          <DashboardTabs
+            groupAmount={individualLoanData?.totalIndividualDisbursed}
+            numberOfMembers={individualLoanData?.totalIndivdualLoanees}
+            totalLoans={Number(individualLoanData?.totalIndividualLoans)}
+            totalCollectedLoans={individualLoanData?.totalIndividualCollected}
+            loanBalance={
+              individualLoanData?.totalIndividualLoans -
+              individualLoanData?.totalIndividualCollected
+            }
+            monthlyDisbursement={individualLoanData?.monthIndividualDisbursed}
+            monthlyTotalLoan={individualLoanData?.monthIndividualLoan}
+            monthlyLoanBalance={
+              individualLoanData?.totalIndividualLoans -
+              individualLoanData?.totalIndividualCollected
+            }
+            monthlyCollected={individualLoanData?.monthIndividualCollected}
+            weeklyDisbursed={individualLoanData?.weekIndividualDisbursed}
+            weeklyTotalLoan={individualLoanData?.weekIndividualLoan}
+            weeklyCollected={individualLoanData?.weekIndividualCollected}
+            weeklyLoanBalance={
+              individualLoanData?.totalIndividualLoans -
+              individualLoanData?.totalIndividualCollected
+            }
+            todayDisbursed={individualLoanData?.todayIndividualDisbursed}
+            todayTotalLoan={individualLoanData?.todayIndividualLoan}
+            todayCollected={individualLoanData?.totalIndividualCollected}
+            todayLoanBalance={
+              individualLoanData?.totalIndividualLoans -
+              individualLoanData?.totalIndividualCollected
+            }
+            groupCycle={individualsCycle}
+            user={user}
+          />
+        </div>
       </div>
-      {/* Total Cards stats */}
-      {/* <div className="border rounded-md px-4 pt-2 pb-4">
-        <h1 className="pb-2 text-md font-bold">Total</h1>
-        <div className="grid gap-6 grid-cols-2 lg:grid-cols-5 ">
-          <Suspense fallback={<CardsSkeleton />}>
-            <CardWrapper />
-          </Suspense>
-        </div>
-      </div> */}
-      {/* Monthly Cards stats */}
-      {/* <div className="border  rounded-md px-4 pt-2 pb-4 mt-6">
-        <div className="flex gap-2 pb-4 items-center">
-          {" "}
-          <h1 className=" text-md font-bold">This month |</h1>
-          <p className=" text-gray-400 text-sm">
-            {formatDateToLocal(String(thisMonth))}
-          </p>
-        </div>
-        <div className="grid gap-6 grid-cols-2 lg:grid-cols-4 ">
-          <Suspense fallback={<CardsSkeleton />}>
-            <MothlyCardWrapper />
-          </Suspense>
-        </div>
-      </div> */}
       <div className="mt-6 grid grid-cols-1 gap-6 md:grid-cols-4 lg:grid-cols-8">
         <Suspense fallback={<LatestInvoicesSkeleton />}>
           <LatestInvoices />
@@ -104,7 +196,7 @@ export default async function Page() {
         <Suspense fallback={<RevenueChartSkeleton />}>
           <RevenueChart2
             revenue={revenue}
-            lastFourDisbursement={lastFourDisbursement}
+            lastFourDisbursement={groupLoansData?.lastFourDisbursement}
           />
         </Suspense>
       </div>

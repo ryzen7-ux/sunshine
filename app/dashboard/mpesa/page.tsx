@@ -5,9 +5,13 @@ import { CreateInvoice } from "@/app/ui/mpesa/buttons";
 import { lusitana } from "@/app/ui/fonts";
 import { InvoicesTableSkeleton } from "@/app/ui/skeletons";
 import { Suspense } from "react";
-import { fetchMpesaInvoicesPages } from "@/app/lib/sun-data";
+import { fetchMpesaInvoicesPages, fetchUserByEmail } from "@/app/lib/sun-data";
+import { fetchMpesaInvoicesPages2 } from "@/app/lib/sun-data2";
 import { Metadata } from "next";
 import { Coins } from "lucide-react";
+import { getSession } from "@/app/lib/session";
+
+export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "Invoices",
@@ -22,7 +26,21 @@ export default async function Page(props: {
   const searchParams = await props.searchParams;
   const query = searchParams?.query || "";
   const currentPage = Number(searchParams?.page) || 1;
-  const totalPagesGroupInvoice = await fetchMpesaInvoicesPages(query);
+
+  const user = await getSession();
+  const isAdmin = user?.role === "admin";
+  const curentUser: any = await fetchUserByEmail(user?.email);
+  let totalPagesGroupInvoice: any = 0;
+
+  if (isAdmin) {
+    totalPagesGroupInvoice = await fetchMpesaInvoicesPages(query);
+  }
+  if (!isAdmin) {
+    totalPagesGroupInvoice = await fetchMpesaInvoicesPages2(
+      query,
+      curentUser[0].id
+    );
+  }
 
   return (
     <div className="w-full">
@@ -39,7 +57,7 @@ export default async function Page(props: {
         <CreateInvoice />
       </div>
       <Suspense key={query + currentPage} fallback={<InvoicesTableSkeleton />}>
-        <Table query={query} currentPage={currentPage} />
+        <Table query={query} currentPage={currentPage} user={curentUser} />
       </Suspense>
       <div className="mt-5 flex w-full justify-center">
         <Pagination totalPages={totalPagesGroupInvoice} />

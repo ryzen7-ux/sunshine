@@ -52,17 +52,35 @@ export default function LoansTable({
                     </div>
                     <div className="flex justify-between">
                       <div>
-                        <p className="text-sm text-gray-500">
+                        <p className="text-xs text-gray-500">
                           ID Number: {individual.idnumber}
                         </p>
-                        <p className="text-sm text-gray-500">
+                        <p className="text-xs text-gray-500">
                           Region: {individual.region}
                         </p>
-                        <p className="text-sm font-bold pt-2">
+                        <p className="text-xs text-gray-500">
+                          Cycle: {individual.cycle}
+                        </p>
+                        <p className="text-xs text-gray-500">
+                          <strong>Start Date:</strong>{" "}
+                          {formatDateToLocal(individual.start_date)}
+                        </p>
+                        <p className="text-xs text-gray-500">
+                          <strong>End Date:</strong>{" "}
+                          {formatDateToLocal(individual.end_date)}
+                        </p>
+                        <p className="text-sm font-bold pt-1">
+                          Processing Fee:{" "}
+                          {formatCurrencyToLocal(individual.fee)}
+                        </p>
+                        <p className="text-sm font-bold pt-1">
                           Paid: {individual.paid}
                         </p>
                         <p className="text-md font-bold">
-                          Total: {formatCurrencyToLocal(individual.payment)}
+                          Total Loan:{" "}
+                          {formatCurrencyToLocal(
+                            individual.payment + individual.fee
+                          )}
                         </p>
                         <p className="pt-2">
                           <InvoiceStatus status={individual.status} />
@@ -71,6 +89,7 @@ export default function LoansTable({
                       <div>
                         {" "}
                         <p className="text-md text-green-500 font-bold">
+                          Amount:{" "}
                           {formatCurrencyToLocal(Math.trunc(individual.amount))}
                         </p>
                         <p className="text-sm text-gray-500">
@@ -108,13 +127,25 @@ export default function LoansTable({
                   Term
                 </th>
                 <th scope="col" className="px-3 py-2 font-medium">
+                  Loan Fee
+                </th>
+                <th scope="col" className="px-3 py-2 font-medium">
                   Paid
                 </th>
                 <th scope="col" className="px-3 py-2 font-medium">
                   Total
                 </th>
                 <th scope="col" className="px-3 py-2 font-medium">
-                  Date
+                  Cycle
+                </th>
+                <th scope="col" className="px-3 py-2 font-medium">
+                  Start Date
+                </th>
+                <th scope="col" className="px-3 py-2 font-medium">
+                  End Date
+                </th>
+                <th scope="col" className="px-3 py-2 font-medium">
+                  Created
                 </th>
                 <th scope="col" className="px-3 py-2 font-medium">
                   Status
@@ -152,10 +183,22 @@ export default function LoansTable({
                     {individual.term} Weeks
                   </td>
                   <td className="whitespace-nowrap px-3 py-3 text-xs">
+                    {formatCurrencyToLocal(individual.fee)}
+                  </td>
+                  <td className="whitespace-nowrap px-3 py-3 text-xs">
                     {individual.paid}
                   </td>
                   <td className="whitespace-nowrap px-3 py-3 text-xs">
                     {formatCurrencyToLocal(individual.payment)}
+                  </td>
+                  <td className="whitespace-nowrap px-3 py-3 text-xs">
+                    {individual.cycle ?? 0}
+                  </td>
+                  <td className="whitespace-nowrap px-3 py-3 text-xs">
+                    {formatDateToLocal(individual.start_date) ?? "None"}
+                  </td>
+                  <td className="whitespace-nowrap px-3 py-3 text-xs">
+                    {formatDateToLocal(individual.end_date) ?? "None"}
                   </td>
                   <td className="whitespace-nowrap px-3 py-3 text-xs">
                     {individual.created}

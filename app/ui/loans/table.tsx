@@ -8,18 +8,29 @@ import {
 } from "@/app/lib/utils";
 import { fetchFilteredInvoices } from "@/app/lib/data";
 import { fetchFilteredLoans } from "@/app/lib/sun-data";
+import { fetchFilteredLoans2 } from "@/app/lib/sun-data2";
 import { Tooltip } from "@heroui/react";
 
 export default async function InvoicesTable({
   query,
   currentPage,
   loan,
+  user,
 }: {
   query: string;
   currentPage: number;
   loan: any;
+  user: any;
 }) {
-  const loans = await fetchFilteredLoans(query, currentPage);
+  const isAdmin: any = user[0].role === "admin";
+  let loans: any = [];
+
+  if (isAdmin) {
+    loans = await fetchFilteredLoans(query, currentPage);
+  }
+  if (!isAdmin) {
+    loans = await fetchFilteredLoans2(query, currentPage, user[0]?.id);
+  }
 
   return (
     <div className="mt-6 flow-root">
@@ -31,32 +42,61 @@ export default async function InvoicesTable({
                 key={loan.id}
                 className="mb-2 w-full rounded-md bg-white p-4"
               >
-                <div className="flex items-center justify-between border-b pb-4">
+                <div className="border-b pb-4 w-full">
                   <div>
-                    <div className="mb-2 flex items-center">
-                      <p>
+                    <div className="mb-2 flex items-center justify-between w-full">
+                      <p className="uppercase font-bold text-sm">
                         {loan.firstname} {loan.surname}
                       </p>
+                      <div className="flex gap-2 items-center">
+                        <p className="text-xs">
+                          {formatDateToLocal(loan.date)}
+                        </p>
+                        <InvoiceStatus status={loan.status} />
+                      </div>
                     </div>
-
-                    <p className="text-sm text-gray-500">{loan.loanid}</p>
+                    <p className="text-sm text-gray-500 uppercase">
+                      <strong>Group:</strong> {loan.name}
+                    </p>
+                    {/* <p className="text-sm text-gray-500">{loan.loanid}</p> */}
                     <p className="text-sm text-gray-500">
-                      Start Date: {formatDateToLocal(loan.start_date) ?? "Nill"}
+                      <strong>Start Date: </strong>
+                      {formatDateToLocal(loan.start_date) ?? "Nill"}
                     </p>
                     <p className="text-sm text-gray-500">
-                      Cycle: {loan.cycle ?? 0}
+                      <strong>End Date:</strong>{" "}
+                      {formatDateToLocal(loan.end_date) ?? "Nill"}
                     </p>
-                  </div>
-                  <div>
-                    <InvoiceStatus status={loan.status} />
+                    <p className="text-sm text-gray-500">
+                      <strong>Cycle:</strong> {loan.cycle ?? 0}
+                    </p>
+                    <p className="text-sm text-gray-500">
+                      <strong>Term:</strong> {Math.trunc(loan.term) ?? 0} weeks
+                    </p>
+                    <p className="text-sm text-gray-500">
+                      <strong>Interest:</strong> {loan.interest ?? 0} %
+                    </p>
                   </div>
                 </div>
                 <div className="flex w-full items-center justify-between pt-4">
                   <div>
-                    <p className="text-xl font-medium">
-                      Amount: {formatCurrencyToLocal(loan.amount)}
+                    <p className="text-sm font-bold text-gray-500">
+                      Processing Fee and Charges:{" "}
+                      {formatCurrencyToLocal(Number(loan.fee))}
                     </p>
-                    <p>Created: {formatDateToLocal(loan.date)}</p>
+                    <p className="text-sm font-bold text-gray-500">
+                      Principal: {formatCurrencyToLocal(Number(loan.amount))}
+                    </p>
+                    <p className="text-sm font-bold text-gray-500">
+                      Loan Amount: {formatCurrencyToLocal(Number(loan.total))}
+                    </p>
+
+                    <p className="text-sm font-bold text-green-500">
+                      Total:{" "}
+                      {formatCurrencyToLocal(
+                        Number(loan.total) + Number(loan.fee)
+                      )}
+                    </p>
                   </div>
                   <div className="flex justify-end gap-2">
                     <UpdateLoan id={loan.id} loan={loan} />
@@ -76,17 +116,18 @@ export default async function InvoicesTable({
                   Group
                 </th>
                 <th scope="col" className="px-3 py-5 font-medium">
-                  Loan ID
-                </th>
-                <th scope="col" className="px-3 py-5 font-medium">
                   Amount
                 </th>
                 <th scope="col" className="px-3 py-5 font-medium">
-                  Created
+                  Fee
                 </th>
                 <th scope="col" className="px-3 py-5 font-medium">
-                  Start Date
+                  Loan
                 </th>
+                <th scope="col" className="px-3 py-5 font-medium">
+                  Total
+                </th>
+
                 <th scope="col" className="px-3 py-5 font-medium">
                   Cycle
                 </th>
@@ -95,6 +136,15 @@ export default async function InvoicesTable({
                 </th>
                 <th scope="col" className="px-3 py-5 font-medium">
                   Status
+                </th>
+                <th scope="col" className="px-3 py-5 font-medium">
+                  Start Date
+                </th>
+                <th scope="col" className="px-3 py-5 font-medium">
+                  End Date
+                </th>
+                <th scope="col" className="px-3 py-5 font-medium">
+                  Created
                 </th>
                 <th scope="col" className="relative py-3 pl-6 pr-3">
                   <span className="sr-only">Edit</span>
@@ -114,20 +164,23 @@ export default async function InvoicesTable({
                       </p>
                     </div>
                   </td>
-                  <td className="whitespace-nowrap px-3 py-3 text-xs">
+                  <td className="whitespace-nowrap px-3 py-3 text-xs uppercase ">
                     {loan.name}
                   </td>
                   <td className="whitespace-nowrap px-3 py-3 text-xs">
-                    {loan.loanid}
+                    {formatCurrencyToLocal(Number(loan.amount))}
                   </td>
                   <td className="whitespace-nowrap px-3 py-3 text-xs">
-                    {formatCurrencyToLocal(loan.amount)}
+                    {formatCurrencyToLocal(Number(loan.fee))}
                   </td>
                   <td className="whitespace-nowrap px-3 py-3 text-xs">
-                    {formatDateToLocal(loan.date)}
+                    {formatCurrencyToLocal(Number(loan.total))}
                   </td>
+
                   <td className="whitespace-nowrap px-3 py-3 text-xs">
-                    {formatDateToLocal(loan.start_date) ?? "Nil"}
+                    {formatCurrencyToLocal(
+                      Number(loan.total) + Number(loan.fee)
+                    )}
                   </td>
                   <td className="whitespace-nowrap px-3 py-3 text-xs">
                     {loan?.cycle ?? 0}
@@ -138,6 +191,16 @@ export default async function InvoicesTable({
                   <td className="whitespace-nowrap px-3 py-3">
                     <InvoiceStatus status={loan.status} />
                   </td>
+                  <td className="whitespace-nowrap px-3 py-3 text-xs">
+                    {formatDateToLocal(loan.start_date) ?? "Nil"}
+                  </td>
+                  <td className="whitespace-nowrap px-3 py-3 text-xs">
+                    {formatDateToLocal(loan.end_date) ?? "Nil"}
+                  </td>
+                  <td className="whitespace-nowrap px-3 py-3 text-xs">
+                    {formatDateToLocal(loan.date)}
+                  </td>
+
                   <td className="whitespace-nowrap py-3 pl-6 pr-3">
                     <div className="flex justify-end gap-3">
                       <UpdateLoan id={loan.id} loan={loan} />

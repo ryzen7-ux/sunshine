@@ -5,13 +5,21 @@ import {
   fetchFilteredGroups,
   fetchGroupPages,
   fetchRegions,
+  fetchUserByEmail,
 } from "@/app/lib/sun-data";
+import {
+  fetchFilteredGroups2,
+  fetchGroupPages2,
+  fetchRegion2,
+} from "@/app/lib/sun-data2";
 import { Suspense } from "react";
 import { InvoicesTableSkeleton } from "@/app/ui/skeletons";
 import GroupPagination from "@/app/ui/customers/pagination";
 import { UserGroupIcon } from "@heroicons/react/24/solid";
 import { Divider } from "@heroui/react";
 import { SuccessToast, DeleteSuccessToast } from "@/app/ui/toast";
+import { getSession } from "@/app/lib/session";
+import { getCurrentUser } from "@/app/lib/current-user";
 
 export default async function Page(props: {
   searchParams?: Promise<{
@@ -24,9 +32,25 @@ export default async function Page(props: {
   const query = searchParams?.query || "";
   const currentPage = Number(searchParams?.page) || 1;
   const success = searchParams?.success || "false";
-  const groups = await fetchFilteredGroups(query, currentPage);
-  const totalPages = await fetchGroupPages(query);
-  const regions = await fetchRegions();
+
+  const user = await getSession();
+  const isAdmin = user?.role === "admin";
+  const curentUser: any = await fetchUserByEmail(user?.email);
+
+  let groups: any = [];
+  let totalPages: any = 0;
+  let regions: any = [];
+  if (isAdmin) {
+    groups = await fetchFilteredGroups(query, currentPage);
+    totalPages = await fetchGroupPages(query);
+    regions = await fetchRegions();
+  }
+
+  if (!isAdmin) {
+    groups = await fetchFilteredGroups2(query, currentPage, curentUser[0]?.id);
+    totalPages = await fetchGroupPages2(query, curentUser[0]?.id);
+    regions = await fetchRegion2(curentUser[0]?.id);
+  }
 
   return (
     <>

@@ -22,28 +22,18 @@ const iconMap = {
 };
 
 export default async function CardWrapper({
-  groupid,
-  name,
+  groupDisbusredAmount,
+  totalPayment,
+  totalMembers,
+  balance,
+  totalMpesa,
 }: {
-  groupid: string;
-  name: string;
+  groupDisbusredAmount: any;
+  totalPayment: any;
+  totalMembers: any;
+  balance: any;
+  totalMpesa: any;
 }) {
-  // const {
-  //   numberOfInvoices,
-  //   numberOfCustomers,
-  //   totalPaidInvoices,
-  //   totalPendingInvoices,
-  // } = await fetchCardData();
-  const {
-    groupDisbusredAmount,
-    totalPayment,
-    groupCollectedAmount,
-    groupPendingPayments,
-    totalMembers,
-    balance,
-    totalMpesa,
-  } = await fetchGroupCardData(groupid, name);
-
   return (
     <>
       {/* NOTE: Uncomment this code in Chapter 9 */}

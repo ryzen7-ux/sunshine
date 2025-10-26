@@ -138,13 +138,13 @@ export default function RevenueChart2({
 }) {
   const thisMonth = new Date().getMonth() + 1;
   const revenueData = revenue?.slice(thisMonth - 4, thisMonth);
-  const monthData = lastFourDisbursement?.slice(thisMonth - 4, thisMonth);
+  const monthData = lastFourDisbursement?.slice(thisMonth - 4, thisMonth) ?? [];
   const monthArray = months.slice(thisMonth - 4, thisMonth);
 
   const rev = revenueData.map((item: any, index: any) => ({
     month: monthArray[index].month,
     revenue: Number(item.revenue),
-    disbursed: Number(monthData[index]?.disbursed),
+    disbursed: Number(monthData[index]?.disbursed ?? 0),
   }));
 
   // const monthPrincipal = monthData.map((item: any, index: any) => ({

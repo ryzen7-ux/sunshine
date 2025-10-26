@@ -17,6 +17,7 @@ import {
   formatCurrencyToLocal,
 } from "@/app/lib/utils";
 import { fetchDashboardCardData } from "@/app/lib/sun-data";
+import { select } from "@heroui/theme";
 
 const iconMap = {
   disbursed: ScaleIcon,
@@ -31,6 +32,10 @@ interface tabsProps {
   monthlyTotalLoan: any;
   monthlyLoanBalance: any;
   monthlyCollected: any;
+  numberOfMembers: any;
+  user: any;
+  groupCycle: any;
+  selected: any;
 }
 
 export default function MothlyCardWrapper({
@@ -38,6 +43,10 @@ export default function MothlyCardWrapper({
   monthlyTotalLoan,
   monthlyLoanBalance,
   monthlyCollected,
+  numberOfMembers,
+  groupCycle,
+  user,
+  selected,
 }: tabsProps) {
   return (
     <>
@@ -45,31 +54,48 @@ export default function MothlyCardWrapper({
 
       <Card
         title="Disbursed"
-        value={monthlyDisbursement}
+        value={monthlyDisbursement ?? 0}
         type="disbursed"
         color="text-indigo-800"
         span=""
+        user={user}
+        selected={select}
       />
       <Card
-        title="Collected"
-        value={monthlyCollected}
+        title="Paid"
+        value={monthlyCollected ?? 0}
         type="collected"
         color="text-green-800"
         span=""
+        user={user}
+        selected={select}
       />
       <Card
         title="Loans"
-        value={monthlyTotalLoan}
+        value={Number(monthlyTotalLoan ?? 0)}
         type="pending"
         color="text-yellow-800"
         span=""
+        user={user}
+        selected={select}
       />
       <Card
-        title="Loan Balance"
-        value={monthlyLoanBalance}
+        title={`Cycle: ${groupCycle} ~ Loan Balance`}
+        value={monthlyLoanBalance ?? 0}
         type="active"
         color="text-indigo-800 "
         span=""
+        user={user}
+        selected={select}
+      />
+      <Card
+        title="Total Loanees"
+        value={numberOfMembers ?? 0}
+        type="customers"
+        color="text-pink-800"
+        span="col-span-2 md:col-span-2"
+        user={user}
+        selected={select}
       />
     </>
   );
@@ -81,17 +107,21 @@ export function Card({
   type,
   color,
   span,
+  user,
+  selected,
 }: {
   title: string;
-  value: number | string;
+  value: number;
   type: "disbursed" | "collected" | "pending" | "active" | "customers";
   color: string;
   span: string;
+  user: any;
+  selected: any;
 }) {
   const Icon = iconMap[type];
 
   return (
-    <div className={`ring-2 ring-pink-700 rounded-xl bg-gray-50  ${span}`}>
+    <div className={`ring-2 ring-blue-700 rounded-xl bg-gray-50  ${span}`}>
       <div className="flex p-2">
         {Icon ? <Icon className={`h-6 w-6 ${color}`} /> : null}
         <h3 className="ml-2 text-sm font-medium">{title}</h3>
@@ -100,7 +130,7 @@ export function Card({
         className={`
           truncate rounded-b-xl bg-white px-2 py-2 text-center text-green-600 text-sm font-black`}
       >
-        {value}
+        {type === "customers" ? value ?? 0 : formatCurrencyToLocal(value)}
       </p>
     </div>
   );

@@ -14,6 +14,8 @@ import {
   ModalFooter,
   Button,
   useDisclosure,
+  addToast,
+  Spinner,
 } from "@heroui/react";
 import { AlertTriangleIcon } from "lucide-react";
 import { useSearchParams, usePathname, useRouter } from "next/navigation";
@@ -71,6 +73,8 @@ export function CreateInvoice() {
 }
 
 export function UpdateInvoice({ id }: { id: string }) {
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const { isOpen, onOpen, onOpenChange, onClose } = useDisclosure();
   return (
     <Link
       href={`/dashboard/invoices/${id}/edit`}
@@ -82,8 +86,23 @@ export function UpdateInvoice({ id }: { id: string }) {
 }
 
 export function DeleteInvoice({ id }: { id: string }) {
-  const deleteInvoiceWithId = deleteMpesaInvoice.bind(null, id);
-  const { isOpen, onOpen, onOpenChange } = useDisclosure();
+  const [isDeleting, setIsDeleting] = useState(false);
+  const { isOpen, onOpen, onOpenChange, onClose } = useDisclosure();
+
+  const handleDelete = async (e: React.FormEvent<HTMLFormElement>) => {
+    setIsDeleting(true);
+    e.preventDefault();
+    const deleteInvoiceWithId = await deleteMpesaInvoice(id);
+    if (deleteInvoiceWithId.success === true) {
+      setIsDeleting(false);
+      addToast({
+        color: "warning",
+        title: "Item deleted!",
+      });
+
+      onClose();
+    }
+  };
   return (
     <>
       <Tooltip content="Delete transaction" color="danger" placement="bottom">
@@ -106,9 +125,9 @@ export function DeleteInvoice({ id }: { id: string }) {
                 </p>
               </ModalBody>
               <ModalFooter>
-                <form action={deleteInvoiceWithId}>
-                  <Button type="submit" color="danger">
-                    YES
+                <form onSubmit={handleDelete}>
+                  <Button type="submit" color="danger" isDisabled={isDeleting}>
+                    {isDeleting ? <Spinner color="default" /> : "YES"}
                   </Button>
                 </form>
                 <Button color="primary" onPress={onClose}>

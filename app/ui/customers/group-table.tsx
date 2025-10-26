@@ -25,7 +25,7 @@ export const columns = [
   { name: "NAME", uid: "name" },
   { name: "LOCATION", uid: "location" },
   { name: "REGION", uid: "region_name" },
-  { name: "DISBURSED", uid: "disbursed" },
+  { name: "ACTIVE DISBURSEMENT", uid: "disbursed" },
   { name: "MEMBERS", uid: "members_count" },
   { name: "ACTIONS", uid: "actions" },
 ];

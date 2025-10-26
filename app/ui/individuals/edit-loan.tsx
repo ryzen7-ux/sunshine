@@ -16,6 +16,7 @@ import {
   NumberInput,
   Divider,
   Tooltip,
+  DatePicker,
 } from "@heroui/react";
 import { Button } from "@heroui/react";
 import {
@@ -36,6 +37,8 @@ import { useSearchParams, usePathname, useRouter } from "next/navigation";
 import { useDebouncedCallback } from "use-debounce";
 import { formatCurrencyToLocal, formatDateToLocal } from "@/app/lib/utils";
 import { Edit } from "lucide-react";
+import { now, getLocalTimeZone, parseDate } from "@internationalized/date";
+import { formatFormDateTime } from "@/app/lib/utils";
 
 const roles = [
   { key: "admin", label: "Admin" },
@@ -55,6 +58,15 @@ export default function EditLoan({ individual }: { individual: any }) {
   const [isLoading, setIsloading] = useState(false);
   const [selectIndividual, setSelectIndividual] = useState("");
   const [select, setSelect] = useState("");
+  const [fee, setFee] = useState(0);
+  const [cycle, setCycle] = useState(individual.cycle);
+  const [error, setError] = useState({ isError: false, type: "" });
+  const [startDate, setStartDate] = useState<any>(
+    formatFormDateTime(individual.start_date)
+  );
+  const [endDate, setEndDate] = useState<any>(
+    startDate.add({ weeks: Number(individual.term) })
+  );
 
   const [selectRegion, setSelectRegion] = useState("");
   const [amount, setAmount] = useState<number>(individual.amount);
@@ -109,6 +121,18 @@ export default function EditLoan({ individual }: { individual: any }) {
       });
       setIsModalOpen(false);
     }
+  };
+
+  const handleDateChange = (date: any) => {
+    console.log(term);
+    if (term < 1) {
+      setError({ isError: true, type: "startDate" });
+      return;
+    }
+    setStartDate(date);
+    const newDate = date;
+    const loanEndDate = newDate.add({ weeks: Number(term) });
+    setEndDate(loanEndDate);
   };
 
   return (
@@ -223,6 +247,9 @@ export default function EditLoan({ individual }: { individual: any }) {
                     <div className="flex flex-col md:flex-row gap-4 ">
                       <div className="w-full">
                         <NumberInput
+                          isInvalid={
+                            error.isError === true && error.type === "term"
+                          }
                           isRequired
                           name="term"
                           className="outline-2 outline-blue-500 "
@@ -242,7 +269,90 @@ export default function EditLoan({ individual }: { individual: any }) {
                           }
                         />
                       </div>
+                      <div className="w-full">
+                        <NumberInput
+                          isRequired
+                          name="fee"
+                          className="outline-2 outline-blue-500 "
+                          label="Processing Fee"
+                          color="success"
+                          labelPlacement="outside"
+                          size="md"
+                          variant="faded"
+                          value={fee}
+                          onValueChange={(e) => {
+                            setFee(e);
+                            setError({ isError: false, type: "" });
+                          }}
+                          errorMessage="Enter value greater than 0"
+                          startContent={
+                            <div className="pointer-events-none flex items-center">
+                              <span className="text-default-400 text-small">
+                                Ksh
+                              </span>
+                            </div>
+                          }
+                        />
+                      </div>
                     </div>
+                    <div className="py-4">
+                      {" "}
+                      <NumberInput
+                        isInvalid={error.isError && error.type === "cycle"}
+                        errorMessage="Select a number greater than 0"
+                        isRequired
+                        name="cycle"
+                        className="outline-2 outline-blue-500 "
+                        label="Loan Cycle"
+                        color="success"
+                        labelPlacement="outside"
+                        size="md"
+                        variant="faded"
+                        value={cycle}
+                        onValueChange={(e) => {
+                          setCycle(e);
+                          setError({ isError: false, type: "" });
+                        }}
+                        placeholder="0"
+                        formatOptions={{ useGrouping: false }}
+                        startContent={
+                          <div className="pointer-events-none flex items-center">
+                            <span className="text-default-400 text-small"></span>
+                          </div>
+                        }
+                      />
+                    </div>
+                    <DatePicker
+                      isInvalid={error.isError && error.type === "startDate"}
+                      errorMessage="Set loan term first with value greater than 0"
+                      showMonthAndYearPickers
+                      name="start_date"
+                      className="pb-4"
+                      variant="faded"
+                      color="success"
+                      label="Loan Start Date"
+                      size="md"
+                      labelPlacement="outside"
+                      value={startDate}
+                      onChange={(val) => {
+                        handleDateChange(val);
+                      }}
+                      inert={true}
+                    />
+                    <DatePicker
+                      isDisabled
+                      showMonthAndYearPickers
+                      name="end_date"
+                      className="pb-4"
+                      variant="faded"
+                      color="success"
+                      label="Loan End Date"
+                      size="md"
+                      labelPlacement="outside"
+                      value={endDate}
+                      isReadOnly
+                      inert={true}
+                    />
                     <fieldset>
                       <legend className="mb-2 block text-sm font-medium">
                         Set the loan status

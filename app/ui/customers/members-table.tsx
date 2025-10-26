@@ -1,4 +1,3 @@
-//@ts-nocheck
 "use client";
 
 import React from "react";
@@ -32,7 +31,6 @@ import { BanknotesIcon } from "@heroicons/react/20/solid";
 export const columns = [
   { name: "ID NO", uid: "idnumber" },
   { name: "NAME", uid: "firstname" },
-  { name: "", uid: "surname" },
   { name: "PHONE", uid: "phone" },
   { name: "LOCATION", uid: "location" },
   { name: "BUSINESS", uid: "business" },
@@ -173,7 +171,7 @@ export default function MembersTable({
   group: any;
   members: any;
 }) {
-  const { isOpen, onOpen, onOpenChange } = useDisclosure();
+  const { isOpen, onOpen, onOpenChange, onClose } = useDisclosure();
   const [isOpenLoan, setIsOpenLoan] = React.useState(false);
 
   const [memberData, setMemberData] = React.useState({});
@@ -191,15 +189,12 @@ export default function MembersTable({
       case "firstname":
         return (
           <div className="flex flex-col">
-            <p className=" text-bold text-md ">{member.firstname}</p>
+            <p className=" text-bold text-md ">
+              {member.firstname} {member.surname}
+            </p>
           </div>
         );
-      case "surname":
-        return (
-          <div className="flex flex-col">
-            <p className=" text-bold text-md">{member.surname}</p>
-          </div>
-        );
+
       case "location":
         return (
           <div>
@@ -290,11 +285,13 @@ export default function MembersTable({
         isOpen={isOpen}
         onOpenChange={onOpenChange}
         memberData={memberData}
+        onClose={onClose}
       />
       <LoanModal
         isOpen={isOpenLoan}
         onOpenChange={setIsOpenLoan}
         memberData={memberData}
+        onClose={onClose}
       />
     </>
   );

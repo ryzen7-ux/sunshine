@@ -10,6 +10,7 @@ import {
   addToast,
   DatePicker,
   NumberInput,
+  Spinner,
 } from "@heroui/react";
 import {
   CheckIcon,
@@ -54,19 +55,25 @@ export default function CreateLoanForm({
   }, 300);
 
   const [select, setSelect] = React.useState("");
+  const [isLoading, setIsLoading] = React.useState(false);
   const [selectMember, setSelectMember] = React.useState(select ? "" : "");
   const [startDate, setStartDate] = React.useState<any>(
     now(getLocalTimeZone())
   );
-  const [endDate, setEndDate] = React.useState<any>(null);
+
   const [error, setError] = React.useState({ isError: false, type: "" });
   const [cycle, setCycle] = React.useState(0);
+  const [fee, setFee] = React.useState(0);
 
   const [amount, setAmount] = React.useState("");
   const [interest, setInterest] = React.useState("");
   const [term, setTerm] = React.useState("");
   const [weeklyPayment, setWeeklyPayment] = React.useState(0);
-  const [loanId, setLoanId] = React.useState("");
+  const [loanId, setLoanId] = React.useState("NILL");
+
+  const [endDate, setEndDate] = React.useState<any>(
+    startDate.add({ weeks: Number(term) })
+  );
 
   const principal = Number.parseFloat(amount);
   const rate = Number.parseFloat(interest) / 100 / 4;
@@ -74,7 +81,7 @@ export default function CreateLoanForm({
   const Loanterm = Number.parseInt(term);
 
   const wpay = Math.ceil(principal / Loanterm + principal * rate);
-  const payment = Math.ceil(wpay * Loanterm);
+  const payment = Math.ceil(wpay * Loanterm) + Number(fee);
 
   const calculateWeeklyPayment = () => {
     const principal = Number.parseFloat(amount);
@@ -91,7 +98,9 @@ export default function CreateLoanForm({
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    setIsLoading(true);
     if (cycle < 1) {
+      setIsLoading(false);
       addToast({
         title: "Error !",
         description: "Please select loan cycle",
@@ -104,6 +113,7 @@ export default function CreateLoanForm({
     const res = await createLoan(formData);
 
     if (res?.success === false) {
+      setIsLoading(false);
       if (res?.errors?.status) {
         addToast({
           title: "Error !",
@@ -111,6 +121,7 @@ export default function CreateLoanForm({
           color: "danger",
         });
       } else {
+        setIsLoading(false);
         addToast({
           title: "Error !",
           description: res?.message,
@@ -125,12 +136,13 @@ export default function CreateLoanForm({
         description: res?.message,
         color: "success",
       });
+      setIsLoading(false);
       onClose();
     }
   };
 
   const handleDateChange = (date: any) => {
-    if (term === "") {
+    if (Number(term) < 1) {
       setError({ isError: true, type: "startDate" });
       return;
     }
@@ -203,6 +215,11 @@ export default function CreateLoanForm({
             variant="faded"
             defaultValue={amount}
             onChange={(e: any) => setAmount(e.target.value)}
+            startContent={
+              <div className="pointer-events-none flex items-center">
+                <span className="text-default-400 text-small">Ksh</span>
+              </div>
+            }
           />
         </div>
         <div className="w-full">
@@ -255,34 +272,58 @@ export default function CreateLoanForm({
           />
         </div>
       </div>
-      <div className="py-2">
-        {" "}
-        <NumberInput
-          isInvalid={error.isError && error.type === "cycle"}
-          errorMessage="Select a number greater than 0"
-          isRequired
-          name="cycle"
-          className="outline-2 outline-blue-500 "
-          label="Loan Cycle"
-          color="primary"
-          labelPlacement="outside"
-          size="md"
-          variant="faded"
-          value={cycle}
-          onValueChange={(e) => {
-            setCycle(e);
-            setError({ isError: false, type: "" });
-          }}
-          placeholder="0"
-          formatOptions={{ useGrouping: false }}
-          startContent={
-            <div className="pointer-events-none flex items-center">
-              <span className="text-default-400 text-small"></span>
-            </div>
-          }
-        />
+      <div className="flex flex-row gap-4 py-2">
+        <div className="w-full">
+          {" "}
+          <NumberInput
+            isInvalid={error.isError && error.type === "cycle"}
+            errorMessage="Select a number greater than 0"
+            isRequired
+            name="cycle"
+            className="outline-2 outline-blue-500 "
+            label="Loan Cycle"
+            color="primary"
+            labelPlacement="outside"
+            size="md"
+            variant="faded"
+            value={cycle}
+            onValueChange={(e) => {
+              setCycle(e);
+              setError({ isError: false, type: "" });
+            }}
+            placeholder="0"
+            formatOptions={{ useGrouping: false }}
+            startContent={
+              <div className="pointer-events-none flex items-center">
+                <span className="text-default-400 text-small"></span>
+              </div>
+            }
+          />
+        </div>
+        <div className="w-full">
+          <NumberInput
+            isRequired
+            name="fee"
+            className="outline-2 outline-blue-500 "
+            label="Processing Fee and Charges"
+            color="primary"
+            labelPlacement="outside"
+            size="md"
+            variant="faded"
+            value={fee}
+            onValueChange={(e) => {
+              setFee(e);
+              setError({ isError: false, type: "" });
+            }}
+            errorMessage="Enter value greater than 0"
+            startContent={
+              <div className="pointer-events-none flex items-center">
+                <span className="text-default-400 text-small">Ksh</span>
+              </div>
+            }
+          />
+        </div>
       </div>
-
       <DatePicker
         isInvalid={error.isError && error.type === "startDate"}
         errorMessage="Select loan term first"
@@ -298,6 +339,7 @@ export default function CreateLoanForm({
         onChange={(val) => {
           handleDateChange(val);
         }}
+        inert={true}
       />
       <DatePicker
         isDisabled
@@ -311,6 +353,7 @@ export default function CreateLoanForm({
         labelPlacement="outside"
         value={endDate}
         isReadOnly
+        inert={true}
       />
       <fieldset>
         <legend className="mb-2 block text-sm font-medium">
@@ -392,9 +435,9 @@ export default function CreateLoanForm({
       </div>
       <div className="flex justify-between">
         <div></div>
-        <div className="flex gap-4 pt-4">
-          <Button type="submit" color="success">
-            Submit
+        <div className="flex gap-4 py-4">
+          <Button type="submit" color="success" disabled={isLoading}>
+            {isLoading ? <Spinner color="default" /> : "SUBMIT"}
           </Button>
         </div>
       </div>

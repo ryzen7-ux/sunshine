@@ -15,6 +15,8 @@ import {
   fetchFilteredIndividuals,
   fetchFilteredIndividualLoans,
   fetchIndividualsCardsData,
+  fetchIndividualsMaxCycle,
+  fetchUserByEmail,
 } from "@/app/lib/sun-data";
 import { getCurrentUser } from "@/app/lib/current-user";
 import Table from "@/app/ui/individuals/table";
@@ -24,6 +26,7 @@ import LoansPagination from "@/app/ui/individuals/loans-pagination";
 import AddLoan from "@/app/ui/individuals/add-loans";
 import IndividualsTab from "@/app/ui/individuals/tabs";
 import { Cuboid } from "lucide-react";
+import { getSession } from "@/app/lib/session";
 
 export default async function Page(props: {
   searchParams?: Promise<{
@@ -41,30 +44,49 @@ export default async function Page(props: {
   const currentPage = Number(searchParams?.page) || 1;
   const loansCurrentPage = Number(searchParams?.loanspage) || 1;
 
-  const totalPages = await fetchIndividualPages(query);
-  const totalLoanPages = await fetchIndividualLoansPages(loansquery);
+  const user = await getSession();
+  const isAdmin = user?.role === "admin";
+  const curentUser: any = await fetchUserByEmail(user?.email);
+  const regions = await fetchRegions();
+
+  let regionArr: any = [];
+  if (isAdmin) {
+    regionArr = regions?.map((item: any) => item.id);
+  }
+
+  if (!isAdmin) {
+    const filteredRegions = regions?.filter(
+      (item: any) => item?.manager === curentUser[0].id
+    );
+
+    regionArr = filteredRegions?.map((item: any) => item.id);
+  }
+
+  const totalPages = await fetchIndividualPages(query, regionArr);
+  const totalLoanPages = await fetchIndividualLoansPages(loansquery, regionArr);
 
   const loans = await fetchFilteredIndividualLoans(
     loansquery,
-    loansCurrentPage
+    loansCurrentPage,
+    regionArr
   );
 
   const filteredIndividuals = await fetchFilteredIndividuals(
     query,
-    currentPage
+    currentPage,
+    regionArr
   );
 
   const filteredLoanIndividuals = await fetchFilteredIndividuals(
     loansquery,
-    loansCurrentPage
+    loansCurrentPage,
+    regionArr
   );
   const users = await fetchUsers();
-  const individuals = await fetchIndividuals();
+  const individuals = await fetchIndividuals(regionArr);
   const individual = await fetchIndividualsById(indiviudalId);
-  const regions = await fetchRegions();
-  const user = await getCurrentUser();
-  const individualsCards = await fetchIndividualsCardsData();
-  console.log(individualsCards);
+
+  const maxCycle = await fetchIndividualsMaxCycle();
 
   return (
     <main className="">
@@ -86,6 +108,7 @@ export default async function Page(props: {
           filtredIndividuals={filteredIndividuals}
           filteredLoanIndividuals={filteredLoanIndividuals}
           loans={loans}
+          maxCycle={maxCycle}
         />
         {/* <AddIndividuals regions={regions} /> */}
       </div>

@@ -1,5 +1,10 @@
 import Breadcrumbs from "@/app/ui/invoices/breadcrumbs";
-import { fetchGroupById, fetchMembers } from "@/app/lib/sun-data";
+import {
+  fetchGroupById,
+  fetchMembers,
+  fetchGroupCardData,
+  fetchMaxCycle,
+} from "@/app/lib/sun-data";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import CardWrapper from "@/app/ui/customers/cards";
@@ -14,16 +19,35 @@ import SearchMembers from "@/app/ui/customers/search-members";
 import HeroBreadcrumbs from "@/app/ui/customers/hero-breadcrumbs";
 import { UsersBRoundIcon } from "@/app/ui/customers/icons";
 import { Divider } from "@heroui/react";
+import DisbursementCycle from "@/app/ui/customers/disbursement-cycle";
 
-export default async function Page(props: { params: Promise<{ id: string }> }) {
+export default async function Page(props: {
+  searchParams?: Promise<{
+    query?: string;
+  }>;
+  params: Promise<{ id: string }>;
+}) {
+  const searchParams = await props.searchParams;
   const params = await props.params;
+  const query = searchParams?.query || "";
   const id = params.id;
+
   const [group] = await Promise.all([fetchGroupById(id)]);
   const [members] = await Promise.all([fetchMembers(id)]);
 
   if (!group) {
     notFound();
   }
+
+  const maxCycle = await fetchMaxCycle(id);
+
+  const {
+    groupDisbusredAmount,
+    totalPayment,
+    totalMembers,
+    balance,
+    totalMpesa,
+  } = await fetchGroupCardData(id, group.name, query);
 
   return (
     <main>
@@ -44,9 +68,16 @@ export default async function Page(props: { params: Promise<{ id: string }> }) {
         <div className="flex w-full items-center pb-2">
           <h1 className={`text-xl font-bold text-gray-900`}>{group.name}</h1>
         </div>
+        <DisbursementCycle maxCycle={maxCycle} />
         <div className="grid gap-6 grid-cols-1 lg:grid-cols-3">
           <Suspense fallback={<CardsSkeleton />}>
-            <CardWrapper groupid={id} name={group.name} />
+            <CardWrapper
+              groupDisbusredAmount={groupDisbusredAmount}
+              totalPayment={totalPayment}
+              totalMembers={totalMembers}
+              balance={balance}
+              totalMpesa={totalMpesa}
+            />
           </Suspense>
         </div>
 

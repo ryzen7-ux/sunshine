@@ -29,10 +29,12 @@ export default function MemberModal({
   isOpen,
   onOpenChange,
   memberData,
+  onClose,
 }: {
   isOpen: boolean;
   onOpenChange: () => void;
-  memberData: MemberForm;
+  memberData: any;
+  onClose: any;
 }) {
   return (
     <>

@@ -15,7 +15,7 @@ export const formatCurrencyToLocal = (
   amount: number,
   locale: string = "en-KE"
 ) => {
-  return amount.toLocaleString(locale, {
+  return amount?.toLocaleString(locale, {
     style: "currency",
     currency: "KES",
   });
@@ -25,13 +25,13 @@ export const formatFormDateTime = (
   dateStr: string,
   locale: string = "en-US"
 ) => {
-  const isoTime: any = new Date(dateStr).toLocaleDateString("fr-CA", {
+  const isoTime: any = new Date(dateStr)?.toLocaleDateString("fr-CA", {
     day: "2-digit",
     month: "2-digit",
     year: "numeric",
   });
 
-  const isoTime2 = new Date(dateStr).toLocaleTimeString("en-CA", {
+  const isoTime2 = new Date(dateStr)?.toLocaleTimeString("en-CA", {
     hour: "2-digit",
     minute: "2-digit",
     hour12: false, // Use 24-hour format
@@ -56,7 +56,7 @@ export const formatDateToLocal = (
     year: "numeric",
   };
   const formatter = new Intl.DateTimeFormat(locale, options);
-  return formatter.format(date);
+  return formatter?.format(date);
 };
 
 export const generateYAxis = (revenue: Revenue[]) => {
@@ -141,7 +141,7 @@ export async function decodeMsisdnValue(hashStr: string) {
 }
 
 export const formatPhoneNumber = (number: string) => {
-  if (number.startsWith("254") || number.startsWith("+254")) {
+  if (number?.startsWith("254") || number?.startsWith("+254")) {
     const remainingString = number?.slice(3, 15);
     const newString = "0" + remainingString;
     return newString;
