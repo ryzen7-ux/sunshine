@@ -35,7 +35,7 @@ export default function IndividualFilters({
     }
     replace(`${pathname}?${params.toString()}`);
   }, 200);
-  const [select, setSelect] = useState<any>(String(maxCycle[0].max));
+  const [select, setSelect] = useState<any>("all");
 
   return (
     <>

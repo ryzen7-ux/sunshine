@@ -35,7 +35,10 @@ export async function POST(request: NextRequest) {
   const dateObject = dt.toISO();
 
   const num = await decodeMsisdnValue(number);
-  const phoneNumber = num?.msisdn ?? "null";
+  let phoneNumber = num?.msisdn ?? "null";
+  if (phoneNumber === "null") {
+    phoneNumber = number;
+  }
   const cycle: any = 0;
   try {
     await sql`

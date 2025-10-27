@@ -29,7 +29,7 @@ export default function DisbursementCycle({ maxCycle }: { maxCycle: any }) {
     }
     replace(`${pathname}?${params.toString()}`);
   }, 200);
-  const [select, setSelect] = useState<any>(String(maxCycle[0].max));
+  const [select, setSelect] = useState<any>("all");
 
   return (
     <>
