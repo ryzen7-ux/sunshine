@@ -169,7 +169,9 @@ export default async function Page(props: {
               individualLoanData?.totalIndividualLoans -
               individualLoanData?.totalIndividualCollected
             }
-            monthlyCollected={individualLoanData?.monthIndividualCollected}
+            monthlyCollected={Number(
+              individualLoanData?.monthIndividualCollected
+            )}
             weeklyDisbursed={individualLoanData?.weekIndividualDisbursed}
             weeklyTotalLoan={individualLoanData?.weekIndividualLoan}
             weeklyCollected={individualLoanData?.weekIndividualCollected}
@@ -179,7 +181,7 @@ export default async function Page(props: {
             }
             todayDisbursed={individualLoanData?.todayIndividualDisbursed}
             todayTotalLoan={individualLoanData?.todayIndividualLoan}
-            todayCollected={individualLoanData?.totalIndividualCollected}
+            todayCollected={individualLoanData?.todayIndividualCollected}
             todayLoanBalance={
               individualLoanData?.totalIndividualLoans -
               individualLoanData?.totalIndividualCollected

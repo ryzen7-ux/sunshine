@@ -695,7 +695,6 @@ export async function fetchDashboardCardData(query: string, region: any) {
         cycle = Number(query);
       }
     }
-    let startDate: any = null;
 
     const cycleSingleArray = [cycle];
     const cycleAllArayy = isAll ? cycleArray : cycleSingleArray;
@@ -717,9 +716,12 @@ export async function fetchDashboardCardData(query: string, region: any) {
         CEIL(SUM(CEIL(CASE WHEN cycle = ANY(${cycleAllArayy}) THEN amount ELSE 0 END/term + CASE WHEN cycle = ANY(${cycleAllArayy})
         THEN amount ELSE 0 END * (interest/4/100)) * term )) AS sum FROM groups JOIN loans ON groupid = groups.id JOIN regions ON
         regions.id = groups.region WHERE regions.id = ANY(${region})`;
-    const collectedLoanPromise = sql`SELECT
-         SUM(transamount) AS total, groups.name FROM groups JOIN mpesainvoice ON LOWER(mpesainvoice.refnumber) = LOWER(groups.name)
-         WHERE cycle = ${cycle} AND LOWER(groups.name) = LOWER(mpesainvoice.refnumber) GROUP BY groups.name`;
+    const collectedLoanPromise = sql`SELECT 
+        SUM(transamount) AS total FROM mpesainvoice JOIN groups ON 
+      LOWER(groups.name)  = LOWER(mpesainvoice.refnumber) JOIN regions ON regions.id =
+      groups.region WHERE regions.id = ANY(${region}) AND cycle = ANY(${cycleAllArayy}) AND 
+      LOWER(mpesainvoice.refnumber) = LOWER(groups.name)
+      `;
 
     // THIS MONTH
     const groupCountThisMonthPromise = sql`SELECT 
@@ -739,7 +741,8 @@ export async function fetchDashboardCardData(query: string, region: any) {
         AND loans.date < DATE_TRUNC('month', current_timestamp) + INTERVAL '1 month'`;
     const collectedThisMonthPromise = sql`SELECT 
         SUM(transamount) AS total FROM groups JOIN mpesainvoice ON LOWER(mpesainvoice.refnumber)
-        = LOWER(groups.name) JOIN regions ON regions.id = groups.region WHERE regions.id = ANY(${region}) AND cycle = ${cycle} AND LOWER(mpesainvoice.refnumber) = LOWER(groups.name)
+        = LOWER(groups.name) JOIN regions ON regions.id = groups.region WHERE regions.id =
+        ANY(${region}) AND cycle = ANY(${cycleAllArayy}) AND LOWER(mpesainvoice.refnumber) = LOWER(groups.name)
          AND transtime >= DATE_TRUNC('month', current_timestamp)
       AND transtime < DATE_TRUNC('month', current_timestamp) + INTERVAL '1 month'`;
     // WEEK
@@ -759,7 +762,8 @@ export async function fetchDashboardCardData(query: string, region: any) {
         AND loans.date < DATE_TRUNC('week', NOW()) + INTERVAL '1 week'`;
     const collectedThisWeekPromise = await sql`SELECT 
         SUM(transamount) AS total FROM groups JOIN mpesainvoice ON LOWER(mpesainvoice.refnumber)
-        = LOWER(groups.name) JOIN regions ON regions.id = groups.region WHERE regions.id = ANY(${region}) AND cycle = ${cycle} AND LOWER(mpesainvoice.refnumber) = LOWER(groups.name)
+        = LOWER(groups.name) JOIN regions ON regions.id = groups.region WHERE regions.id =
+        ANY(${region}) AND cycle = ANY(${cycleAllArayy}) AND LOWER(mpesainvoice.refnumber) = LOWER(groups.name)
          AND transtime >= DATE_TRUNC('week', NOW())
         AND transtime < DATE_TRUNC('week', NOW()) + INTERVAL '1 week'`;
 
@@ -839,6 +843,7 @@ ORDER BY
       individualCountLastFourPromise,
       individualLoanThisMonthPromise,
     ]);
+
     const todayDisbursedPromises =
       await sql`SELECT SUM(CASE WHEN cycle = ANY(${cycleAllArayy}) THEN amount ELSE 0 END) 
         FROM groups JOIN 
@@ -855,7 +860,7 @@ ORDER BY
         AND loans.date < DATE_TRUNC('day', NOW()) + INTERVAL '1 day'`;
     const collectedTodayhPromise =
       await sql`SELECT SUM(transamount) AS total FROM groups JOIN mpesainvoice ON LOWER(mpesainvoice.refnumber)
-     = LOWER(groups.name) JOIN regions ON regions.id = groups.region WHERE regions.id = ANY(${region}) AND LOWER(mpesainvoice.refnumber) = LOWER(groups.name) AND  transtime >= DATE_TRUNC('day', NOW())
+     = LOWER(groups.name) JOIN regions ON regions.id = groups.region WHERE cycle = ANY(${cycleAllArayy})  AND regions.id = ANY(${region}) AND LOWER(mpesainvoice.refnumber) = LOWER(groups.name) AND  transtime >= DATE_TRUNC('day', NOW())
   AND transtime < DATE_TRUNC('day', NOW()) + INTERVAL '1 day'`;
 
     const groupAmount = Number(data[0][0]?.sum || "0");
@@ -899,7 +904,6 @@ ORDER BY
         disbursed: Number(item.disbursed) + Number(data[13][index].disbursed),
       })
     );
-    // console.log(monthlyDisbursement);
     return {
       groupAmount,
       numberOfMembers,
@@ -998,11 +1002,11 @@ export async function fetchIndividualsDashbordCards(
       AS sum FROM individuals JOIN individuals_loans ON individuals_loans.loanee = individuals.id 
       JOIN regions ON regions.id = individuals.region WHERE regions.id = ANY(${region})`;
     const collectedLoanPromise = await sql`SELECT 
-      SUM(transamount) AS total, individuals.idnumber::TEXT FROM individuals JOIN mpesainvoice
+      SUM(transamount) AS total FROM individuals JOIN mpesainvoice
       ON LOWER(mpesainvoice.refnumber) = LOWER(individuals.idnumber::TEXT) JOIN regions ON
       regions.id = individuals.region WHERE regions.id = ANY(${region}) AND
       LOWER(individuals.idnumber::TEXT) = LOWER(mpesainvoice.refnumber) 
-      AND mpesainvoice.cycle = ${cycle} GROUP BY individuals.idnumber`;
+      AND mpesainvoice.cycle = ANY(${cycleAllArayy}) `;
     // CURRENT MONTH
     const disbursedCountThisMonthPromise = await sql`SELECT 
       SUM(CASE WHEN cycle = ANY(${cycleAllArayy}) THEN amount ELSE 0 END)  
@@ -1018,12 +1022,12 @@ export async function fetchIndividualsDashbordCards(
       individuals_loans.created >= DATE_TRUNC('month', current_timestamp)
       AND individuals_loans.created < DATE_TRUNC('month', current_timestamp) + INTERVAL '1 month'`;
     const collectedThisMonthPromise = await sql`SELECT 
-      SUM(transamount) AS total, individuals.idnumber::TEXT FROM individuals JOIN mpesainvoice 
+      SUM(transamount) AS total FROM individuals JOIN mpesainvoice 
       ON LOWER(mpesainvoice.refnumber) = LOWER(individuals.idnumber::TEXT) JOIN regions ON
       regions.id = individuals.region WHERE regions.id = ANY(${region}) AND 
-       mpesainvoice.cycle = ${cycle} AND LOWER(mpesainvoice.refnumber) 
+       mpesainvoice.cycle = ANY(${cycleAllArayy}) AND LOWER(mpesainvoice.refnumber) 
       = LOWER(individuals.idnumber::TEXT) AND transtime >= DATE_TRUNC('month', current_timestamp)
-     AND transtime < DATE_TRUNC('month', current_timestamp) + INTERVAL '1 month' GROUP BY individuals.idnumber`;
+     AND transtime < DATE_TRUNC('month', current_timestamp) + INTERVAL '1 month'`;
     // THIS WEEK
     const disbursedCountThisWeekPromise = await sql`SELECT 
       SUM(CASE WHEN cycle = ANY(${cycleAllArayy}) THEN amount ELSE 0 END)  
@@ -1039,12 +1043,12 @@ export async function fetchIndividualsDashbordCards(
        individuals_loans.created >= DATE_TRUNC('week', NOW())
       AND individuals_loans.created < DATE_TRUNC('week', NOW()) + INTERVAL '1 week'`;
     const collectedThisWeekPromise = await sql`SELECT 
-      SUM(transamount) AS total, individuals.idnumber::TEXT FROM individuals JOIN mpesainvoice 
+      SUM(transamount) AS total FROM individuals JOIN mpesainvoice 
       ON LOWER(mpesainvoice.refnumber) = LOWER(individuals.idnumber::TEXT) JOIN regions ON
       regions.id = individuals.region WHERE regions.id = ANY(${region}) AND
-       mpesainvoice.cycle = ${cycle} AND LOWER(mpesainvoice.refnumber) 
+       mpesainvoice.cycle = ANY(${cycleAllArayy})  AND LOWER(mpesainvoice.refnumber) 
       = LOWER(individuals.idnumber::TEXT) AND  transtime >= DATE_TRUNC('week', NOW())
-      AND transtime < DATE_TRUNC('week', NOW()) + INTERVAL '1 week' GROUP BY individuals.idnumber`;
+      AND transtime < DATE_TRUNC('week', NOW()) + INTERVAL '1 week'`;
     // TODAY
     const todayDisbursedPromises = await sql`SELECT 
       SUM(CASE WHEN cycle = ANY(${cycleAllArayy}) THEN amount ELSE 0 END) 
@@ -1055,7 +1059,7 @@ export async function fetchIndividualsDashbordCards(
 
     const totalLoanTodayPromise = await sql`SELECT 
       CEIL(SUM(CEIL(CASE WHEN cycle = ANY(${cycleAllArayy}) THEN amount ELSE 0 END/term + 
-      CASE WHEN cycle = ${cycle} THEN amount ELSE 0 END * (interest/4/100)) * term ))
+      CASE WHEN cycle = ANY(${cycleAllArayy})  THEN amount ELSE 0 END * (interest/4/100)) * term ))
       AS sum FROM individuals JOIN individuals_loans ON individuals_loans.loanee = individuals.id 
       JOIN regions ON regions.id = individuals.region WHERE regions.id = ANY(${region}) AND 
       individuals_loans.created >= DATE_TRUNC('day', NOW())
@@ -1065,7 +1069,7 @@ export async function fetchIndividualsDashbordCards(
       SUM(transamount) AS total, individuals.idnumber::TEXT FROM individuals JOIN mpesainvoice 
       ON LOWER(mpesainvoice.refnumber) = LOWER(individuals.idnumber::TEXT) JOIN regions ON
       regions.id = individuals.region WHERE regions.id = ANY(${region}) AND
-       mpesainvoice.cycle = ${cycle} AND LOWER(mpesainvoice.refnumber) = LOWER(individuals.idnumber::TEXT)
+       mpesainvoice.cycle = ANY(${cycleAllArayy}) AND LOWER(mpesainvoice.refnumber) = LOWER(individuals.idnumber::TEXT)
        AND  transtime >= DATE_TRUNC('day', NOW())
       AND transtime < DATE_TRUNC('day', NOW()) + INTERVAL '1 day' GROUP BY individuals.idnumber`;
 
@@ -1079,7 +1083,8 @@ export async function fetchIndividualsDashbordCards(
       disbursedCountThisMonthPromise[0]?.sum ?? 0
     );
     const monthIndividualLoan = totalLoanThisMonthPromise[0]?.sum ?? 0;
-    const monthIndividualCollected = collectedThisMonthPromise[0]?.total ?? 0;
+    const monthIndividualCollected =
+      Number(collectedThisMonthPromise[0]?.total) ?? 0;
     const weekIndividualDisbursed = Number(
       disbursedCountThisWeekPromise[0]?.sum ?? 0
     );
@@ -1091,6 +1096,7 @@ export async function fetchIndividualsDashbordCards(
     const todayIndividualLoan = totalLoanTodayPromise[0]?.sum ?? 0;
     const todayIndividualCollected = collectedTodayhPromise[0]?.total ?? 0;
 
+    console.log(totalIndividualCollected);
     return {
       totalIndividualDisbursed,
       totalIndivdualLoanees,
