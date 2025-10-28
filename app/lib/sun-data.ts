@@ -688,7 +688,6 @@ export async function fetchDashboardCardData(query: string, region: any) {
     );
 
     let cycleAllArayy: any = cycleArray;
-    let cycle = highestCyle;
 
     if (query) {
       if (query !== "all") {
@@ -719,9 +718,10 @@ export async function fetchDashboardCardData(query: string, region: any) {
         THEN amount ELSE 0 END * (interest/4/100)) * term )) AS sum FROM groups JOIN loans ON groupid = groups.id JOIN regions ON
         regions.id = groups.region WHERE regions.id = ANY(${region})`;
     const collectedLoanPromise = sql`SELECT 
-        SUM(transamount) AS total FROM mpesainvoice JOIN groups ON LOWER(groups.name)
-       ILIKE '%' || mpesainvoice.refnumber || '%' JOIN regions ON regions.id =
-      groups.region WHERE regions.id = ANY(${region}) AND cycle = ANY(${cycleAllArayy})
+        SUM(transamount) AS total FROM mpesainvoice JOIN groups
+       ON refnumber % groups.name JOIN regions ON regions.id =
+      groups.region WHERE  SIMILARITY(groups.name, refnumber) >= 0.7 AND
+      regions.id = ANY(${region}) AND cycle = ANY(${cycleAllArayy})
       `;
 
     // THIS MONTH
@@ -741,8 +741,9 @@ export async function fetchDashboardCardData(query: string, region: any) {
         loans.date >= DATE_TRUNC('month', current_timestamp)
         AND loans.date < DATE_TRUNC('month', current_timestamp) + INTERVAL '1 month'`;
     const collectedThisMonthPromise = sql`SELECT 
-        SUM(transamount) AS total FROM mpesainvoice JOIN groups ON LOWER(groups.name) 
-         ILIKE '%' || mpesainvoice.refnumber || '%' JOIN regions ON regions.id = groups.region WHERE regions.id =
+        SUM(transamount) AS total FROM mpesainvoice JOIN groups
+       ON refnumber % groups.name JOIN regions ON regions.id = groups.region WHERE
+        SIMILARITY(groups.name, refnumber) >= 0.7 AND regions.id =
         ANY(${region}) AND cycle = ANY(${cycleAllArayy}) 
          AND transtime >= DATE_TRUNC('month', current_timestamp)
       AND transtime < DATE_TRUNC('month', current_timestamp) + INTERVAL '1 month'`;
@@ -762,8 +763,9 @@ export async function fetchDashboardCardData(query: string, region: any) {
         loans.date >= DATE_TRUNC('week', NOW())
         AND loans.date < DATE_TRUNC('week', NOW()) + INTERVAL '1 week'`;
     const collectedThisWeekPromise = await sql`SELECT 
-        SUM(transamount) AS total FROM mpesainvoice JOIN groups ON LOWER(groups.name)
-        ILIKE '%' || mpesainvoice.refnumber || '%' JOIN regions ON regions.id = groups.region WHERE regions.id =
+        SUM(transamount) AS total FROM mpesainvoice JOIN groups
+       ON refnumber % groups.name JOIN regions ON regions.id = groups.region WHERE
+        SIMILARITY(groups.name, refnumber) >= 0.7 AND regions.id =
         ANY(${region}) AND cycle = ANY(${cycleAllArayy}) 
          AND transtime >= DATE_TRUNC('week', NOW())
         AND transtime < DATE_TRUNC('week', NOW()) + INTERVAL '1 week'`;
@@ -860,9 +862,10 @@ ORDER BY
         WHERE regions.id = ANY(${region}) AND loans.date >= DATE_TRUNC('day', NOW())
         AND loans.date < DATE_TRUNC('day', NOW()) + INTERVAL '1 day'`;
     const collectedTodayhPromise =
-      await sql`SELECT SUM(transamount) AS total FROM mpesainvoice JOIN groups ON LOWER(groups.name) 
-      ILIKE '%' || mpesainvoice.refnumber || '%'
-      JOIN regions ON regions.id = groups.region WHERE cycle = ANY(${cycleAllArayy})  AND 
+      await sql`SELECT SUM(transamount) AS total FROM mpesainvoice JOIN groups
+       ON refnumber % groups.name
+      JOIN regions ON regions.id = groups.region WHERE SIMILARITY(groups.name, refnumber)
+      >= 0.7 AND cycle = ANY(${cycleAllArayy})  AND 
       regions.id = ANY(${region}) AND 
       transtime >= DATE_TRUNC('day', NOW())
       AND transtime < DATE_TRUNC('day', NOW()) + INTERVAL '1 day'`;
@@ -949,7 +952,6 @@ export async function fetchIndividualsDashbordCards(
   region: any
 ) {
   try {
-    const isAll = query === "all";
     const highestCyclePromise =
       await sql`SELECT MAX(cycle) FROM individuals_loans`;
     const highestCyle = highestCyclePromise[0].max;
@@ -1009,9 +1011,10 @@ export async function fetchIndividualsDashbordCards(
       AS sum FROM individuals JOIN individuals_loans ON individuals_loans.loanee = individuals.id 
       JOIN regions ON regions.id = individuals.region WHERE regions.id = ANY(${region})`;
     const collectedLoanPromise = await sql`SELECT 
-      SUM(transamount) AS total FROM mpesainvoice JOIN individuals ON LOWER(individuals.idnumber::TEXT)
-      ILIKE '%' || mpesainvoice.refnumber || '%' JOIN regions ON
-      regions.id = individuals.region WHERE regions.id = ANY(${region}) 
+      SUM(transamount) AS total FROM mpesainvoice JOIN individuals ON LOWER(individuals.idnumber::TEXT) % 
+      mpesainvoice.refnumber JOIN regions ON
+      regions.id = individuals.region WHERE SIMILARITY(LOWER(individuals.idnumber::TEXT), LOWER(refnumber))
+      >= 0.7 AND regions.id = ANY(${region}) 
       AND mpesainvoice.cycle = ANY(${cycleAllArayy}) `;
     // CURRENT MONTH
     const disbursedCountThisMonthPromise = await sql`SELECT 
@@ -1028,9 +1031,10 @@ export async function fetchIndividualsDashbordCards(
       individuals_loans.created >= DATE_TRUNC('month', current_timestamp)
       AND individuals_loans.created < DATE_TRUNC('month', current_timestamp) + INTERVAL '1 month'`;
     const collectedThisMonthPromise = await sql`SELECT 
-      SUM(transamount) AS total FROM mpesainvoice JOIN individuals ON LOWER(individuals.idnumber::TEXT)
-      ILIKE '%' || mpesainvoice.refnumber || '%' JOIN regions ON
-      regions.id = individuals.region WHERE regions.id = ANY(${region}) AND 
+      SUM(transamount) AS total FROM mpesainvoice JOIN individuals ON 
+      LOWER(individuals.idnumber::TEXT) % mpesainvoice.refnumber JOIN regions ON
+      regions.id = individuals.region WHERE SIMILARITY(LOWER(individuals.idnumber::TEXT), LOWER(refnumber))
+      >= 0.7 AND regions.id = ANY(${region}) AND 
        mpesainvoice.cycle = ANY(${cycleAllArayy})  AND transtime >= DATE_TRUNC('month', current_timestamp)
      AND transtime < DATE_TRUNC('month', current_timestamp) + INTERVAL '1 month'`;
     // THIS WEEK
@@ -1048,8 +1052,8 @@ export async function fetchIndividualsDashbordCards(
        individuals_loans.created >= DATE_TRUNC('week', NOW())
       AND individuals_loans.created < DATE_TRUNC('week', NOW()) + INTERVAL '1 week'`;
     const collectedThisWeekPromise = await sql`SELECT 
-      SUM(transamount) AS total FROM mpesainvoice JOIN individuals ON LOWER(individuals.idnumber::TEXT)
-      ILIKE '%' || mpesainvoice.refnumber || '%' JOIN regions ON
+      SUM(transamount) AS total FROM mpesainvoice JOIN individuals ON 
+      LOWER(individuals.idnumber::TEXT) % mpesainvoice.refnumber JOIN regions ON
       regions.id = individuals.region WHERE regions.id = ANY(${region}) AND
        mpesainvoice.cycle = ANY(${cycleAllArayy}) AND  transtime >= DATE_TRUNC('week', NOW())
       AND transtime < DATE_TRUNC('week', NOW()) + INTERVAL '1 week'`;
@@ -1070,9 +1074,10 @@ export async function fetchIndividualsDashbordCards(
       AND individuals_loans.created < DATE_TRUNC('day', NOW()) + INTERVAL '1 day'`;
 
     const collectedTodayhPromise = await sql`SELECT 
-      SUM(transamount) AS total FROM mpesainvoice JOIN individuals ON LOWER(individuals.idnumber::TEXT)
-      ILIKE '%' || mpesainvoice.refnumber || '%' JOIN regions ON
-      regions.id = individuals.region WHERE regions.id = ANY(${region}) AND
+      SUM(transamount) AS total FROM mpesainvoice JOIN individuals ON 
+      LOWER(individuals.idnumber::TEXT) % mpesainvoice.refnumber JOIN regions ON
+      regions.id = individuals.region WHERE SIMILARITY(LOWER(individuals.idnumber::TEXT), LOWER(refnumber))
+      >= 0.7 AND regions.id = ANY(${region}) AND
        mpesainvoice.cycle = ANY(${cycleAllArayy}) AND  transtime >= DATE_TRUNC('day', NOW())
       AND transtime < DATE_TRUNC('day', NOW()) + INTERVAL '1 day' GROUP BY individuals.idnumber`;
 
