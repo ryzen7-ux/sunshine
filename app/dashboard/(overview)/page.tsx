@@ -101,11 +101,11 @@ export default async function Page(props: {
     regionArr
   );
 
-  let groupCycle = String(maxCycle[0]?.max ?? 0);
+  let groupCycle = "All";
   if (query) {
     groupCycle = query;
   }
-  let individualsCycle = String(individualsMaxCyle[0]?.max ?? 0);
+  let individualsCycle = "All";
   if (iQuery) {
     individualsCycle = iQuery;
   }
