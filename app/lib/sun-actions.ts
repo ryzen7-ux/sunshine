@@ -819,7 +819,7 @@ export async function createMpesaInvoice(formData: FormData) {
 
   const splitDate1 = transTime.split("+");
   const splitDate2 = splitDate1[0].split(".");
-  const newTransDate = new Date(splitDate2[0]);
+  const newTransDate = new Date(splitDate2[0]).toISOString();
 
   try {
     await sql`INSERT INTO mpesainvoice (transid, transtime, transamount, refnumber, first_name, phone_number, cycle)
@@ -847,7 +847,7 @@ export async function updateMpesaInvoice(formData: FormData) {
 
   const splitDate1 = transTime.split("+");
   const splitDate2 = splitDate1[0].split(".");
-  const newTransDate = new Date(splitDate2[0]);
+  const newTransDate = new Date(splitDate2[0]).toISOString();
 
   try {
     await sql`UPDATE mpesainvoice SET refnumber = ${refNumber}, transid =${transId}, transtime =${newTransDate}, transamount =${Number(

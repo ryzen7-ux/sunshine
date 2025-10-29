@@ -15,7 +15,6 @@ import EditMpesaForm from "./edit-form";
 
 export default function EditMpesa({ mpesa }: { mpesa: any }) {
   const [isModalOpen, setIsModalOpen] = useState(false);
-  console.log({ name: name, mname: mpesa.first_name });
   const { isOpen, onOpen, onOpenChange, onClose } = useDisclosure();
 
   return (
