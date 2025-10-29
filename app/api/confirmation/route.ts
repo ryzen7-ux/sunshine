@@ -1,5 +1,3 @@
-//@ts-nocheck
-
 import sql from "@/app/lib/db";
 import { NextRequest, NextResponse } from "next/server";
 import { DateTime } from "luxon";
@@ -34,7 +32,7 @@ export async function POST(request: NextRequest) {
 
   const dateObject = dt.toISO();
 
-  const num = await decodeMsisdnValue(number);
+  const num: any = await decodeMsisdnValue(number);
   let phoneNumber = num?.msisdn ?? "null";
   if (phoneNumber === "null") {
     phoneNumber = number;
