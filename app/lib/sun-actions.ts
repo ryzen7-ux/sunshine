@@ -819,12 +819,13 @@ export async function createMpesaInvoice(formData: FormData) {
 
   const splitDate1 = transTime.split("+");
   const splitDate2 = splitDate1[0].split(".");
-  const newTransDate = DateTime.fromISO(String(splitDate2));
-  const newTransDate2 = newTransDate.setZone("Africa/Nairobi").toISO();
+  const newTransDate = new Date(splitDate2[0]);
+  const hours = newTransDate.getHours();
+  newTransDate.setHours(hours - 3);
 
   try {
     await sql`INSERT INTO mpesainvoice (transid, transtime, transamount, refnumber, first_name, phone_number, cycle)
-          VALUES (${transId},${newTransDate2}, ${Number(
+          VALUES (${transId},${newTransDate}, ${Number(
       transAmount
     )}, ${refNumber}, ${firstName}, ${phone}, ${Number(cycle)})`;
     revalidatePath("dashboard/mpesa");
@@ -848,11 +849,12 @@ export async function updateMpesaInvoice(formData: FormData) {
 
   const splitDate1 = transTime.split("+");
   const splitDate2 = splitDate1[0].split(".");
-  const newTransDate = DateTime.fromISO(String(splitDate2));
-  const newTransDate2 = newTransDate.setZone("Africa/Nairobi").toISO();
+  const newTransDate = new Date(splitDate2[0]);
+  const hours = newTransDate.getHours();
+  newTransDate.setHours(hours - 3);
 
   try {
-    await sql`UPDATE mpesainvoice SET refnumber = ${refNumber}, transid =${transId}, transtime =${newTransDate2}, transamount =${Number(
+    await sql`UPDATE mpesainvoice SET refnumber = ${refNumber}, transid =${transId}, transtime =${newTransDate}, transamount =${Number(
       transAmount
     )}, first_name = ${firstName}, phone_number = ${phone}, cycle = ${Number(
       cycle
