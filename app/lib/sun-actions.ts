@@ -10,6 +10,8 @@ import {
   fetchUserById,
   fetchIndividualsByIdNumber,
   fetchIndividualById,
+  fetchMemberById,
+  fetchMemberByIdNumber,
 } from "@/app/lib/sun-data";
 import bcrypt from "bcryptjs";
 import { DateTime } from "luxon";
@@ -26,7 +28,6 @@ const FormSchema = z.object({
 const MembersFormSchema = z.object({
   groupId: z.string(),
   idNumber: z.coerce.number().gt(0, { message: "Please enter a value." }),
-  surname: z.string().min(1, { message: "Please enter  surname" }),
   firstName: z.string().min(1, { message: "Please enter a name" }),
   phone: z.string().min(1, { message: "Please enter a value" }),
   nature: z.string(),
@@ -470,7 +471,7 @@ export async function updateGroup(formData: FormData) {
   const location = formData.get("location") as string;
   const region = formData.get("region") as string;
   const id = formData.get("id") as string;
-  console.log(formData);
+
   try {
     await sql`
         UPDATE groups
@@ -498,53 +499,45 @@ export async function deleteGroup(prevState: any, formData: FormData) {
   revalidatePath("/dashboard/customers");
 }
 // Members
-export async function createMembers(
-  prevState: MembersState,
-  formData: FormData
-) {
-  const validatedFields = CreateMembers.safeParse({
-    groupId: formData.get("groupId"),
-    idNumber: formData.get("idNumber"),
-    surname: formData.get("surname"),
-    firstName: formData.get("firstName"),
-    phone: formData.get("phone"),
-    location: formData.get("location"),
-    nature: formData.get("nature"),
-  });
+export async function createMembers(formData: FormData) {
+  const groupId = formData.get("groupId") as string;
+  const idNumber = formData.get("idNumber") as string;
+  const surname = "";
+  const firstName = formData.get("firstName") as string;
+  const phone = formData.get("phone") as string;
+  const location = formData.get("location") as string;
+  const nature = formData.get("nature") as string;
 
-  const utcDate = new Date(); // UTC time
-  const offset = utcDate.getTimezoneOffset() * 60000; // Offset in milliseconds
-  const localDate = new Date(utcDate.getTime() - offset);
-
-  if (!validatedFields.success) {
-    return {
-      errors: validatedFields.error.flatten().fieldErrors,
-      message: "Missing Fields. Failed to Create Member.",
-    };
+  const newIdNumber: bigint = BigInt(idNumber);
+  if (newIdNumber > 9223372036854775000n) {
+    return { success: false, message: "ID Number too large!" };
   }
 
-  const { groupId, idNumber, surname, firstName, phone, location, nature } =
-    validatedFields.data;
-  console.log(groupId, idNumber, surname, firstName, phone, location);
+  const member = await fetchMemberByIdNumber(Number(idNumber));
+
+  if (member) {
+    return { success: false, message: "Member with that ID number exists" };
+  }
+
+  const date = new Date();
   try {
     await sql`
         INSERT INTO members (groupid, idnumber, surname, firstname, phone, location, nature, date)
-        VALUES (${groupId}, ${idNumber}, ${surname}, ${firstName}, ${phone}, ${location}, ${nature}, ${localDate})
+        VALUES (${groupId}, ${Number(
+      idNumber
+    )}, ${surname}, ${firstName}, ${phone}, ${location}, ${nature}, ${date})
       `;
+    revalidatePath(`/dashboard/customers/${groupId}/details`);
+    return { success: true, message: "Member created successfuly!" };
   } catch (error) {
-    return {
-      message: "Database Error: Failed to Create Invoice.",
-      err: error,
-    };
+    console.log(error);
+    return { success: false, message: "Some error occurred" };
   }
-  revalidatePath(`/dashboard/customers/${groupId}/details`);
-  redirect(`/dashboard/customers/${groupId}/details`);
 }
 
-export async function updateMember(mid: string, formData: FormData) {
+export async function updateMember(formData: FormData) {
   const {
     idNumber,
-    surname,
     firstName,
     phone,
     location,
@@ -555,7 +548,6 @@ export async function updateMember(mid: string, formData: FormData) {
     doc_name,
   } = UpdateMember.parse({
     idNumber: formData.get("idNumber"),
-    surname: formData.get("surname"),
     firstName: formData.get("firstName"),
     phone: formData.get("phone"),
     location: formData.get("location"),
@@ -567,6 +559,21 @@ export async function updateMember(mid: string, formData: FormData) {
   });
 
   const id = formData.get("groupId");
+  const mid = formData.get("id") as string;
+  const surname = "";
+
+  const newIdNumber: bigint = BigInt(idNumber);
+
+  if (newIdNumber > 9223372036854775000n) {
+    return { success: false, message: "ID Number too large!" };
+  }
+  const member = await fetchMemberByIdNumber(Number(idNumber));
+
+  if (member) {
+    if (member.id !== mid) {
+      return { success: false, message: "Member with that ID number exists" };
+    }
+  }
 
   // File logic
   const id_front_file = formData.get("id_front") as File;
@@ -607,12 +614,15 @@ export async function updateMember(mid: string, formData: FormData) {
   try {
     await sql`
         UPDATE members
-        SET idnumber = ${idNumber}, surname = ${surname}, firstname= ${firstName}, phone=${phone}, location = ${location}, nature = ${nature}, id_front = ${id_front}, id_back = ${id_back}, passport = ${passport}, doc = ${doc}
+        SET idnumber = ${Number(
+          idNumber
+        )}, surname = ${surname}, firstname= ${firstName}, phone=${phone}, location = ${location}, nature = ${nature}, id_front = ${id_front}, id_back = ${id_back}, passport = ${passport}, doc = ${doc}
         WHERE id = ${mid}
       `;
   } catch (error) {
     // We'll log the error to the console for now
     console.error(error);
+    return { success: false, message: "Some error occured!" };
   }
   if (id_front_file.name !== "undefined") {
     await fs.writeFile(
@@ -636,7 +646,7 @@ export async function updateMember(mid: string, formData: FormData) {
     await fs.writeFile(`./public/uploads/doc-${mid}-${doc_file.name}`, buffer4);
   }
   revalidatePath(`/dashboard/customers/${id}/details`);
-  redirect(`/dashboard/customers/${id}/details`);
+  return { success: true, message: "Datails updated!" };
 }
 
 export async function deleteMember(id: string, gid: string) {

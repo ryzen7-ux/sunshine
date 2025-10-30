@@ -1,94 +1,99 @@
-//@ts-nocheck
 "use client";
 
-import { Form, Input, Button, Spinner, addToast } from "@heroui/react";
-import { useActionState } from "react";
+import {
+  Form,
+  Input,
+  Button,
+  Spinner,
+  addToast,
+  NumberInput,
+} from "@heroui/react";
+import { useActionState, useState } from "react";
 import { createMembers, MembersState } from "@/app/lib/sun-actions";
 import React from "react";
 
 export default function MemberForm({
   groupId,
-  setIsSuccess,
+  onClose,
 }: {
   groupId: string;
-  setIsSuccess: any;
+  onClose: any;
 }) {
-  const initialState: MembersState = { message: null, errors: {} };
-  const [state, formAction, isLoading] = useActionState(
-    createMembers,
-    initialState
-  );
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState({ isError: false, type: "", message: "" });
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setIsLoading(true);
+
+    const formData = new FormData(e.currentTarget);
+    const res = await createMembers(formData);
+
+    if (res?.success === false) {
+      setIsLoading(false);
+      if (res?.success == false) {
+        addToast({
+          title: "Error !",
+          description: res.message,
+          color: "danger",
+        });
+      } else {
+        setIsLoading(false);
+        addToast({
+          title: "Error !",
+          description: res?.message,
+          color: "danger",
+        });
+      }
+    }
+
+    if (res?.success === true) {
+      addToast({
+        title: "Success !",
+        description: res?.message,
+        color: "success",
+      });
+      setIsLoading(false);
+      onClose();
+    }
+  };
 
   return (
-    <Form action={formAction}>
-      <h1 className="text-xl font-bold text-gray-900  ">Add Member</h1>
-      <div className="flex flex-col py-4 border rounded-md px-6 w-full">
-        <div className="flex flex-col md:flex-row  gap-4">
+    <Form onSubmit={handleSubmit}>
+      <div className="flex flex-col  w-full">
+        <div className="grid grid-cols-1 md:grid-cols-2  gap-4">
           <div className="w-full">
-            <Input
+            <NumberInput
               isRequired
               name="idNumber"
-              type="text"
-              className="outline-2 outline-blue-500  "
-              label="ID number"
-              labelPlacement="outside"
-              color="success"
-              size="md"
-              variant="faded"
-            />
-            <div id="customer-error" aria-live="polite" aria-atomic="true">
-              {state.errors?.idNumber &&
-                state.errors.idNumber.map((error: string) => (
-                  <p className="mt-2 text-sm text-red-500" key={error}>
-                    {error}
-                  </p>
-                ))}
-            </div>
-          </div>
-          <div className="w-full">
-            <Input
-              isRequired
-              name="surname"
-              type="text"
-              className="outline-2 outline-blue-500 mb-4 "
-              label="Surname"
+              className="outline-2 outline-blue-500 "
+              label="ID Number"
               color="success"
               labelPlacement="outside"
               size="md"
               variant="faded"
+              placeholder="0"
+              formatOptions={{ useGrouping: false }}
+              startContent={
+                <div className="pointer-events-none flex items-center">
+                  <span className="text-default-400 text-small"></span>
+                </div>
+              }
             />
-            <div id="customer-error" aria-live="polite" aria-atomic="true">
-              {state.errors?.surname &&
-                state.errors.surname.map((error: string) => (
-                  <p className="mt-2 text-sm text-red-500" key={error}>
-                    {error}
-                  </p>
-                ))}
-            </div>
           </div>
           <div className="w-full">
             <Input
               isRequired
               name="firstName"
               type="text"
-              className="outline-2 outline-blue-500 mb-4 "
-              label="First name"
+              className="outline-2 outline-blue-500"
+              label="Name"
               color="success"
               labelPlacement="outside"
               size="md"
               variant="faded"
             />
-            <div id="customer-error" aria-live="polite" aria-atomic="true">
-              {state.errors?.firstName &&
-                state.errors.firstName.map((error: string) => (
-                  <p className="mt-2 text-sm text-red-500" key={error}>
-                    {error}
-                  </p>
-                ))}
-            </div>
           </div>
-        </div>
-        <div className="flex flex-col md:flex-row gap-4 ">
           <div className="w-full">
             <Input
               isRequired
@@ -101,14 +106,6 @@ export default function MemberForm({
               size="md"
               variant="faded"
             />
-            <div id="customer-error" aria-live="polite" aria-atomic="true">
-              {state.errors?.phone &&
-                state.errors.phone.map((error: string) => (
-                  <p className="mt-2 text-sm text-red-500" key={error}>
-                    {error}
-                  </p>
-                ))}
-            </div>
           </div>
           <div className="w-full">
             <Input
@@ -122,16 +119,8 @@ export default function MemberForm({
               size="md"
               variant="faded"
             />
-            <div id="customer-error" aria-live="polite" aria-atomic="true">
-              {state.errors?.location &&
-                state.errors.location.map((error: string) => (
-                  <p className="mt-2 text-sm text-red-500" key={error}>
-                    {error}
-                  </p>
-                ))}
-            </div>
           </div>
-          <div className="w-full">
+          <div className="w-full col-span-1 md:col-span-2">
             <Input
               name="nature"
               type="text"
@@ -142,14 +131,6 @@ export default function MemberForm({
               size="md"
               variant="faded"
             />
-            <div id="customer-error" aria-live="polite" aria-atomic="true">
-              {state.errors?.location &&
-                state.errors.location.map((error: string) => (
-                  <p className="mt-2 text-sm text-red-500" key={error}>
-                    {error}
-                  </p>
-                ))}
-            </div>
           </div>
         </div>
 

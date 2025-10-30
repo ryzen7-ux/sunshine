@@ -1,86 +1,93 @@
-//@ts-nocheck
 "use client";
 
-import { Form, Input, Button, Spinner, addToast } from "@heroui/react";
-import { useActionState } from "react";
 import {
-  createGroup,
-  updateGroup,
-  State,
-  updateMember,
-  MembersState,
-} from "@/app/lib/sun-actions";
-import React from "react";
-import { MemberForm } from "@/app/lib/sun-defination";
+  Form,
+  Input,
+  Button,
+  Spinner,
+  addToast,
+  NumberInput,
+} from "@heroui/react";
+import { updateMember, MembersState } from "@/app/lib/sun-actions";
+import { useState } from "react";
 
 export default function EditMemberForm({
-  setIsSuccess,
   member,
+  onClose,
 }: {
-  setIsSuccess: boolean;
-  member: MemberForm;
+  member: any;
+  onClose: any;
 }) {
-  const initialState: MembersState = { message: null, errors: {} };
+  const [isLoading, setIsLoading] = useState(false);
 
-  const updateMemberWithId = updateMember.bind(null, member.id);
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setIsLoading(true);
 
+    const formData = new FormData(e.currentTarget);
+    const res = await updateMember(formData);
+
+    if (res?.success === false) {
+      setIsLoading(false);
+      if (res?.success == false) {
+        addToast({
+          title: "Error !",
+          description: res.message,
+          color: "danger",
+        });
+      } else {
+        setIsLoading(false);
+        addToast({
+          title: "Error !",
+          description: res?.message,
+          color: "danger",
+        });
+      }
+    }
+
+    if (res?.success === true) {
+      addToast({
+        title: "Success !",
+        description: res?.message,
+        color: "success",
+      });
+      setIsLoading(false);
+      onClose();
+    }
+  };
   return (
     <>
-      <h1 className="text-xl font-bold text-gray-900 mb-2 ">
-        Edit Member Details
-      </h1>
-      <Form action={updateMemberWithId}>
-        <div className="flex flex-col py-4 border rounded-md px-6 w-full">
-          <div className="flex flex-col md:flex-row  gap-4">
+      <Form onSubmit={handleSubmit}>
+        <div className="w-full">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <input className="hidden" name="id" value={member.id} readOnly />
             <div className="w-full">
-              <Input
+              <NumberInput
                 isRequired
                 name="idNumber"
-                type="number"
-                className="outline-2 outline-blue-500  "
+                className="outline-2 outline-blue-500 "
                 label="ID Number"
-                labelPlacement="outside"
                 color="success"
+                labelPlacement="outside"
                 size="md"
                 variant="faded"
+                placeholder="0"
                 defaultValue={member.idnumber}
+                formatOptions={{ useGrouping: false }}
+                startContent={
+                  <div className="pointer-events-none flex items-center">
+                    <span className="text-default-400 text-small"></span>
+                  </div>
+                }
               />
-              <div
-                id="customer-error"
-                aria-live="polite"
-                aria-atomic="true"
-              ></div>
             </div>
-            {/* <div class="relative flex w-full max-w-sm flex-col gap-1 text-on-surface dark:text-on-surface-dark">
-    <label for="fileInput" class="w-fit pl-0.5 text-sm">Upload File</label>
-    <input id="fileInput" type="file" class="w-full max-w-md overflow-clip rounded-radius border border-outline bg-surface-alt/50 text-sm file:mr-4 file:border-none file:bg-surface-alt file:px-4 file:py-2 file:font-medium file:text-on-surface-strong focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:cursor-not-allowed disabled:opacity-75 dark:border-outline-dark dark:bg-surface-dark-alt/50 dark:file:bg-surface-dark-alt dark:file:text-on-surface-dark-strong dark:focus-visible:outline-primary-dark" />
-    <small class="pl-0.5">PNG, JPG, WebP - Max 5MB</small>
-</div> */}
-            <div className="w-full">
-              <Input
-                isRequired
-                name="surname"
-                type="text"
-                className="outline-2 outline-blue-500 mb-4 "
-                label="Surname"
-                color="success"
-                labelPlacement="outside"
-                size="md"
-                variant="faded"
-                defaultValue={member.surname}
-              />
-              <div
-                id="customer-error"
-                aria-live="polite"
-                aria-atomic="true"
-              ></div>
-            </div>
+
             <div className="w-full">
               <Input
                 isRequired
                 name="firstName"
                 type="text"
-                className="outline-2 outline-blue-500 mb-4 "
+                className="outline-2 outline-blue-500  "
                 label="First Name"
                 color="success"
                 labelPlacement="outside"
@@ -94,8 +101,6 @@ export default function EditMemberForm({
                 aria-atomic="true"
               ></div>
             </div>
-          </div>
-          <div className="flex flex-col md:flex-row gap-4 ">
             <div className="w-full">
               <Input
                 isRequired
@@ -134,7 +139,7 @@ export default function EditMemberForm({
                 aria-atomic="true"
               ></div>
             </div>
-            <div className="w-full">
+            <div className="w-full col-span-2">
               <Input
                 name="nature"
                 type="text"
@@ -292,11 +297,17 @@ export default function EditMemberForm({
             name="groupId"
             type="text"
             defaultValue={member.groupid}
+            readOnly
           />
 
           <div className="my-6 py-6">
-            <Button type="submit" color="success" className="w-full">
-              Edit
+            <Button
+              type="submit"
+              color="success"
+              className="w-full"
+              isDisabled={isLoading}
+            >
+              {isLoading ? <Spinner color="default" /> : "Edit"}
             </Button>
           </div>
         </div>

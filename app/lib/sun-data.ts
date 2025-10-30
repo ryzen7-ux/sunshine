@@ -477,6 +477,32 @@ export async function fetchMemberById(mid: string) {
     throw new Error("Failed to fetch invoice.");
   }
 }
+
+export async function fetchMemberByIdNumber(mid: any) {
+  try {
+    const data = await sql<MemberForm[]>`
+      SELECT
+        members.id,
+        members.groupId,
+        members.idNumber,
+        members.surname,
+        members.firstName,
+        members.phone,
+        members.location,
+        members.nature,
+        members.id_front,
+        members.id_back,
+        members.passport,
+        members.doc
+      FROM members
+      WHERE members.idnumber = ${mid};
+    `;
+    return data[0];
+  } catch (error) {
+    console.error("Database Error:", error);
+    throw new Error("Failed to fetch invoice.");
+  }
+}
 // LOANS
 export async function fetchLoanById(mid: string) {
   try {
@@ -1358,13 +1384,16 @@ export async function fetchGroupCardData(
       { length: highestCyle },
       (_, index) => index + 1
     );
+    let cycleAllArayy: any = [highestCyle];
 
     if (query) {
       if (cycleArray.includes(Number(query))) {
-        cycle = Number(query);
+        cycleAllArayy = [Number(query)];
+      }
+      if (query === "all") {
+        cycleAllArayy = cycleArray;
       }
     }
-    let startDate: any = null;
 
     if (cycle === 0 || cycle === null) {
       const groupDisbusredAmount = formatCurrencyToLocal(Number("0"));
@@ -1389,10 +1418,10 @@ export async function fetchGroupCardData(
     }
 
     const groupDisbursedPromise = sql`SELECT 
-        SUM(amount) FROM loans WHERE groupid=${id}  AND cycle=${cycle}`;
+        SUM(amount) FROM loans WHERE groupid=${id}  AND cycle= ANY(${cycleAllArayy})`;
 
     const totalGroupLoan = sql`SELECT 
-        CEIL(SUM(CEIL(CASE WHEN cycle = ${cycle} THEN amount ELSE 0 END/term + CASE WHEN cycle = ${cycle} 
+        CEIL(SUM(CEIL(CASE WHEN cycle = ANY(${cycleAllArayy}) THEN amount ELSE 0 END/term + CASE WHEN cycle = ANY(${cycleAllArayy})
         THEN amount ELSE 0 END * (interest/4/100)) * term )) AS sum FROM loans WHERE groupid=${id}`;
     const groupsCollectedPromise = sql`SELECT 
         SUM(CASE WHEN status = 'paid' THEN amount ELSE 0 END) FROM groupinvoice WHERE group_id = ${id}`;
@@ -1403,7 +1432,7 @@ export async function fetchGroupCardData(
         COUNT(*) AS total FROM members WHERE groupid = ${id}`;
     const collectedMpesaPromise = sql`SELECT 
         SUM(transamount) AS mpesa FROM mpesainvoice WHERE mpesainvoice.refnumber ILIKE ${`%${name}%`} 
-        AND cycle =${cycle}  `;
+        AND cycle = ANY(${cycleAllArayy})  `;
 
     const data = await Promise.all([
       groupDisbursedPromise,

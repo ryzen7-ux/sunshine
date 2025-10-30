@@ -11,7 +11,7 @@ export default function DisbursementCycle({ maxCycle }: { maxCycle: any }) {
     value: String(i),
     label: `Cycle ${i}`,
   }));
-
+  cycles.push({ value: "all", label: "All" });
   const searchParams = useSearchParams();
   const pathname = usePathname();
   const { replace } = useRouter();
@@ -26,7 +26,7 @@ export default function DisbursementCycle({ maxCycle }: { maxCycle: any }) {
     }
     replace(`${pathname}?${params.toString()}`);
   }, 200);
-  const [select, setSelect] = useState<any>(String(maxCycle[0].max));
+  const [select, setSelect] = useState<any>(String(maxCycle[0].max ?? 0));
 
   return (
     <>

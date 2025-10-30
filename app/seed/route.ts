@@ -126,18 +126,6 @@ async function seedCustomers() {
       image_url VARCHAR(255) NOT NULL
     );
   `;
-
-  // const insertedCustomers = await Promise.all(
-  //   customers.map(
-  //     (customer) => sql`
-  //       INSERT INTO customers (id, name, email, image_url)
-  //       VALUES (${customer.id}, ${customer.name}, ${customer.email}, ${customer.image_url})
-  //       ON CONFLICT (id) DO NOTHING;
-  //     `
-  //   )
-  // );
-
-  // return insertedCustomers;
 }
 
 async function seedRevenue() {
@@ -147,18 +135,6 @@ async function seedRevenue() {
       revenue INT NOT NULL
     );
   `;
-
-  // const insertedRevenue = await Promise.all(
-  //   revenue.map(
-  //     (rev) => sql`
-  //       INSERT INTO revenue (month, revenue)
-  //       VALUES (${rev.month}, ${rev.revenue})
-  //       ON CONFLICT (month) DO NOTHING;
-  //     `
-  //   )
-  // );
-
-  // return insertedRevenue;
 }
 
 async function seedInvoicees() {
@@ -176,18 +152,6 @@ async function seedInvoicees() {
       payment VARCHAR(255) NOT NULL
     );
   `;
-
-  // const insertedInvoices = await Promise.all(
-  //   invoicees.map(
-  //     (invoice) => sql`
-  //       INSERT INTO invoicees (name, invoiceNumber, date, quantity, price, tax, payment)
-  //       VALUES (${invoice.name},${invoice.invoiceNumber}, ${invoice.date}, ${invoice.quantity}, ${invoice.price}, ${invoice.tax}, ${invoice.payment})
-  //       ON CONFLICT (id) DO NOTHING;
-  //     `
-  //   )
-  // );
-
-  // return insertedInvoices;
 }
 
 async function seedGroups() {
@@ -203,18 +167,6 @@ async function seedGroups() {
     
     );
   `;
-
-  // const insertedGroups = await Promise.all(
-  //   groups.map(
-  //     (group) => sql`
-  //       INSERT INTO groups (reg, name, location, date)
-  //       VALUES (${group.reg},${group.name}, ${group.location}, ${group.date})
-  //       ON CONFLICT (id) DO NOTHING;
-  //     `
-  //   )
-  // );
-
-  // return insertedGroups;
 }
 
 async function seedMembers() {
@@ -237,18 +189,6 @@ async function seedMembers() {
       doc VARCHAR(255)
     );
   `;
-
-  // const insertedGroups = await Promise.all(
-  //   members.map(
-  //     (member) => sql`
-  //       INSERT INTO members (groupId, idNumber, surname, firstName, phone, location, date)
-  //       VALUES (${member.groupId}, ${member.idNumber}, ${member.surname}, ${member.firstName}, ${member.phone}, ${member.location}, ${member.date})
-  //       ON CONFLICT (id) DO NOTHING;
-  //     `
-  //   )
-  // );
-
-  // return insertedGroups;
 }
 
 async function seedLoans() {
@@ -269,18 +209,6 @@ async function seedLoans() {
       date TIMESTAMPTZ NOT NULL
     );
   `;
-
-  // const insertedLoans = await Promise.all(
-  //   loans.map(
-  //     (loan) => sql`
-  //       INSERT INTO loans (groupid, memberid, amount, loanid, interest, term, status, date)
-  //       VALUES (${loan.groupid}, ${loan.memberid}, ${loan.amount}, ${loan.loanid}, ${loan.interest}, ${loan.term}, ${loan.status}, ${loan.date})
-  //       ON CONFLICT (id) DO NOTHING;
-  //     `
-  //   )
-  // );
-
-  // return insertedLoans;
 }
 
 async function seedGroupInvoices() {
@@ -295,18 +223,6 @@ async function seedGroupInvoices() {
       date DATE NOT NULL
     );
   `;
-
-  // const insertedInvoices = await Promise.all(
-  //   ginvoices.map(
-  //     (invoice) => sql`
-  //       INSERT INTO groupinvoice (group_id, amount, status, date)
-  //       VALUES (${invoice.group_id}, ${invoice.amount}, ${invoice.status}, ${invoice.date})
-  //       ON CONFLICT (id) DO NOTHING;
-  //     `
-  //   )
-  // );
-
-  // return insertedInvoices;
 }
 
 async function seedMpesaInvoices() {

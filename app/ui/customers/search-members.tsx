@@ -1,11 +1,27 @@
 "use client";
 
-import { Input, Link } from "@heroui/react";
+import { useState } from "react";
+import {
+  Input,
+  Link,
+  Button,
+  Tooltip,
+  Modal,
+  ModalContent,
+  ModalHeader,
+  ModalBody,
+  ModalFooter,
+  useDisclosure,
+} from "@heroui/react";
 import { Search, Plus } from "lucide-react";
 import { useSearchParams, usePathname, useRouter } from "next/navigation";
 import { useDebouncedCallback } from "use-debounce";
+import MemberForm from "./member-form";
 
 export default function SearchMembers({ group }: { group: any }) {
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const { isOpen, onOpen, onOpenChange, onClose } = useDisclosure();
+
   const searchParams = useSearchParams();
   const pathname = usePathname();
   const { replace } = useRouter();
@@ -37,12 +53,35 @@ export default function SearchMembers({ group }: { group: any }) {
         defaultValue={searchParams.get("query")?.toString()}
         startContent={<Search className="h-6 w-6 text-gray-600" />}
       />
-      <Link
-        href={`/dashboard/customers/${group.id}/details/create-member`}
+      <Button
+        onPress={() => setIsAddModalOpen(true)}
         className="flex h-10 md:w-48 items-center rounded-lg bg-green-600 px-4 text-sm font-medium text-white transition-colors hover:bg-green-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-green-600"
+        startContent={<Plus className="h-8 w-8" />}
       >
-        <span className="">Add Member</span> <Plus className="h-5 md:ml-4" />
-      </Link>
+        Add Member
+      </Button>
+      <Modal
+        isOpen={isAddModalOpen}
+        onOpenChange={onOpenChange}
+        onClose={() => {
+          setIsAddModalOpen(false);
+        }}
+        size="xl"
+        scrollBehavior="outside"
+      >
+        <ModalContent>
+          {(onClose) => (
+            <>
+              <ModalHeader className="flex flex-col gap-1">
+                Add Member
+              </ModalHeader>
+              <ModalBody>
+                <MemberForm groupId={group?.id} onClose={onClose} />
+              </ModalBody>
+            </>
+          )}
+        </ModalContent>
+      </Modal>
     </div>
   );
 }

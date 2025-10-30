@@ -18,7 +18,6 @@ import {
   Badge,
 } from "@heroui/react";
 import { MemberForm } from "@/app/lib/sun-defination";
-
 import Image from "next/image";
 import {
   LeftContent,
