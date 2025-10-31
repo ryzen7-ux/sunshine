@@ -35,7 +35,6 @@ export default async function Page(props: {
           },
         ]}
       />
-      <MemberForm setIsSuccess={false} groupId={id} />
     </div>
   );
 }
