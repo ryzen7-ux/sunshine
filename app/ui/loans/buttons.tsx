@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import 
 import { PencilIcon, PlusIcon, TrashIcon } from "@heroicons/react/24/solid";
 import Link from "next/link";
 import { deleteLoan } from "@/app/lib/sun-actions";
