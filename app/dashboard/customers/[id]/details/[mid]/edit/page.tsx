@@ -44,7 +44,6 @@ export default async function Page(props: {
           },
         ]}
       />
-      <EditMemberForm member={member} setIsSuccess={false} />
     </div>
   );
 }
