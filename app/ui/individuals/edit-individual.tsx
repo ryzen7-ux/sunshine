@@ -85,12 +85,12 @@ export default function AddIndividual({
     <>
       <Tooltip color="success" content="Edit Details">
         <button
-          className="pr-3"
+          className=""
           onClick={(event) => {
             setIsModalOpen(true);
           }}
         >
-          <Edit className="h-4 w-4 text-green-500 hover:text-green-600" />
+          <Edit className="h-5 w-5 text-green-500 hover:text-green-600" />
         </button>
       </Tooltip>
       {/* Is add staff Modal */}

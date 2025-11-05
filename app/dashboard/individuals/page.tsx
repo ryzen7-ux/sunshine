@@ -71,11 +71,8 @@ export default async function Page(props: {
     regionArr
   );
 
-  const filteredIndividuals = await fetchFilteredIndividuals(
-    query,
-    currentPage,
-    regionArr
-  );
+  const { individualLoanees, individual_loans } =
+    await fetchFilteredIndividuals(query, currentPage, regionArr);
 
   const filteredLoanIndividuals = await fetchFilteredIndividuals(
     loansquery,
@@ -105,10 +102,11 @@ export default async function Page(props: {
           loansQuery={loansquery}
           loansCurrentPage={loansCurrentPage}
           loansTotalPages={totalLoanPages}
-          filtredIndividuals={filteredIndividuals}
+          filtredIndividuals={individualLoanees}
           filteredLoanIndividuals={filteredLoanIndividuals}
           loans={loans}
           maxCycle={maxCycle}
+          detailLoans={individual_loans}
         />
         {/* <AddIndividuals regions={regions} /> */}
       </div>

@@ -224,6 +224,7 @@ export default function AddLoan({
                       <div className="w-full">
                         <NumberInput
                           isRequired
+                          minValue={10}
                           name="amount"
                           className="outline-2 outline-blue-500 "
                           label="Amount"
@@ -307,6 +308,7 @@ export default function AddLoan({
                             setError({ isError: false, type: "" });
                           }}
                           errorMessage="Enter value greater than 0"
+                          formatOptions={{ useGrouping: false }}
                           startContent={
                             <div className="pointer-events-none flex items-center">
                               <span className="text-default-400 text-small">

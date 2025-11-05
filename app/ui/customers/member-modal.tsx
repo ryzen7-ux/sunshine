@@ -1,4 +1,4 @@
-import React from "react";
+import { useState, useEffect } from "react";
 import {
   Modal,
   ModalContent,
@@ -7,41 +7,48 @@ import {
   ModalFooter,
   Button,
   useDisclosure,
-  Card,
-  CardHeader,
-  CardBody,
-  CardFooter,
-  Divider,
-  Link,
-  Avatar,
-  Slider,
-  Badge,
+  Tooltip,
 } from "@heroui/react";
-import { MemberForm } from "@/app/lib/sun-defination";
 import Image from "next/image";
 import {
   LeftContent,
   RightContent,
 } from "@/app/ui/customers/member-modal-content";
+import { EyeIcon } from "lucide-react";
 
 export default function MemberModal({
-  isOpen,
-  onOpenChange,
   memberData,
-  onClose,
+  loan,
 }: {
-  isOpen: boolean;
-  onOpenChange: () => void;
   memberData: any;
-  onClose: any;
+  loan: any;
 }) {
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const { isOpen, onOpen, onOpenChange, onClose } = useDisclosure();
+
+  const filteredLoans = loan
+    ?.filter((item: any) => item.memberid === memberData.id)
+    .sort((a: any, b: any) => b.date.localeCompare(a.date));
+
   return (
     <>
+      <Tooltip color="warning" content="Member Details">
+        <button
+          onClick={() => {
+            setIsAddModalOpen(true);
+          }}
+        >
+          <span className="text-lg text-default-400 cursor-pointer active:opacity-50">
+            <EyeIcon className="h-6 w-6 text-yellow-500" />
+          </span>
+        </button>
+      </Tooltip>
       <Modal
-        isOpen={isOpen}
+        isOpen={isAddModalOpen}
         onOpenChange={onOpenChange}
         size="full"
         className="overflow-auto"
+        onClose={() => setIsAddModalOpen(false)}
       >
         <ModalContent>
           {(onClose) => (
@@ -52,7 +59,7 @@ export default function MemberModal({
               <ModalBody>
                 <div className="flex flex-col md:flex-row gap-4">
                   <LeftContent memberData={memberData} />
-                  <RightContent memberData={memberData} />
+                  <RightContent memberData={memberData} loans={filteredLoans} />
                 </div>
               </ModalBody>
               <ModalFooter>

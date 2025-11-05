@@ -46,7 +46,7 @@ export default function DeleteIndividual({ id }: { id: string }) {
       <Tooltip color="danger" content="Delete Individual">
         <button onClick={onOpen} className="">
           <span className="sr-only">Delete</span>
-          <TrashIcon className="w-4 fill-red-500" />
+          <TrashIcon className="w-5 fill-red-500" />
         </button>
       </Tooltip>
       <Modal isOpen={isOpen} onOpenChange={onOpenChange}>

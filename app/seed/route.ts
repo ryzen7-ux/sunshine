@@ -14,30 +14,27 @@ import {
 import sql from "@/app/lib/db";
 
 async function seedUsers() {
-  await sql`CREATE EXTENSION IF NOT EXISTS "uuid-ossp"`;
-  await sql`
-    CREATE TABLE IF NOT EXISTS users (
-      id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
-      name VARCHAR(255) NOT NULL,
-      email TEXT NOT NULL UNIQUE,
-      phone VARCHAR(255),
-      role VARCHAR(255) NOT NULL,
-      status VARCHAR(255) NOT NULL,
-      password TEXT NOT NULL,
-      created TIMESTAMPTZ NOT NULL
-    );
-  `;
+  const password: string = "pass1234";
+  const hashedPassword = await bcrypt.hash(password, 10);
+  const created = new Date();
+  const admin =
+    await sql`INSERT INTO users (name, email, phone, role, status, password, created) 
+    VALUES ('henry-admin','henryomosh7@gmail.com', '0708663296', 'admin', 'active', ${hashedPassword}, ${created})`;
+  console.log(admin);
 
-  // const insertedUsers = await Promise.all(
-  //   users.map(async (user) => {
-  //     const hashedPassword = await bcrypt.hash(user.password, 10);
-  //     return sql`
-  //       INSERT INTO users (id, is_admin, name, email, password)
-  //       VALUES (${user.id},${user.is_admin}, ${user.name}, ${user.email}, ${hashedPassword})
-  //       ON CONFLICT (id) DO NOTHING;
-  //     `;
-  //   })
-  // );
+  // await sql`CREATE EXTENSION IF NOT EXISTS "uuid-ossp"`;
+  // await sql`
+  //   CREATE TABLE IF NOT EXISTS users (
+  //     id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+  //     name VARCHAR(255) NOT NULL,
+  //     email TEXT NOT NULL UNIQUE,
+  //     phone VARCHAR(255),
+  //     role VARCHAR(255) NOT NULL,
+  //     status VARCHAR(255) NOT NULL,
+  //     password TEXT NOT NULL,
+  //     created TIMESTAMPTZ NOT NULL
+  //   );
+  // `;
 
   return;
 }
@@ -67,7 +64,11 @@ async function seedIndividuals() {
       idnumber BIGINT NOT NULL UNIQUE,
       phone VARCHAR(255) NOT NULL,
       business VARCHAR(255) NOT NULL,
-      created TIMESTAMPTZ NOT NULL
+      created TIMESTAMPTZ NOT NULL,
+      id_front TEXT,
+      id_back TEXT,
+      passport TEXT,
+      doc TEXT
     );
   `;
 }
@@ -84,6 +85,9 @@ async function seedIndividualLoans() {
       interest NUMERIC(10, 2) NOT NULL,
       term NUMERIC(10, 2) NOT NULL,
       status VARCHAR(255) NOT NULL,
+      fee BIGINT,
+      cycle INT,
+      start_date TIMESTAMPTZ,
       created TIMESTAMPTZ NOT NULL
     );
   `;
@@ -101,18 +105,6 @@ async function seedInvoices() {
       date DATE NOT NULL
     );
   `;
-
-  // const insertedInvoices = await Promise.all(
-  //   invoices.map(
-  //     (invoice) => sql`
-  //       INSERT INTO invoices (customer_id, amount, status, date)
-  //       VALUES (${invoice.customer_id}, ${invoice.amount}, ${invoice.status}, ${invoice.date})
-  //       ON CONFLICT (id) DO NOTHING;
-  //     `
-  //   )
-  // );
-
-  // return insertedInvoices;
 }
 
 async function seedCustomers() {
@@ -160,7 +152,8 @@ async function seedGroups() {
   await sql`
   CREATE TABLE IF NOT EXISTS groups (
       id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
-      reg VARCHAR(255) NOT NULL,
+      region UUID NOT NULL,
+      reg VARCHAR(255),
       name VARCHAR(255) NOT NULL,
       location VARCHAR(255) NOT NULL,
       date TIMESTAMPTZ NOT NULL
@@ -183,10 +176,10 @@ async function seedMembers() {
       nature VARCHAR(5000),
       location VARCHAR(255) NOT NULL,
       date TIMESTAMPTZ NOT NULL,
-      id_front VARCHAR(255),
-      id_back VARCHAR(255),
-      passport VARCHAR(255),
-      doc VARCHAR(255)
+      id_front TEXT,
+      id_back TEXT,
+      passport TEXT,
+      doc TEXT
     );
   `;
 }
@@ -204,7 +197,9 @@ async function seedLoans() {
       interest FLOAT NOT NULL,
       term INT NOT NULL,
       status VARCHAR(255) NOT NULL,
-      start_date DATE,
+      start_date TIMESTAMPTZ,
+      cycle INT,
+      fee BIGINT,
       notes VARCHAR(10000),
       date TIMESTAMPTZ NOT NULL
     );
@@ -231,9 +226,14 @@ async function seedMpesaInvoices() {
   await sql`
     CREATE TABLE IF NOT EXISTS mpesainvoice (
       id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+      first_name VARCHAR(255),
+      middle_name VARCHAR(255),
+      last_name VARCHAR(255),
+      phone_number VARCHAR(255),
       transid VARCHAR(255),
       transtime TIMESTAMPTZ,
       transamount INT,
+      cycle INT,
       refnumber VARCHAR(255)
     );
   `;
@@ -241,19 +241,19 @@ async function seedMpesaInvoices() {
 export async function GET() {
   try {
     const result = await sql.begin((sql) => [
-      seedUsers(),
+      // seedUsers(),
       seedRegions(),
       seedIndividuals(),
       seedIndividualLoans(),
-      // seedInvoices(),
-      // seedCustomers(),
-      // seedRevenue(),
-      // seedInvoicees(),
-      // seedGroups(),
-      // seedMembers(),
-      // seedLoans(),
-      // seedGroupInvoices(),
-      // seedMpesaInvoices(),
+      seedInvoices(),
+      seedCustomers(),
+      seedRevenue(),
+      seedInvoicees(),
+      seedGroups(),
+      seedMembers(),
+      seedLoans(),
+      seedGroupInvoices(),
+      seedMpesaInvoices(),
     ]);
 
     return Response.json({ message: "Database seeded successfully" });

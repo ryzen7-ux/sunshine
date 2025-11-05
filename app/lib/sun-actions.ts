@@ -576,47 +576,47 @@ export async function updateMember(formData: FormData) {
   }
 
   // File logic
-  const id_front_file = formData.get("id_front") as File;
-  const id_back_file = formData.get("id_back") as File;
-  const passport_file = formData.get("passport") as File;
-  const doc_file = formData.get("doc") as File;
+  // const id_front_file = formData.get("id_front") as File;
+  // const id_back_file = formData.get("id_back") as File;
+  // const passport_file = formData.get("passport") as File;
+  // const doc_file = formData.get("doc") as File;
 
-  const arrayBuffer1 = await id_front_file.arrayBuffer();
-  const arrayBuffer2 = await id_back_file.arrayBuffer();
-  const arrayBuffer3 = await passport_file.arrayBuffer();
-  const arrayBuffer4 = await doc_file.arrayBuffer();
+  // const arrayBuffer1 = await id_front_file.arrayBuffer();
+  // const arrayBuffer2 = await id_back_file.arrayBuffer();
+  // const arrayBuffer3 = await passport_file.arrayBuffer();
+  // const arrayBuffer4 = await doc_file.arrayBuffer();
 
-  const buffer = new Uint8Array(arrayBuffer1);
-  const buffer2 = new Uint8Array(arrayBuffer2);
-  const buffer3 = new Uint8Array(arrayBuffer3);
-  const buffer4 = new Uint8Array(arrayBuffer4);
+  // const buffer = new Uint8Array(arrayBuffer1);
+  // const buffer2 = new Uint8Array(arrayBuffer2);
+  // const buffer3 = new Uint8Array(arrayBuffer3);
+  // const buffer4 = new Uint8Array(arrayBuffer4);
 
-  let id_front = `id-front-${mid}-${id_front_file.name}`;
-  let id_back = `id-back-${mid}-${id_back_file.name}`;
-  let passport = `passport-${mid}-${passport_file.name}`;
-  let doc = `doc-${mid}-${doc_file.name}`;
+  // let id_front = `id-front-${mid}-${id_front_file.name}`;
+  // let id_back = `id-back-${mid}-${id_back_file.name}`;
+  // let passport = `passport-${mid}-${passport_file.name}`;
+  // let doc = `doc-${mid}-${doc_file.name}`;
 
-  if (id_front_file.name === "undefined") {
-    id_front = id_front_name;
-  }
+  // if (id_front_file.name === "undefined") {
+  //   id_front = id_front_name;
+  // }
 
-  if (id_back_file.name === "undefined") {
-    id_back = id_back_name;
-  }
+  // if (id_back_file.name === "undefined") {
+  //   id_back = id_back_name;
+  // }
 
-  if (passport_file.name === "undefined") {
-    passport = passport_name;
-  }
-  if (doc_file.name === "undefined") {
-    doc = doc_name;
-  }
+  // if (passport_file.name === "undefined") {
+  //   passport = passport_name;
+  // }
+  // if (doc_file.name === "undefined") {
+  //   doc = doc_name;
+  // }
 
   try {
     await sql`
         UPDATE members
         SET idnumber = ${Number(
           idNumber
-        )}, surname = ${surname}, firstname= ${firstName}, phone=${phone}, location = ${location}, nature = ${nature}, id_front = ${id_front}, id_back = ${id_back}, passport = ${passport}, doc = ${doc}
+        )}, surname = ${surname}, firstname= ${firstName}, phone=${phone}, location = ${location}, nature = ${nature}
         WHERE id = ${mid}
       `;
   } catch (error) {
@@ -624,35 +624,46 @@ export async function updateMember(formData: FormData) {
     console.error(error);
     return { success: false, message: "Some error occured!" };
   }
-  if (id_front_file.name !== "undefined") {
-    await fs.writeFile(
-      `./public/uploads/id-front-${mid}-${id_front_file.name}`,
-      buffer
-    );
-  }
-  if (id_back_file.name !== "undefined") {
-    await fs.writeFile(
-      `./public/uploads/id-back-${mid}-${id_back_file.name}`,
-      buffer2
-    );
-  }
-  if (passport_file.name !== "undefined") {
-    await fs.writeFile(
-      `./public/uploads/passport-${mid}-${passport_file.name}`,
-      buffer3
-    );
-  }
-  if (doc_file.name !== "undefined") {
-    await fs.writeFile(`./public/uploads/doc-${mid}-${doc_file.name}`, buffer4);
-  }
+  // if (id_front_file.name !== "undefined") {
+  //   await fs.writeFile(
+  //     `./public/uploads/id-front-${mid}-${id_front_file.name}`,
+  //     buffer
+  //   );
+  // }
+  // if (id_back_file.name !== "undefined") {
+  //   await fs.writeFile(
+  //     `./public/uploads/id-back-${mid}-${id_back_file.name}`,
+  //     buffer2
+  //   );
+  // }
+  // if (passport_file.name !== "undefined") {
+  //   await fs.writeFile(
+  //     `./public/uploads/passport-${mid}-${passport_file.name}`,
+  //     buffer3
+  //   );
+  // }
+  // if (doc_file.name !== "undefined") {
+  //   await fs.writeFile(`./public/uploads/doc-${mid}-${doc_file.name}`, buffer4);
+  // }
   revalidatePath(`/dashboard/customers/${id}/details`);
   return { success: true, message: "Datails updated!" };
 }
 
+export async function updateMemberDocs(FormData: FormData) {
+  try {
+    const memberId = FormData.get("memberId");
+    const groupId = FormData.get("groupId");
+    revalidatePath(`/dashboard/customers/${groupId}/details`);
+    revalidatePath(`/dashboard/individuals`);
+  } catch (error) {
+    console.log(error);
+  }
+}
 export async function deleteMember(id: string, gid: string) {
   await sql`DELETE FROM loans WHERE memberid = ${id}`;
   await sql`DELETE FROM members WHERE id = ${id}`;
   revalidatePath(`/dashboard/customers/${gid}/details`);
+  revalidatePath(`/dashboard/individuals`);
 }
 
 // LOANS

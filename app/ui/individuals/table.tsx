@@ -11,17 +11,21 @@ import { fetchFilteredIndividuals, fetchRegions } from "@/app/lib/sun-data";
 import { Tooltip } from "@heroui/react";
 import EditIndividual from "@/app/ui/individuals/edit-individual";
 import DeleteIndividual from "@/app/ui/individuals/delete-individual";
+import { AddFileModal } from "@/app/ui/customers/add-file-modal";
+import MemberModal from "@/app/ui/customers/member-modal";
 
 export default function InvoicesTable({
   query,
   currentPage,
   filtredIndividuals,
   regions,
+  detailLoans,
 }: {
   query: string;
   currentPage: number;
   filtredIndividuals: any;
   regions: any;
+  detailLoans: any;
 }) {
   return (
     <div className="mt-6 flow-root">
@@ -110,11 +114,14 @@ export default function InvoicesTable({
                     {individual.business}
                   </td>
                   <td className="whitespace-nowrap py-3 pl-6 pr-3">
-                    <div className="flex justify-end gap-3">
+                    <div className="flex gap-4">
+                      <AddFileModal member={individual} loanee="individual" />
+                      <MemberModal memberData={individual} loan={detailLoans} />
                       <EditIndividual
                         individual={individual}
                         regions={regions}
                       />
+
                       <DeleteIndividual id={individual?.id} />
                     </div>
                   </td>

@@ -202,7 +202,7 @@ export async function fetchFilteredIndividuals(
   const offset = (currentPage - 1) * ITEMS_PER_PAGE;
 
   try {
-    const groups = await sql<any[]>`
+    const individualLoanees = await sql<any[]>`
       SELECT
       individuals.id,
       individuals.name,
@@ -210,6 +210,10 @@ export async function fetchFilteredIndividuals(
       individuals.phone,
       individuals.idnumber,
       individuals.business,
+      individuals.passport,
+      individuals.id_front,
+      individuals.id_back,
+      individuals.doc,
       regions.name as regionname
       FROM individuals
       JOIN regions ON regions.id = individuals.region
@@ -224,7 +228,26 @@ export async function fetchFilteredIndividuals(
       LIMIT ${ITEMS_PER_PAGE} OFFSET ${offset}
     `;
 
-    return groups;
+    const individual_loans = await sql<any[]>`
+      SELECT
+      individuals_loans.id ,
+      individuals_loans.region,
+      individuals_loans.fee,
+      individuals_loans.loanee AS memberid,
+      individuals_loans.amount,
+      individuals_loans.start_date,
+      individuals_loans.start_date + (individuals_loans.term  * INTERVAL '1 week') as end_date,
+      individuals_loans.cycle,
+      individuals_loans.interest,
+      individuals_loans.term,
+      individuals_loans.status,
+      individuals_loans.created,
+      CEIL(CEIL(individuals_loans.amount / individuals_loans.term + individuals_loans.amount * (individuals_loans.interest/4/100)) * individuals_loans.term) as total,
+      TO_CHAR( individuals_loans.created, 'YYYY-MM-DD HH24:MI:SS') AS date           
+      FROM individuals_loans
+    `;
+
+    return { individualLoanees, individual_loans };
   } catch (error) {
     console.error("Database Error:", error);
     throw new Error("Failed to fetch groups.");
@@ -427,7 +450,7 @@ export async function fetchGroups() {
 
 export async function fetchMembers(id: string) {
   try {
-    const data = await sql<MembersTable[]>`
+    const members = await sql<MembersTable[]>`
       SELECT
         members.id,
         members.groupId,
@@ -445,7 +468,32 @@ export async function fetchMembers(id: string) {
       WHERE members.groupId = ${id}
       ORDER BY members.date DESC
     `;
-    return data;
+
+    const loans = await sql<LoanForm[]>`
+      SELECT
+        loans.id,
+        loans.memberid,
+        loans.loanid,
+        loans.amount,
+        loans.fee,
+        loans.interest,
+        loans.term,
+        TO_CHAR(loans.date, 'YYYY-MM-DD HH24:MI:SS') AS date,
+        loans.status,
+        loans.notes,
+        loans.cycle,
+        CEIL(CEIL(loans.amount / term + amount * (interest/4/100)) * term) as total,
+        loans.start_date,
+        loans.start_date + (COALESCE(loans.term, 0) * INTERVAL '1 week') AS end_date,
+        (EXTRACT(days FROM (now() - loans.start_date)) / 7)::int as today,
+        (EXTRACT(days FROM (now() - loans.start_date)))::int as past_days
+      FROM loans
+      JOIN members ON members.id = loans.memberid JOIN groups ON groups.id::TEXT = members.groupid
+      WHERE groups.id = ${id}
+      ORDER BY loans.date DESC
+    `;
+
+    return { members, loans };
   } catch (error) {
     console.error("Database Error:", error);
     throw new Error("Failed to fetch invoice.");
@@ -497,6 +545,7 @@ export async function fetchMemberByIdNumber(mid: any) {
       FROM members
       WHERE members.idnumber = ${mid};
     `;
+
     return data[0];
   } catch (error) {
     console.error("Database Error:", error);
@@ -504,6 +553,39 @@ export async function fetchMemberByIdNumber(mid: any) {
   }
 }
 // LOANS
+export async function fetchMemberLoanById(mid: string) {
+  try {
+    const data = await sql<LoanForm[]>`
+      SELECT
+        loans.id,
+        loans.memberid,
+        loans.loanid,
+        loans.amount,
+        loans.fee,
+        loans.interest,
+        loans.term,
+        TO_CHAR(loans.date, 'YYYY-MM-DD HH24:MI:SS') AS date,
+        loans.status,
+        loans.notes,
+        loans.cycle,
+        CEIL(CEIL(loans.amount / term + amount * (interest/4/100)) * term) as total,
+        loans.start_date,
+        loans.start_date + (COALESCE(loans.term, 0) * INTERVAL '1 week') AS end_date,
+        (EXTRACT(days FROM (now() - loans.start_date)) / 7)::int as today,
+        (EXTRACT(days FROM (now() - loans.start_date)))::int as past_days
+      FROM loans
+      WHERE loans.memberid = ${mid}
+      ORDER BY loans.date DESC
+      
+    `;
+
+    return data;
+  } catch (error) {
+    console.error("Database Error:", error);
+    throw new Error("Failed to fetch invoice.");
+  }
+}
+
 export async function fetchLoanById(mid: string) {
   try {
     const data = await sql<LoanForm[]>`

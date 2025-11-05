@@ -4,6 +4,7 @@ import {
   fetchMembers,
   fetchGroupCardData,
   fetchMaxCycle,
+  fetchMemberLoanById,
 } from "@/app/lib/sun-data";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
@@ -24,16 +25,18 @@ import DisbursementCycle from "@/app/ui/customers/disbursement-cycle";
 export default async function Page(props: {
   searchParams?: Promise<{
     query?: string;
+    loansQuery?: string;
   }>;
   params: Promise<{ id: string }>;
 }) {
   const searchParams = await props.searchParams;
   const params = await props.params;
   const query = searchParams?.query || "";
+  const loansQuery = searchParams?.loansQuery || "";
   const id = params.id;
 
   const [group] = await Promise.all([fetchGroupById(id)]);
-  const [members] = await Promise.all([fetchMembers(id)]);
+  const { members, loans } = await fetchMembers(id);
 
   if (!group) {
     notFound();
@@ -86,7 +89,7 @@ export default async function Page(props: {
             <h1 className={`text-lg font-bold text-gray-900`}>Group Members</h1>
             <SearchMembers group={group} />
           </div>
-          <MembersTable group={group} members={members} />
+          <MembersTable group={group} members={members} loan={loans} />
         </div>
       </div>
     </main>

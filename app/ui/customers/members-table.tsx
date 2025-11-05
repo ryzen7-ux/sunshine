@@ -23,9 +23,10 @@ import Link from "next/link";
 import { deleteGroup } from "@/app/lib/sun-actions";
 import { DeleteMemberAction } from "@/app/ui/customers/table-actions";
 import MemberModal from "@/app/ui/customers/member-modal";
+import { AddFileModal } from "@/app/ui/customers/add-file-modal";
 import LoanModal from "@/app/ui/customers/loan-modal";
 import { BanknotesIcon } from "@heroicons/react/20/solid";
-import { EditIcon, DeleteIcon, EyeIcon } from "lucide-react";
+import { EditIcon, DeleteIcon, EyeIcon, File } from "lucide-react";
 
 export const columns = [
   { name: "ID NO", uid: "idnumber" },
@@ -45,9 +46,11 @@ const statusColorMap = {
 export default function MembersTable({
   group,
   members,
+  loan,
 }: {
   group: any;
   members: any;
+  loan: any;
 }) {
   const { isOpen, onOpen, onOpenChange, onClose } = useDisclosure();
   const [isOpenLoan, setIsOpenLoan] = React.useState(false);
@@ -60,14 +63,14 @@ export default function MembersTable({
     switch (columnKey) {
       case "id":
         return (
-          <div className="flex flex-col">
+          <div className="flex flex-col flex-nowrap">
             <p className="py-2 text-xs">{member.idnumber}</p>
           </div>
         );
       case "firstname":
         return (
           <div className="flex flex-col">
-            <p className=" text-bold text-md ">
+            <p className=" text-bold text-xs ">
               {member.firstname} {member.surname}
             </p>
           </div>
@@ -76,19 +79,20 @@ export default function MembersTable({
       case "location":
         return (
           <div>
-            <p className="text-bold text-md ">{member.location}</p>
+            <p className="text-bold text-xs ">{member.location}</p>
           </div>
         );
       case "business":
         return (
           <div>
-            <p className="text-bold text-md ">{member.nature}</p>
+            <p className="text-bold text-xs ">{member.nature}</p>
           </div>
         );
 
       case "actions":
         return (
-          <div className="relative flex justify-center gap-2">
+          <div className="relative flex justify-center gap-4">
+            <AddFileModal member={member} loanee="member" />
             <Tooltip color="primary" content="New loan">
               <button
                 onClick={() => {
@@ -101,18 +105,15 @@ export default function MembersTable({
                 </span>
               </button>
             </Tooltip>
-            <Tooltip color="warning" content="Member details">
-              <Link
-                href={`/dashboard/customers/${group.id}/details/${member.id}/details`}
-              >
-                <span className="text-lg text-default-400 cursor-pointer active:opacity-50">
-                  <EyeIcon className="h-5 w-5 text-yellow-500" />
-                </span>
-              </Link>
-            </Tooltip>
+            <>
+              {" "}
+              <MemberModal memberData={member} loan={loan} />
+            </>
+
             <Tooltip color="success" content="Edit member">
               <EditMemberModal member={member} />
             </Tooltip>
+
             <DeleteMemberAction id={member.id} gid={group.id} />
           </div>
         );
@@ -153,13 +154,6 @@ export default function MembersTable({
           <TableBody emptyContent={"No rows to display."}>{[]}</TableBody>
         )}
       </Table>
-      <MemberModal
-        isOpen={isOpen}
-        onOpenChange={onOpenChange}
-        memberData={memberData}
-        onClose={onClose}
-      />
-
       <LoanModal
         isOpen={isOpenLoan}
         onOpenChange={setIsOpenLoan}

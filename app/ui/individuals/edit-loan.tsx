@@ -285,6 +285,7 @@ export default function EditLoan({ individual }: { individual: any }) {
                             setError({ isError: false, type: "" });
                           }}
                           errorMessage="Enter value greater than 0"
+                          formatOptions={{ useGrouping: false }}
                           startContent={
                             <div className="pointer-events-none flex items-center">
                               <span className="text-default-400 text-small">

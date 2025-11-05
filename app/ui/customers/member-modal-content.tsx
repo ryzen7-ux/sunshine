@@ -20,10 +20,13 @@ import {
 
 import { MemberForm } from "@/app/lib/sun-defination";
 import { EnvelopeIcon, PhoneIcon } from "@heroicons/react/24/solid";
-import { Camera } from "lucide-react";
+import { Camera, FileCheck2, FileCheck, Eye, Banknote } from "lucide-react";
+import MemberDetails from "./member-details";
+import { formatCurrencyToLocal, formatDateToLocal } from "@/app/lib/utils";
+import { UpdateLoan, DeleteLoan } from "@/app/ui/loans/buttons";
+import InvoiceStatus from "@/app/ui/loans/status";
 
-export function LeftContent({ memberData }: { memberData: MemberForm }) {
-  console.log(memberData);
+export function LeftContent({ memberData }: { memberData: any }) {
   return (
     <>
       <div className="w-full border rounded-md py-4">
@@ -34,13 +37,15 @@ export function LeftContent({ memberData }: { memberData: MemberForm }) {
           />
           <div className="flex flex-col">
             <p className="text-lg text-default-900 ">
-              {memberData.firstname} {memberData.surname}
+              {memberData.firstname} {memberData.surname} {memberData.name}
             </p>
             <p className="pt-4 text-sm text-default-600 pt-1">
               ID number: {memberData.idnumber}
             </p>
             <p className="pt-1 text-sm text-default-600 pt-1">
-              Location: {memberData.location}
+              {memberData.location && <>Location: {memberData.location}</>}
+
+              {memberData?.regionname && <>Region: {memberData.regionname}</>}
             </p>
 
             <p className="flex text-small text-default-500 p-1">
@@ -52,61 +57,65 @@ export function LeftContent({ memberData }: { memberData: MemberForm }) {
           </div>
         </div>
         <Divider />
-
-        <div>
-          <div>
-            <h1 className="text-xl font-bold text-gray-900 py-4 px-8">
-              Loan Details
-            </h1>
+        <div className="w-full">
+          <div className="flex px-4 py-2">
+            <div className="text-green-500">
+              <FileCheck2 />
+            </div>
+            <p className="px-2">Documents</p>
           </div>
-        </div>
-        <div className="flex flex-col gap-4 px-8 pb-4">
-          <div className="flex gap-4">
-            <div className="flex flex-col w-48">
-              <p className="text-sm text-default-600">Loan Start Date</p>
-              <p className="text-lg font-bold text-default-900">686868</p>
-            </div>
-            <div className="w-24 md:w-32"></div>
-            <div className="flex flex-col jutify-center w-48">
-              <p className="text-sm text-default-600">Loan End Date</p>
-              <p className="text-lg font-bold text-default-900">8.00%</p>
-            </div>
-          </div>
-          <div className="flex gap-4 pt-4">
-            <div className="flex flex-col w-48">
-              <p className="text-sm text-default-600">Total Aamount (P+I)</p>
-              <p className="text-lg font-bold text-default-900">6 Weeks</p>
-            </div>
-            <div className="w-24 md:w-32"></div>
-            <div className="flex flex-col justify-center w-48 ">
-              <p className="text-sm text-default-600">Remaining Amount</p>
-              <p className="text-lg font-bold text-default-900">40,000</p>
-            </div>
-          </div>
-        </div>
-        <Divider />
-        <div className="flex flex-col gap-4 px-8 pt-4">
-          <div className="flex gap-4">
-            <div className="flex flex-col w-48">
-              <p className="text-sm text-default-600">Loan Start Date</p>
-              <p className="text-lg font-bold text-default-900">686868</p>
-            </div>
-            <div className="w-24 md:w-32"></div>
-            <div className="flex flex-col jutify-center w-48">
-              <p className="text-sm text-default-600">Loan End Date</p>
-              <p className="text-lg font-bold text-default-900">8.00%</p>
-            </div>
-          </div>
-          <div className="flex gap-4 pt-4">
-            <div className="flex flex-col w-48">
-              <p className="text-sm text-default-600">Total Aamount (P+I)</p>
-              <p className="text-lg font-bold text-default-900">6 Weeks</p>
-            </div>
-            <div className="w-24 md:w-32"></div>
-            <div className="flex flex-col justify-center w-48 ">
-              <p className="text-sm text-default-600">Remaining Amount</p>
-              <p className="text-lg font-bold text-default-900">40,000</p>
-            </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4">
+            {memberData.passport ? (
+              <Image
+                isZoomed
+                src={`${memberData.passport}`}
+                alt="No image"
+                className="w-full"
+              />
+            ) : (
+              <div className="flex items-center justify-center border border-green-500 rounded-md text-green-700">
+                No passport
+              </div>
+            )}
+            {memberData.id_front ? (
+              <Image isZoomed src={`${memberData.id_front}`} alt="No image" />
+            ) : (
+              <div className="flex items-center justify-center border border-green-500 rounded-md text-green-700">
+                No ID Front
+              </div>
+            )}
+            {memberData.id_back ? (
+              <Image isZoomed src={`${memberData.id_back}`} alt="No image" />
+            ) : (
+              <div className="flex items-center justify-center border border-green-500 rounded-md text-green-700">
+                No ID Back
+              </div>
+            )}
+            {memberData.doc ? (
+              <div className="border rounded-lg py-4">
+                {" "}
+                <div className="flex flex-col items-center justify-center gap-4">
+                  <FileCheck className="h-12 w-12 text-green-600" />
+                  <div className="text-center">
+                    <p className="text-sm  text-muted-foreground mb-4">
+                      Application FORM Document
+                    </p>
+                    <a
+                      href={memberData.doc}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-block px-4 py-2 bg-green-600 text-primary-foreground rounded hover:bg-green-500  text-sm"
+                    >
+                      Open PDF in New Tab
+                    </a>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="flex items-center justify-center border border-green-500 rounded-md text-green-700">
+                No application form
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -114,38 +123,99 @@ export function LeftContent({ memberData }: { memberData: MemberForm }) {
   );
 }
 
-export function RightContent({ memberData }: { memberData: MemberForm }) {
+export function RightContent({
+  memberData,
+  loans,
+}: {
+  memberData: MemberForm;
+  loans: any;
+}) {
   return (
     <>
       <div className="w-full border rounded-md">
         <div className="flex p-4">
           <div className="text-green-500">
-            <Camera />
+            <Banknote className="" />
           </div>
-          <p className="px-2">Photos</p>
+          <p className="px-2">Loans</p>
         </div>
-        <div className="flex gap-4 p-4">
-          <Image
-            isZoomed
-            src={`/uploads/${memberData.id_front}`}
-            width={150}
-            alt="No image"
-          />
-          <Image
-            isZoomed
-            src={`/uploads/${memberData.id_back}`}
-            width={150}
-            alt="No image"
-          />
-          <Image
-            isZoomed
-            src={`/uploads/${memberData.passport}`}
-            width={150}
-            height={150}
-            alt="No image"
-          />
-        </div>
-        <div></div>
+        {loans.length > 0 ? (
+          <div className="px-4">
+            {" "}
+            {loans?.map((loan: any) => (
+              <div
+                key={loan.id}
+                className="mb-2 w-full border-2 border-green-500 rounded-md bg-green-100 p-4"
+              >
+                <div className="border-b pb-4 w-full">
+                  <div>
+                    <div className="mb-2 flex items-center justify-between w-full">
+                      <div className="flex justify-between items-center w-full">
+                        <p className="text-md font-bold">
+                          <strong>Loan Cycle:</strong> {loan.cycle ?? 0}
+                        </p>
+                        <InvoiceStatus status={loan.status} />
+                      </div>
+                    </div>
+                    {/* <p className="text-sm text-gray-500">{loan.loanid}</p> */}
+                    <p className="text-sm text-gray-500">
+                      <strong>Start Date: </strong>
+                      {formatDateToLocal(loan.start_date) ?? "Nill"}
+                    </p>
+                    <p className="text-sm text-gray-500">
+                      <strong>End Date:</strong>{" "}
+                      {formatDateToLocal(loan.end_date) ?? "Nill"}
+                    </p>
+
+                    <p className="text-sm text-gray-500">
+                      <strong>Term:</strong> {Math.trunc(loan.term) ?? 0} weeks
+                    </p>
+                    <p className="text-sm text-gray-500">
+                      <strong>Interest:</strong> {loan.interest ?? 0} %
+                    </p>
+                  </div>
+                </div>
+                <div className="flex w-full items-center justify-between pt-4">
+                  <div>
+                    <p className="text-sm font-bold text-gray-500">
+                      Processing Fee and Charges:{" "}
+                      {formatCurrencyToLocal(Number(loan.fee))}
+                    </p>
+                    <p className="text-sm font-bold text-gray-500">
+                      Principal: {formatCurrencyToLocal(Number(loan.amount))}
+                    </p>
+                    <p className="text-sm font-bold text-gray-500">
+                      Loan Amount: {formatCurrencyToLocal(Number(loan.total))}
+                    </p>
+
+                    <p className="text-sm font-bold text-green-500">
+                      Total:{" "}
+                      {formatCurrencyToLocal(
+                        Number(loan.total) + Number(loan.fee)
+                      )}
+                    </p>
+                  </div>
+                  <div className="flex justify-end gap-2">
+                    {/* <UpdateLoan id={loan.id} loan={loan} />
+                    <DeleteLoan id={loan.id} /> */}
+                  </div>
+                </div>
+                {loan.notes && (
+                  <div className="flex gap-2 py-2 border-t">
+                    <div>
+                      <FileCheck className="h-6 w-6 text-green-700" />
+                    </div>
+                    <p className="text-xs">{loan.notes}</p>
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        ) : (
+          <p className="text-center justify-center text-sm">
+            Member has no loans
+          </p>
+        )}
       </div>
     </>
   );
