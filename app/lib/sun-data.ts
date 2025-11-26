@@ -15,6 +15,7 @@ import {
   formatDateToLocal,
   computeTotalLoan,
 } from "@/app/lib/utils";
+import { AArrowDown } from "lucide-react";
 
 // CLSOE DB COONECTIONS
 
@@ -279,14 +280,13 @@ export async function fetchFilteredIndividualLoans(
       individuals.name,
       individuals.idnumber,
       regions.name as region,
-      COALESCE(SUM(transamount), 0) as paid
-            
+      (SELECT SUM(mpesainvoice.transamount) FROM mpesainvoice WHERE mpesainvoice.refnumber = individuals.idnumber::TEXT AND individuals_loans.cycle = mpesainvoice.cycle) as paid      
       FROM individuals_loans
       INNER JOIN individuals ON individuals.id = individuals_loans.loanee
       INNER JOIN regions ON regions.id = individuals.region
       LEFT JOIN mpesainvoice ON mpesainvoice.refnumber = individuals.idnumber::TEXT
       WHERE
-      regions.id = ANY(${regions}) AND 
+      regions.id = ANY(${regions})  AND 
       ( individuals_loans.amount::TEXT ILIKE ${`%${query}%`} OR
         individuals_loans.status ILIKE ${`%${query}%`} OR
         individuals_loans.created::TEXT ILIKE ${`%${query}%`} OR
@@ -308,11 +308,14 @@ export async function fetchFilteredIndividualLoans(
         interest: Math.trunc(item.interest),
         term: Math.trunc(item.term),
         created: formatDateToLocal(item.created),
+        created_at: item.created,
         paid: formatCurrencyToLocal(Number(item.paid)),
       }))
       .sort((a: any, b: any) => b.created.localeCompare(a.created));
-
-    return loan;
+    const sorted = [...loan].sort(
+      (a: any, b: any) => b.created_at - a.created_at
+    );
+    return sorted;
   } catch (error) {
     console.error("Database Error:", error);
     throw new Error("Failed to fetch groups.");
