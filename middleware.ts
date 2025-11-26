@@ -14,31 +14,59 @@ export async function middleware(request: NextRequest) {
   const isProtectedRoute = path.startsWith("/dashboard");
   const isPublicRoute = publicRoutes.includes(path);
   const isLockedRoute = lockedRoutes.includes(path);
+  const isLocke = path.startsWith("/");
 
   const cookieStore = await cookies();
   const cookie = (await cookies()).get("user-session")?.value;
   const oldCookie = (await cookies()).get("session")?.value;
 
+  const locked = true;
+
+  // if (oldCookie && !cookie) {
+  //   cookieStore.delete("session");
+  //   return NextResponse.redirect(new URL("/login", request.nextUrl));
+  // }
+
+  // if (isProtectedRoute && !cookie) {
+  //   return NextResponse.redirect(new URL("/login", request.nextUrl));
+  // }
+  // if (isLockedRoute && cookie) {
+  //   return NextResponse.redirect(new URL("/dashboard", request.nextUrl));
+  // }
+  // if (isLockedRoute && !cookie) {
+  //   return NextResponse.redirect(new URL("/login", request.nextUrl));
+  // }
+  // if (
+  //   isPublicRoute &&
+  //   cookie &&
+  //   !request.nextUrl.pathname.startsWith("/dashboard")
+  // ) {
+  //   return NextResponse.redirect(new URL("/dashboard", request.nextUrl));
+  // }
+
   if (oldCookie && !cookie) {
     cookieStore.delete("session");
-    return NextResponse.redirect(new URL("/login", request.nextUrl));
+    return NextResponse.redirect(new URL("/locked", request.nextUrl));
   }
 
   if (isProtectedRoute && !cookie) {
-    return NextResponse.redirect(new URL("/login", request.nextUrl));
+    return NextResponse.redirect(new URL("/locked", request.nextUrl));
+  }
+  if (isProtectedRoute && cookie) {
+    return NextResponse.redirect(new URL("/locked", request.nextUrl));
   }
   if (isLockedRoute && cookie) {
-    return NextResponse.redirect(new URL("/dashboard", request.nextUrl));
+    return NextResponse.redirect(new URL("/locked", request.nextUrl));
   }
   if (isLockedRoute && !cookie) {
-    return NextResponse.redirect(new URL("/login", request.nextUrl));
+    return NextResponse.redirect(new URL("/locked", request.nextUrl));
   }
   if (
     isPublicRoute &&
     cookie &&
-    !request.nextUrl.pathname.startsWith("/dashboard")
+    !request.nextUrl.pathname.startsWith("/locked")
   ) {
-    return NextResponse.redirect(new URL("/dashboard", request.nextUrl));
+    return NextResponse.redirect(new URL("/locked", request.nextUrl));
   }
 
   return NextResponse.next();
