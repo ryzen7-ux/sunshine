@@ -5,7 +5,7 @@ import type { NextRequest } from "next/server";
 import { cookies } from "next/headers";
 
 const protectedRoutes = ["/dashboard"];
-const publicRoutes = ["/login", "/signup"];
+const publicRoutes = ["/login", "/signup", "/locked"];
 const lockedRoutes = ["/"];
 
 export async function middleware(request: NextRequest) {
@@ -22,52 +22,52 @@ export async function middleware(request: NextRequest) {
 
   const locked = true;
 
-  // if (oldCookie && !cookie) {
-  //   cookieStore.delete("session");
-  //   return NextResponse.redirect(new URL("/login", request.nextUrl));
-  // }
-
-  // if (isProtectedRoute && !cookie) {
-  //   return NextResponse.redirect(new URL("/login", request.nextUrl));
-  // }
-  // if (isLockedRoute && cookie) {
-  //   return NextResponse.redirect(new URL("/dashboard", request.nextUrl));
-  // }
-  // if (isLockedRoute && !cookie) {
-  //   return NextResponse.redirect(new URL("/login", request.nextUrl));
-  // }
-  // if (
-  //   isPublicRoute &&
-  //   cookie &&
-  //   !request.nextUrl.pathname.startsWith("/dashboard")
-  // ) {
-  //   return NextResponse.redirect(new URL("/dashboard", request.nextUrl));
-  // }
-
   if (oldCookie && !cookie) {
     cookieStore.delete("session");
-    return NextResponse.redirect(new URL("/locked", request.nextUrl));
+    return NextResponse.redirect(new URL("/login", request.nextUrl));
   }
 
   if (isProtectedRoute && !cookie) {
-    return NextResponse.redirect(new URL("/locked", request.nextUrl));
-  }
-  if (isProtectedRoute && cookie) {
-    return NextResponse.redirect(new URL("/locked", request.nextUrl));
+    return NextResponse.redirect(new URL("/login", request.nextUrl));
   }
   if (isLockedRoute && cookie) {
-    return NextResponse.redirect(new URL("/locked", request.nextUrl));
+    return NextResponse.redirect(new URL("/dashboard", request.nextUrl));
   }
   if (isLockedRoute && !cookie) {
-    return NextResponse.redirect(new URL("/locked", request.nextUrl));
+    return NextResponse.redirect(new URL("/login", request.nextUrl));
   }
   if (
     isPublicRoute &&
     cookie &&
-    !request.nextUrl.pathname.startsWith("/locked")
+    !request.nextUrl.pathname.startsWith("/dashboard")
   ) {
-    return NextResponse.redirect(new URL("/locked", request.nextUrl));
+    return NextResponse.redirect(new URL("/dashboard", request.nextUrl));
   }
+  //UNCOMENT TO UNLOCK
+  // if (oldCookie && !cookie) {
+  //   cookieStore.delete("session");
+  //   return NextResponse.redirect(new URL("/locked", request.nextUrl));
+  // }
+
+  // if (isProtectedRoute && !cookie) {
+  //   return NextResponse.redirect(new URL("/locked", request.nextUrl));
+  // }
+  // if (isProtectedRoute && cookie) {
+  //   return NextResponse.redirect(new URL("/locked", request.nextUrl));
+  // }
+  // if (isLockedRoute && cookie) {
+  //   return NextResponse.redirect(new URL("/locked", request.nextUrl));
+  // }
+  // if (isLockedRoute && !cookie) {
+  //   return NextResponse.redirect(new URL("/locked", request.nextUrl));
+  // }
+  // if (
+  //   isPublicRoute &&
+  //   cookie &&
+  //   !request.nextUrl.pathname.startsWith("/locked")
+  // ) {
+  //   return NextResponse.redirect(new URL("/locked", request.nextUrl));
+  // }
 
   return NextResponse.next();
 }
