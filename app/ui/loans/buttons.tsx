@@ -19,6 +19,7 @@ import CreateLoanForm from "./loan-from";
 import EditLoanForm from "./edit-form";
 import { useSearchParams, usePathname, useRouter } from "next/navigation";
 import { useDebouncedCallback } from "use-debounce";
+import { useUser } from "@/app/providers/provider";
 
 export function CreateInvoice({
   groups,
@@ -123,6 +124,7 @@ export function UpdateLoan({ id, loan }: { id: string; loan: any }) {
 }
 
 export function DeleteLoan({ id }: { id: string }) {
+  const { user }: { user: any } = useUser();
   const deleteLoanWithId = deleteLoan.bind(null, id);
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
   return (
@@ -130,7 +132,9 @@ export function DeleteLoan({ id }: { id: string }) {
       <Tooltip color="danger" content="Delete Loan Item">
         <button
           onClick={onOpen}
-          className="rounded-md border p-2 hover:bg-red-100"
+          className={`rounded-md border p-2 hover:bg-red-100 ${
+            user.role !== "admin" ? "hidden" : ""
+          }`}
         >
           <span className="sr-only">Delete</span>
           <TrashIcon className="w-4 fill-red-500" />

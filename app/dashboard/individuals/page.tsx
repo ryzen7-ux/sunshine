@@ -50,6 +50,7 @@ export default async function Page(props: {
   const regions = await fetchRegions();
 
   let regionArr: any = [];
+  let selectRegions: any = regions;
   if (isAdmin) {
     regionArr = regions?.map((item: any) => item.id);
   }
@@ -60,6 +61,9 @@ export default async function Page(props: {
     );
 
     regionArr = filteredRegions?.map((item: any) => item.id);
+    selectRegions = regions?.filter(
+      (item: any) => item.manager === curentUser[0].id
+    );
   }
 
   const totalPages = await fetchIndividualPages(query, regionArr);
@@ -79,7 +83,7 @@ export default async function Page(props: {
     loansCurrentPage,
     regionArr
   );
-  const users = await fetchUsers();
+
   const individuals = await fetchIndividuals(regionArr);
   const individual = await fetchIndividualsById(indiviudalId);
 
@@ -93,7 +97,7 @@ export default async function Page(props: {
       </h1>
       <div className="w-full">
         <IndividualsTab
-          regions={regions}
+          regions={selectRegions}
           query={query}
           currentPage={currentPage}
           totalPages={totalPages}

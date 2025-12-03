@@ -16,9 +16,10 @@ import {
 } from "@heroui/react";
 import { useActionState, useState } from "react";
 import { SuccessToast, DeleteSuccessToast } from "@/app/ui/toast";
+import { useUser } from "@/app/providers/provider";
 
 export function DeleteGroupAction({ id }: { id: string }) {
-  // const deleteGroupWithId = deleteGroup.bind(null, id);
+  const { user }: { user: any } = useUser();
   const initialState = { success: false };
   const [formstate, formAction, isLoading] = useActionState(
     deleteGroup,
@@ -28,7 +29,10 @@ export function DeleteGroupAction({ id }: { id: string }) {
   return (
     <>
       <Tooltip color="danger" content="Delete Group">
-        <button onClick={onOpen}>
+        <button
+          onClick={onOpen}
+          className={`${user.role !== "admin" ? "hidden" : ""}`}
+        >
           <span className="text-lg text-danger cursor-pointer active:opacity-50">
             <Trash2 className="h-5 w-5" />
           </span>
@@ -67,11 +71,16 @@ export function DeleteGroupAction({ id }: { id: string }) {
 }
 
 export function DeleteMemberAction({ id, gid }: { id: string; gid: string }) {
+  const { user }: { user: any } = useUser();
+
   const deleteMemberWithId = deleteMember.bind(null, id, gid);
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
   return (
     <>
-      <button onClick={onOpen}>
+      <button
+        onClick={onOpen}
+        className={`${user.role !== "admin" ? "hidden" : ""}`}
+      >
         <span className="text-lg text-danger cursor-pointer active:opacity-50">
           <Trash2 className="h-5 w-5" />
         </span>

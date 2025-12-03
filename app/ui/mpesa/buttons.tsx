@@ -16,13 +16,17 @@ import {
   useDisclosure,
   addToast,
   Spinner,
+  user,
 } from "@heroui/react";
 import { AlertTriangleIcon } from "lucide-react";
 import { useSearchParams, usePathname, useRouter } from "next/navigation";
 import { useDebouncedCallback } from "use-debounce";
 import AddMpesaForm from "./mpesa-form";
+import { useUser } from "@/app/providers/provider";
 
 export function CreateInvoice() {
+  const { user }: { user: any } = useUser();
+
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const { isOpen, onOpen, onOpenChange, onClose } = useDisclosure();
 
@@ -40,13 +44,14 @@ export function CreateInvoice() {
   return (
     <>
       {" "}
-      <button
-        onClick={() => setIsAddModalOpen(true)}
+      <Button
+        onPress={() => setIsAddModalOpen(true)}
         className="flex h-10 items-center rounded-lg bg-blue-600 px-4 text-sm font-medium text-white transition-colors hover:bg-blue-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600"
+        isDisabled={user?.role !== "admin"}
       >
         <span className="hidden md:block">New Transaction</span>{" "}
         <PlusIcon className="h-5 md:ml-4" />
-      </button>
+      </Button>
       <Modal
         isOpen={isAddModalOpen}
         onOpenChange={onOpenChange}
@@ -86,10 +91,12 @@ export function UpdateInvoice({ id }: { id: string }) {
 }
 
 export function DeleteInvoice({ id }: { id: string }) {
+  const { user }: { user: any } = useUser();
   const [isDeleting, setIsDeleting] = useState(false);
   const { isOpen, onOpen, onOpenChange, onClose } = useDisclosure();
 
   const handleDelete = async (e: React.FormEvent<HTMLFormElement>) => {
+    const { user }: { user: any } = useUser();
     setIsDeleting(true);
     e.preventDefault();
     const deleteInvoiceWithId = await deleteMpesaInvoice(id);
@@ -106,10 +113,15 @@ export function DeleteInvoice({ id }: { id: string }) {
   return (
     <>
       <Tooltip content="Delete transaction" color="danger" placement="bottom">
-        <button onClick={onOpen} className="">
+        <Button
+          onPress={onOpen}
+          className="bg-white px-1"
+          size="sm"
+          isDisabled={user?.role !== "admin"}
+        >
           <span className="sr-only">Delete</span>
           <TrashIcon className="w-6 h-6 text-red-500" />
-        </button>
+        </Button>
       </Tooltip>
 
       <Modal isOpen={isOpen} onOpenChange={onOpenChange}>

@@ -17,8 +17,10 @@ import {
   Spinner,
 } from "@heroui/react";
 import { Trash2Icon, Trash2, Eye, Pen, AlertTriangleIcon } from "lucide-react";
+import { useUser } from "@/app/providers/provider";
 
 export default function DeleteIndividualLoan({ id }: { id: string }) {
+  const { user }: { user: any } = useUser();
   const [isDelete, setIsDelete] = useState(false);
 
   const handleDelete = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -44,7 +46,10 @@ export default function DeleteIndividualLoan({ id }: { id: string }) {
   return (
     <>
       <Tooltip color="danger" content="Delete Individual">
-        <button onClick={onOpen} className="">
+        <button
+          onClick={onOpen}
+          className={`${user.role !== "admin" ? "hidden" : ""}`}
+        >
           <span className="sr-only">Delete</span>
           <TrashIcon className="w-4 fill-red-500" />
         </button>

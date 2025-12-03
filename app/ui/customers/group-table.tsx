@@ -12,13 +12,13 @@ import {
   Chip,
   Tooltip,
 } from "@heroui/react";
-
 import Link from "next/link";
 import { deleteGroup } from "@/app/lib/sun-actions";
 import { DeleteGroupAction } from "@/app/ui/customers/table-actions";
 import { formatCurrencyToLocal } from "@/app/lib/utils";
 import EditGroupModal from "@/app/ui/customers/edit-group-modal";
 import Regions from "../system-management/regions";
+import { useUser } from "@/app/providers/provider";
 
 export const columns = [
   { name: "REG NO", uid: "reg" },
@@ -164,6 +164,7 @@ export default function GroupTable({
   groups: any;
   regions: any;
 }) {
+  const { user }: { user: any } = useUser();
   const renderCell = React.useCallback((group: any, columnKey: any) => {
     const cellValue = group[columnKey];
 
